@@ -36,7 +36,6 @@ MERGER_RULES = {
   'bibgroups':            'takeAll',
   'openaccess':           'originTrustMerger',
   'private':              'originTrustMerger',
-  'pubtype':              'originTrustMerger',
   'bibgroups':            'takeAll',
   'openaccess':           'originTrustMerger',
   'nonarticle':           'originTrustMerger',

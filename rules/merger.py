@@ -55,7 +55,7 @@ def takeAll(f1,f2,*args,**kwargs):
     for k,v in result.iteritems():
       #Flatten the values of the dict
       result[k] = list(itertools.chain(*v))
-  return result
+  return {'content':result, '@origin': 'merged_takeAll'}
 
   #If elements are neither, we have a problem!
   LOGGER.critical('takeAll merger didnt get normalized data')
@@ -64,12 +64,19 @@ def takeAll(f1,f2,*args,**kwargs):
 
 
 def stringConcatenateMerger(f1,f2,*args,**kwargs):
-  return "<%s><%s>" % (f1['content'],f2['content'])
+  f1['content'] = "%s,%s" % (f1['content'],f2['content'])
+  f1['@origin'] = "merged_stringConcat"
+  return f1
 
 
-# def authorMerger(f1,f2,*args,**kwargs):
-#   #originTrustMerger used instead
-#   pass
+def authorMerger(f1,f2,*args,**kwargs):
+  best = originTrustMerger(f1,f2)
+  
+  # #Take the affiliation data based solely on the quantity thereof
+  # if 'affiliations' in f1['content'] and 'affiliations' in f2['content']:
+  #   best['affiliations'] = 
+  # return best
+
 
 # def pubdateMerger(f1,f2,*args,**kwargs):
 #   #originTrustMerger used instead
@@ -97,7 +104,7 @@ def originTrustMerger(f1,f2,fieldName,*args,**kwargs):
   if PRIORITIES[fieldName][f1['@origin']] == PRIORITIES[fieldName][f2['@origin']]:
     return equalTrustFallback(f1,f2)
 
-  return f1['content'] if PRIORITIES[fieldName][f1['@origin']] >  PRIORITIES[fieldName][f2['@origin']] else f2['content']
+  return f1 if PRIORITIES[fieldName][f1['@origin']] >  PRIORITIES[fieldName][f2['@origin']] else f2
   
 
 
@@ -111,10 +118,10 @@ def equalTrustFallback(f1,f2,*args,**kwargs):
   f2['modtime'] = datetime.datetime.strptime(f2['modtime'],dateformat) if f2['modtime'] else 0
 
   if len(f1['content']) != len(f2['content']):
-    return f1['content'] if len(f1['content']) > len(f2['content']) else f2['content']
+    return f1 if len(f1['content']) > len(f2['content']) else f2
   
   elif f1['modtime'] != f2['modtime']:
-    return f1['content'] if f1['modtime'] > f2['modtime'] else f2['content']
+    return f1 if f1['modtime'] > f2['modtime'] else f2
   
   else:
-    return f1['content']
+    return f1

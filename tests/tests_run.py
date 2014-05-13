@@ -25,7 +25,7 @@ LOGGER.addHandler(rfh)
 
 def main(*args,**kwargs):
   args = ['--bibcodes']
-  with open(os.path.join(PROJECT_HOME,'tests','merge_test_cases2.txt'),'r') as fp:
+  with open(os.path.join(PROJECT_HOME,'tests','merge_test_cases.txt'),'r') as fp:
     lines = fp.readlines()
 
   MONGO['DATABASE'] = 'tests_%s' % MONGO['DATABASE']

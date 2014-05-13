@@ -194,18 +194,14 @@ def merge(metadataBlocks,bibcode,entryType,LOGGER=settings.LOGGER):
   mergedResults = {}
   for fieldName,data in fields.iteritems():
     result = None
-    while len(data) > 1:
+    while len(data) > 0:
       f1 = data.pop()
       f2 = result if result else data.pop()
-
-      result = merger.dispatcher(f1,f2,fieldName) if f1['content'] != f2['content'] else f1['content']
+      result = merger.dispatcher(f1,f2,fieldName) if f1['content'] != f2['content'] else f1
     mergedResults[fieldName] = result
-
+  
   #Combine all the pieces into the complete <metadata> block
-  completeBlock = {
-    '@type':entryType,
-    '@origin': 'merged',
-  }
+  completeBlock = {'@type':entryType,}
   singleDefined = dict([(k,v) for block in metadataBlocks for k,v in block.iteritems() if k in singleDefinedFields])
   completeBlock.update(singleDefined)
   completeBlock.update(mergedResults)
