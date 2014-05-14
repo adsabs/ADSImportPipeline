@@ -8,7 +8,7 @@ MERGER_RULES = {
   'keywords':             'originTrustMerger',
   'title':                'originTrustMerger',
   'abstract':             'originTrustMerger',
-  'author':               'originTrustMerger',
+  'author':               'authorMerger',
   'pagenumber':           'originTrustMerger',
   'journal':              'originTrustMerger',
   'canonical_journal':    'originTrustMerger',

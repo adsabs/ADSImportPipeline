@@ -20,6 +20,7 @@ except ImportError:
 #Changing this will break the merger logic, as it expects a consistent schema.
 NORMALIZE_SCHEMA = {
   'arxivcategories':  lambda d: ensureList(d),
+  'author':           lambda d: ensureList(d),
   'keywords':         lambda d: ensureList(d),
   'title':            lambda d: ensureLanguageSchema(d),
   'abstract':         lambda d: ensureLanguageSchema(d),
@@ -99,7 +100,6 @@ def updateRecords(records,LOGGER=settings.LOGGER):
     return []
 
   targets = dict(records)
-
 
   s = time.time()
   records = ADSRecords('full','XML')

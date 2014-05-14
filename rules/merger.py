@@ -5,7 +5,6 @@ import datetime
 import settings
 import types
 import itertools
-
 #Maybe re-write this as a class since we need access to f1,f2 etc everywhere
 
 def dispatcher(f1,f2,fieldName,*args,**kwargs):
@@ -55,7 +54,7 @@ def takeAll(f1,f2,*args,**kwargs):
     for k,v in result.iteritems():
       #Flatten the values of the dict
       result[k] = list(itertools.chain(*v))
-  return {'content':result, '@origin': 'merged_takeAll'}
+  return {'content':[result], '@origin': 'merged_takeAll'}
 
   #If elements are neither, we have a problem!
   LOGGER.critical('takeAll merger didnt get normalized data')
@@ -70,24 +69,25 @@ def stringConcatenateMerger(f1,f2,*args,**kwargs):
 
 
 def authorMerger(f1,f2,*args,**kwargs):
-  best = originTrustMerger(f1,f2)
-  
-  # #Take the affiliation data based solely on the quantity thereof
-  # if 'affiliations' in f1['content'] and 'affiliations' in f2['content']:
-  #   best['affiliations'] = 
-  # return best
+  assert isinstance(f1['content'],list)
+  assert isinstance(f2['content'],list)
 
-
-# def pubdateMerger(f1,f2,*args,**kwargs):
-#   #originTrustMerger used instead
-#   pass
+  best = originTrustMerger(f1,f2,'author')
+  for author in best['content']:
+    if 'affiliations' not in author:
+      _all = f1['content']+f2['content']
+      matches = [i for i in _all if i['name']['normalized']==author['name']['normalized'] and 'affiliations' in i]
+      #In the case that a there are multiple authors with the same normalized name in the list, matches will have len>1.
+      #This will blindly pick the first one that matched, which isn't necessarily correct.
+      if matches:
+        author['affiliations'] = matches[0]['affiliations']
+  return best
 
 def referencesMerger(f1,f2,*args,**kwargs):
   assert type(f1['content'])==type(f2['content'])==list
   if f1['@origin'] in REFERENCES_ALWAYS_APPEND or f2['@origin'] in REFERENCES_ALWAYS_APPEND:
     return takeAll(f1,f2)
   return originTrustMerger(f1,f2,'reference')
-
 
 
 def originTrustMerger(f1,f2,fieldName,*args,**kwargs):
