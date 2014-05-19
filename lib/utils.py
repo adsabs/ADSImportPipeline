@@ -122,6 +122,10 @@ def updateRecords(records,LOGGER=settings.LOGGER):
   LOGGER.info('ADSRecords took %0.1fs to query %s records (%0.1f rec/s)' % (ttc,len(targets),rate))
 
   records = ensureList(xmltodict.parse(records.__str__())['records']['record'])
+  with open('raw.txt','a') as fp:
+    for r in records:
+      fp.write('%s' % r)
+      fp.write('\n\n')
   assert(len(records)==len(targets)-len(failures))
 
   #Could send these tasks out on a queue
@@ -153,17 +157,21 @@ def updateRecords(records,LOGGER=settings.LOGGER):
       cr['metadata'].update({entryType:merge(data,r['@bibcode'],entryType,LOGGER)})
     
     #Finally, we have a complete record
-    completeRecords.append(cr)
+    completeRecords.append(enforceSchema(cr))
 
   LOGGER.info('Added %s complete records' % len(completeRecords))
   return completeRecords
 
-def enforceSchema(records,LOGGER=settings.LOGGER):
+def enforceSchema(record,LOGGER=settings.LOGGER):
   '''
   translates schema from ADSRecords to alternative schema
   '''
+  try:
+    del record['metadata']['properties']['JSON_timestamp']
+  except KeyError:
+    pass
 
-  return records
+  return record
 
 def merge(metadataBlocks,bibcode,entryType,LOGGER=settings.LOGGER):
   '''
