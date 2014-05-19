@@ -54,7 +54,7 @@ def takeAll(f1,f2,*args,**kwargs):
     for k,v in result.iteritems():
       #Flatten the values of the dict
       result[k] = list(itertools.chain(*v))
-  return {'content':[result], '@origin': 'merged_takeAll'}
+    return {'content':[result], '@origin': '%s; %s' % (f1['@origin'],f2['@origin'])}
 
   #If elements are neither, we have a problem!
   LOGGER.critical('takeAll merger didnt get normalized data')
@@ -64,7 +64,7 @@ def takeAll(f1,f2,*args,**kwargs):
 
 def stringConcatenateMerger(f1,f2,*args,**kwargs):
   f1['content'] = "%s,%s" % (f1['content'],f2['content'])
-  f1['@origin'] = "merged_stringConcat"
+  f1['@origin'] = "%s; %s" % (f1['@origin'],f2['@origin'])
   return f1
 
 
