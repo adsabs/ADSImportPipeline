@@ -86,7 +86,9 @@ def authorMerger(f1,f2,*args,**kwargs):
 def referencesMerger(f1,f2,*args,**kwargs):
   assert type(f1['content'])==type(f2['content'])==list
   if f1['@origin'] in REFERENCES_ALWAYS_APPEND or f2['@origin'] in REFERENCES_ALWAYS_APPEND:
-    return takeAll(f1,f2)
+    result = takeAll(f1,f2)
+    result['@origin'] = '%s; %s' % (f1['@origin'],f2['@origin'])
+    return result
   return originTrustMerger(f1,f2,'reference')
 
 
@@ -101,10 +103,13 @@ def originTrustMerger(f1,f2,fieldName,*args,**kwargs):
   f1['@origin'] = f1['@origin'] if f1['@origin'] in PRIORITIES[fieldName] else f1['@origin'].split(';')[0]
   f2['@origin'] = f2['@origin'] if f2['@origin'] in PRIORITIES[fieldName] else f2['@origin'].split(';')[0]
 
-  if PRIORITIES[fieldName][f1['@origin']] == PRIORITIES[fieldName][f2['@origin']]:
+  P1 = PRIORITIES[fieldName][f1['@origin']]
+  P2 = PRIORITIES[fieldName][f2['@origin']]
+  
+  if P1 == P2:
     return equalTrustFallback(f1,f2)
 
-  return f1 if PRIORITIES[fieldName][f1['@origin']] >  PRIORITIES[fieldName][f2['@origin']] else f2
+  return f1 if P1 > P2 else f2
   
 
 
