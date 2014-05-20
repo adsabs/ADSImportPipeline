@@ -1,0 +1,220 @@
+//          TOP LEVEL SCHEMA
+[
+  {
+    '@bibcode':         '',
+    'JSON_fingerprint': '',
+    'metadata': {
+      'general':    {},
+      'properties': {},
+      'references': {},
+      'relations':  {},
+    },
+  },
+]
+
+
+//          METADATA-BLOCK SCHEMA
+// GENERAL
+general = {
+  'arxivcategories': ['',]
+
+  'keywords': [
+    {
+    '@origin': '',
+    'channel': '',
+    'original': '',
+    'normalized': '',
+    },
+  ]
+
+  'title': [
+    {
+      '@lang': '',
+      '#text': '',
+    },
+  ],
+
+  'abstract: [
+    {
+      '@lang': '',
+      '#text': '',
+    },
+  ],
+
+//-affiliations are currently combined to a single long string. Is splitting on ";" correct to uncombine?
+//-Do we have any orcid data?
+  'author': [
+    {
+      '@nr': '',
+      '@origin': '',
+      'type': '',
+      'affiliations': ['',],
+      'emails': ['',]
+      'orcid': '',
+      'name': {
+        'native': '',
+        'western': '',
+        'normalized': '',
+      },
+    },
+  ],
+
+// I don't know what info is really necessary here. Could we remove 1+ of these items?
+  'pages': {
+    '@origin': '',
+    'page_number': '',
+    'page_range': '',
+    'page_last': '',
+    'page': ''
+  },
+
+//Is it worth combining 'pages' into 'journal'?
+  'journal': {
+    '@origin': '',
+    'volume': '',
+    'issue': '',
+    'name': {
+      'raw': '',
+      'canonical': '',
+  },
+ },
+
+  'eid': {
+    '@origin': '',
+    'content': '',
+  },
+
+  'conf_metadata': {
+    '@origin': '',
+    'content': '',
+  },
+
+  'isbns': [
+    {
+      '@origin':'',
+      'content': '',
+    },
+  ],
+
+  'issns': [
+    {
+      '@origin':'',
+      'content': '',
+    },
+  ],
+
+  'doi': {
+    '@origin': '',
+    'content': '',
+  },
+
+  'instruments': [
+    {
+      '@origin':'',
+      'content': '',
+    },
+  ],
+
+  'copyright': {
+    '@origin': '',
+    'content': '',
+  },
+
+  'objects': [
+    {
+      '@origin':'',
+      'content': '',
+    },
+  ],
+
+  //Omitting singly defined 'language' field here
+}
+
+// PROPERTIES
+properties = {
+  'databases': [
+    {
+      '@origin':'',
+      'content': '',
+    },
+  ],
+
+  'pubtype': {
+    '@origin': '',
+    'content': '',
+  },
+
+  'bibgroups': [
+    {
+      '@origin':'',
+      'content': '',
+    },
+  ],
+
+// Should these all be booleans?
+  'openaccess': true||false,
+
+  'nonarticle': true||false,
+
+  'ocrabstract': true||false,
+
+  'private': true||false,
+
+  'refereed': true||false,
+}
+
+// REFERENCES
+references = [
+  {
+    '@origin':    '',
+    'bibcode':    '',
+    'doi':        '',
+    'score':      '',
+    'source':     '', //Is this the same as @origin?
+    'extension':  '', //Is this really necessary to keep?
+  },
+],
+
+// RELATIONS
+// I get the impression that this metadata block is the least consistent, and therefore should be most carefully considered
+relations = {
+  //Not sure the role these play. Are they necessary?
+  '@primary': true||false,
+  '@alternate_journal': true||false,
+
+
+  //This field doesn't exist in many of the test cases. Is it necessary?
+  'preprints': [
+    {
+      '@origin':'',
+      'content': '',
+    },
+  ],
+
+  'alternatives': [
+    {
+      '@origin':'',
+      'alternate': ['',],
+      'deleted': ['',],
+      'eprint': [''],
+    },
+  ],
+
+  //This field doesn't exist in many of the test cases. Is it necessary?
+  'associates': [
+    {
+      '@origin':'',
+      'content': '',
+    },
+  ],
+
+  'links': [
+    {
+      '@origin': '',
+      'type': '',
+      'url': '',
+      'title': '',
+      'count': '',
+    },
+  ],
+}
