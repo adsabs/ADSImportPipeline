@@ -5,7 +5,7 @@ MERGER_RULES = {
   'creation_time':        'stringConcatenateMerger', #Also in <metadata type="references">
   'modification_time':    'stringConcatenateMerger', #Also in <metadata type="references">
   'arxivcategories':      'originTrustMerger',
-  'keywords':             'originTrustMerger',
+  'keywords':             'takeAll',
   'title':                'originTrustMerger',
   'abstract':             'originTrustMerger',
   'author':               'authorMerger',
