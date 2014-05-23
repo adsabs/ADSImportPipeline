@@ -42,7 +42,7 @@ general = {
   ],
 
 //-affiliations are currently combined to a single long string. Is splitting on ";" correct to uncombine?
-//-Do we have any orcid data?
+// ...Or, should we keep the current implementation of 1 author-> 1 affiliation, where affiliation is a long string?
   'author': [
     {
       '@nr': '',
@@ -59,7 +59,6 @@ general = {
     },
   ],
 
-// I don't know what info is really necessary here. Could we remove 1+ of these items?
   'pages': {
     '@origin': '',
     'page_number': '',
@@ -68,7 +67,6 @@ general = {
     'page': ''
   },
 
-//Is it worth combining 'pages' into 'journal'?
   'journal': {
     '@origin': '',
     'volume': '',
@@ -127,7 +125,6 @@ general = {
     },
   ],
 
-  //Omitting singly defined 'language' field here
 }
 
 // PROPERTIES
@@ -170,13 +167,11 @@ references = [
     'bibcode':    '',
     'doi':        '',
     'score':      '',
-    'source':     '', //Is this the same as @origin?
     'extension':  '', //Is this really necessary to keep?
   },
 ],
 
 // RELATIONS
-// I get the impression that this metadata block is the least consistent, and therefore should be most carefully considered
 relations = {
   //Not sure the role these play. Are they necessary?
   '@primary': true||false,
@@ -200,7 +195,6 @@ relations = {
     },
   ],
 
-  //This field doesn't exist in many of the test cases. Is it necessary?
   'associates': [
     {
       '@origin':'',
