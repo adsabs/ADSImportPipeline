@@ -166,10 +166,17 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   '''
   translates schema from ADSRecords to alternative schema
   '''
+
+  #1. Delete records that we no longer want
   try:
     del record['metadata']['properties']['JSON_timestamp']
   except KeyError:
     pass
+
+  #2. Unique based on key,value within lists:
+
+
+  #3. Apply schema manipulation in settings.py
 
   return record
 
