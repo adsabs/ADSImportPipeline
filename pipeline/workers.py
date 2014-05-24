@@ -56,6 +56,22 @@ class FindNewRecordsWorker(RabbitMQWorker):
     self.subscribe(self.on_message)
 
 
+class ReadRecordsRecordsWorker(RabbitMQWorker):
+  def __init__(self,params):
+    self.params=params
+    from lib.utils import readRecords #Hack to avoid loading ADSRecords until it is necessary
+    self.f = readRecords
+
+  def on_message(self, channel, method_frame, header_frame, body):
+    records = json.loads(body)
+    self.publish(json.dumps(self.f(records)))
+    self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+
+  def run(self):
+    self.connect(self.params['RABBITMQ_URL'])
+    self.subscribe(self.on_message)
+
+
 
 class UpdateRecordsWorker(RabbitMQWorker):
   def __init__(self,params):

@@ -26,6 +26,10 @@ RABBITMQ_ROUTES = {
       'durable': True,
     },
     {
+      'queue': 'ReadRecordsQueue',
+      'durable': True,
+    },
+    {
       'queue': 'UpdateRecordsQueue',
       'durable': True,
     },
@@ -39,6 +43,11 @@ RABBITMQ_ROUTES = {
       'queue':        'FindNewRecordsQueue',
       'exchange':     'MergerPipelineExchange',
       'routing_key':  'FindNewRecordsRoute',
+    },
+    {
+      'queue':        'ReadRecordsQueue',
+      'exchange':     'MergerPipelineExchange',
+      'routing_key':  'ReadRecordsRoute',
     },
     {
       'queue':        'UpdateRecordsQueue',
@@ -58,10 +67,21 @@ WORKERS = {
     'concurrency': 1,
     'qos_prefetch': 10,
     'publish': [
-      {'exchange': 'MergerPipelineExchange', 'routing_key': 'UpdateRecordsRoute',},
+      {'exchange': 'MergerPipelineExchange', 'routing_key': 'ReadRecordsRoute',},
     ],
     'subscribe': [
       {'queue': 'FindNewRecordsQueue',},
+    ],
+  },
+
+  'ReadRecordsWorker': { 
+    'concurrency': 1,
+    'qos_prefetch': 10,
+    'publish': [
+      {'exchange': 'MergerPipelineExchange', 'routing_key': 'UpdateRecordsRoute',},
+    ],
+    'subscribe': [
+      {'queue': 'ReadRecordsQueue',},
     ],
   },
 

@@ -93,8 +93,7 @@ def findChangedRecords(records,LOGGER=settings.LOGGER,MONGO=settings.MONGO):
   conn.close()
   return list(set([(r[0],r[1]) for r in records]).difference(currentRecords))
 
-def updateRecords(records,LOGGER=settings.LOGGER):
-
+def readRecords(records,LOGGER=settings.LOGGER):
   if not records:
     LOGGER.debug("No records given")
     return []
@@ -122,11 +121,10 @@ def updateRecords(records,LOGGER=settings.LOGGER):
   LOGGER.info('ADSRecords took %0.1fs to query %s records (%0.1f rec/s)' % (ttc,len(targets),rate))
 
   records = ensureList(xmltodict.parse(records.__str__())['records']['record'])
-  with open('raw.txt','a') as fp:
-    for r in records:
-      fp.write('%s' % r)
-      fp.write('\n\n')
   assert(len(records)==len(targets)-len(failures))
+  return records
+
+def updateRecords(records,LOGGER=settings.LOGGER):
 
   #Could send these tasks out on a queue
   completeRecords = []

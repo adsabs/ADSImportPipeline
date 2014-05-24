@@ -105,6 +105,8 @@ def main(LOGGER=LOGGER,MONGO=MONGO,*args):
       records = utils.findChangedRecords(records,LOGGER,MONGO)
       LOGGER.info('[%s] Found %s records to be updated in %0.1fs' % (target,len(records),(time.time()-s)))
 
+      records = utils.readRecords(records,LOGGER)
+
       s = time.time()
       records = utils.updateRecords(records,LOGGER)
       LOGGER.info('[%s] Updating %s records took %0.1fs' % (target,len(records),(time.time()-s)))
