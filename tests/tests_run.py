@@ -24,13 +24,18 @@ LOGGER.addHandler(ch)
 LOGGER.addHandler(rfh)
 
 def main(*args,**kwargs):
-  args = ['--bibcodes']
-  with open(os.path.join(PROJECT_HOME,'tests','merge_test_cases.txt'),'r') as fp:
-    lines = fp.readlines()
+
+  #args = ['--bibcodes']
+  #with open(os.path.join(PROJECT_HOME,'tests','merge_test_cases.txt'),'r') as fp:
+  #  lines = fp.readlines()
 
   MONGO['DATABASE'] = 'tests_%s' % MONGO['DATABASE']
-  args.extend([L.strip().split()[0] for L in lines if L and not L.startswith('#')])
+  args = ['--bibcode-files']
+  args.extend([os.path.join(PROJECT_HOME,'tests','merge_test_cases.txt')])
+  #args.extend([L.strip().split()[0] for L in lines if L and not L.startswith('#')])
   #args.extend(['--classic-databases','PHY','AST'])
+  if sys.argv and len(sys.argv) > 1:
+    args.extend(sys.argv[1:])
 
   records = run.main(LOGGER,MONGO,args)
 

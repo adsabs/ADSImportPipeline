@@ -46,11 +46,11 @@ def main(LOGGER=LOGGER,MONGO=MONGO,*args):
   parser = argparse.ArgumentParser()
 
   parser.add_argument(
-    '--classic-databases',
+    '--bibcode-files',
     nargs='*',
-    default=CLASSIC_BIBCODES.keys(),
+    default=CLASSIC_BIBCODES.values(),
     dest='updateTargets',
-    help='Which datasources should be updated'
+    help='full paths to bibcode files'
     )
 
   parser.add_argument(
@@ -69,6 +69,14 @@ def main(LOGGER=LOGGER,MONGO=MONGO,*args):
     help='start in async mode'
     )
 
+  parser.add_argument(
+    '--load-records-from-files',
+    nargs='*',
+    default=None,
+    dest='load_from_files',
+    help='Load XML records from files via pickle instead of ADSExports',
+    )
+
   args = parser.parse_args()
   LOGGER.debug('Recieved args (%s)' % (args))
   for target in args.updateTargets:
@@ -77,7 +85,7 @@ def main(LOGGER=LOGGER,MONGO=MONGO,*args):
     
     s = time.time() #Let's eventually use statsd for these timers :)
     with cd(PROJECT_HOME):
-      with open(CLASSIC_BIBCODES[target]) as fp:
+      with open(target) as fp:
         records = []
         for line in fp:
           if not line or line.startswith("#"):
@@ -93,8 +101,6 @@ def main(LOGGER=LOGGER,MONGO=MONGO,*args):
             publish(records)
             records = []
             #TODO: Throttling?
-
-
     LOGGER.debug('[%s] Read took %0.1fs' % (target,(time.time()-s)))
     #Publish any leftovers in case the total was not evenly divisibly
     if args.async:
@@ -105,10 +111,13 @@ def main(LOGGER=LOGGER,MONGO=MONGO,*args):
       records = utils.findChangedRecords(records,LOGGER,MONGO)
       LOGGER.info('[%s] Found %s records to be updated in %0.1fs' % (target,len(records),(time.time()-s)))
 
-      records = utils.readRecords(records,LOGGER)
+      if args.load_from_files:
+        records,targets = utils.readRecordsFromFiles(records,args.load_from_files,LOGGER)
+      else:
+        records,targets = utils.readRecords(records,LOGGER)
 
       s = time.time()
-      records = utils.updateRecords(records,LOGGER)
+      records = utils.updateRecords(records,targets,LOGGER)
       LOGGER.info('[%s] Updating %s records took %0.1fs' % (target,len(records),(time.time()-s)))
 
       s = time.time()

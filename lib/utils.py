@@ -10,11 +10,18 @@ from rules import merger
 from lib import xmltodict
 from lib import collections
 try:
+  import cPickle as pickle
+except ImportError:
+  import pickle
+try:
   from ads.ADSExports import ADSRecords
 except ImportError:
   sys.path.append('/proj/ads/soft/python/lib/site-packages')
-  from ads.ADSExports import ADSRecords
-
+  try:
+    from ads.ADSExports import ADSRecords
+  except ImportError:
+    print "Unable to import ads.ADSExports.ADSRecords!"
+    print "We will be unable to query the ADS system for records!"
 
 #This is not in settings because it normalizes the XML schema coming directly from ADSExports;
 #Changing this will break the merger logic, as it expects a consistent schema.
@@ -78,6 +85,8 @@ def findChangedRecords(records,LOGGER=settings.LOGGER,MONGO=settings.MONGO):
   '''
   Finds records in mongodb that need updating.
   Update criteria: JSON_fingerprint field different from the input records
+
+  records: [(bibcode,JSON_fingerprint),...]
   '''
   if not records:
     LOGGER.debug("No records given")
@@ -93,7 +102,30 @@ def findChangedRecords(records,LOGGER=settings.LOGGER,MONGO=settings.MONGO):
   conn.close()
   return list(set([(r[0],r[1]) for r in records]).difference(currentRecords))
 
+def readRecordsFromFiles(records,files,LOGGER=settings.LOGGER):
+  '''
+  records: [(bibcode,JSON_fingerprint),...]
+  '''
+
+  if not records:
+    LOGGER.debug("No records given")
+    return []
+
+  targets = dict(records)
+  records = []
+
+  for file_ in files:
+    with open(file_) as fp:
+      recs = pickle.load(fp)
+
+  records.extend( [r for r in recs if r['@bibcode'] in targets] )
+  return records,targets
+
+
 def readRecords(records,LOGGER=settings.LOGGER):
+  '''
+  records: [(bibcode,JSON_fingerprint),...]
+  '''
   if not records:
     LOGGER.debug("No records given")
     return []
@@ -122,9 +154,9 @@ def readRecords(records,LOGGER=settings.LOGGER):
 
   records = ensureList(xmltodict.parse(records.__str__())['records']['record'])
   assert(len(records)==len(targets)-len(failures))
-  return records
+  return records,targets
 
-def updateRecords(records,LOGGER=settings.LOGGER):
+def updateRecords(records,targets,LOGGER=settings.LOGGER):
 
   #Could send these tasks out on a queue
   completeRecords = []
