@@ -101,6 +101,9 @@ def main(LOGGER=LOGGER,MONGO=MONGO,*args):
             publish(records)
             records = []
             #TODO: Throttling?
+    for r in records:
+      print r
+
     LOGGER.debug('[%s] Read took %0.1fs' % (target,(time.time()-s)))
     #Publish any leftovers in case the total was not evenly divisibly
     if args.async:
