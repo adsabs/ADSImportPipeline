@@ -202,10 +202,14 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     del record['metadata']['properties']['JSON_timestamp']
   except KeyError:
     pass
+  if 'electronic_id' in record:
+    for field in ['page','page_range']:
+      if field in record:
+        del record[field]
+  if 'page' in record and 'page_range' in record and record['page'] == record['page_range']:
+    del record['page_range']
 
   #2. Unique based on key,value within lists:
-
-
   #3. Apply schema manipulation in settings.py
 
   return record
