@@ -15,14 +15,21 @@ def dispatcher(f1,f2,fieldName,*args,**kwargs):
   if fieldName not in MERGER_RULES:
     fieldName = 'default'
 
+
   if type(MERGER_RULES[fieldName])==types.FunctionType:
     return MERGER_RULES[fieldName](f1,f2,fieldName, *args, **kwargs)
   else:
     #Assert that the string maps to function defined within this module
     assert type(eval(MERGER_RULES[fieldName]))==types.FunctionType
     assert MERGER_RULES[fieldName] in dir(sys.modules[__name__])
-
     return eval(MERGER_RULES[fieldName])(f1,f2,fieldName,*args,**kwargs)
+
+def booleanMerger(f1,f2,*args,**kwargs):
+  f = stringConcatenateMerger(f1,f2) #use stringConcatMerger to ensure formatting even though @origin isn't very useful in this content
+  f['content'] = False
+  if any([  i for i in [int(f1['content']),int(f2['content'])]  ]):
+    f['content'] = True
+  return f
 
 
 def takeAll(f1,f2,*args,**kwargs):
@@ -60,13 +67,10 @@ def takeAll(f1,f2,*args,**kwargs):
   LOGGER.critical('takeAll merger didnt get normalized data')
   raise TypeError (c1,c2)
 
-
-
 def stringConcatenateMerger(f1,f2,*args,**kwargs):
   f1['content'] = "%s,%s" % (f1['content'],f2['content'])
   f1['@origin'] = "%s; %s" % (f1['@origin'],f2['@origin'])
   return f1
-
 
 def authorMerger(f1,f2,*args,**kwargs):
   assert isinstance(f1['content'],list)
@@ -110,8 +114,6 @@ def originTrustMerger(f1,f2,fieldName,*args,**kwargs):
     return equalTrustFallback(f1,f2)
 
   return f1 if P1 > P2 else f2
-  
-
 
 def equalTrustFallback(f1,f2,*args,**kwargs):
   # Return priority:
