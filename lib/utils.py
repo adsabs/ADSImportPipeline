@@ -198,10 +198,15 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   '''
 
   #1. Delete records that we no longer want
-  try:
-    del record['metadata']['properties']['JSON_timestamp']
-  except KeyError:
-    pass
+  for deletion in settings.SCHEMA['deletions']:
+    current_loc=record
+    for key in deletion[:-1]:
+      current_loc=current_loc[key]
+    try:
+      del current_loc[deletion[-1]]
+    except KeyError:
+      pass
+
   if 'electronic_id' in record:
     for field in ['page','page_range']:
       if field in record:
@@ -209,8 +214,22 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   if 'page' in record and 'page_range' in record and record['page'] == record['page_range']:
     del record['page_range']
 
-  #2. Unique based on key,value within lists:
-  #3. Apply schema manipulation in settings.py
+  #2. Apply schema manipulation in settings.py
+  #  arxivcategories
+  record['metadata']['properties']['arxivcategories'] = record['metadata']['properties'].get('arxivcategories',[])
+  if record['metadata']['properties']['arxivcategories']:
+    current = record['metadata']['properties']['arxivcategories']
+    record['metadata']['properties']['arxivcategories'] = [i['arxivcategory']['#text'] for i in current]
+  #  keywords
+  record['metadata']['properties']['keywords'] = record['metadata']['properties'].get('keywords',[])
+  if record['metadata']['properties']['keywords']:
+    current = record['metadata']['properties']['keywords']
+    record['metadata']['properties']['keywords'] = [i for i in current['content']]
+
+
+
+
+  #3. Unique based on key,value within lists:
 
   return record
 

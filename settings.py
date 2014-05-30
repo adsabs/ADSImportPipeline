@@ -9,7 +9,6 @@ LOGFILE = os.path.join(PROJECT_HOME,'logs','merger.log')
 LOG_LEVEL = logging.DEBUG
 #LOG_LEVEL = logging.INFO
 
-ARXIV2PUB = '/proj/ads/abstracts/config/links/preprint/arxiv2pub.list'
 # CLASSIC_BIBCODES = {
 #   'AST': '/proj/ads/abstracts/ast/load/current/index.status',
 #   'PHY': '/proj/ads/abstracts/phy/load/current/index.status',
@@ -26,13 +25,10 @@ BIBCODES_PER_JOB = 200
 # key: <how to get key from ADSExports dict>
 # Not yet implemented; does nothing
 SCHEMA = {
-  'id':           lambda d: str(d['_id']),
-  'recid':        lambda d: int(d['_id']),
-  'bibcode':      lambda d: d['bibcode'],
-  'identifier':   lambda d: d['identifier'], #What is identifier?
-  'bibstem':      lambda d: d['bibcode'],
-  'bibstem_facet':  lambda d: d['bibcode'],
-  'pub':          lambda d: d['pub'],
+  'deletions': [
+    ['metadata','properties','JSON_timestamp'],
+    ['metadata','general','bibcode'],
+  ],
 }
 
 MONGO = {

@@ -2,7 +2,7 @@ import os, sys
 import pymongo
 import pika
 import json
-from settings import (CLASSIC_BIBCODES, ARXIV2PUB, MONGO, LOGGER, BIBCODES_PER_JOB)
+from settings import (CLASSIC_BIBCODES, MONGO, LOGGER, BIBCODES_PER_JOB)
 
 import time
 from lib import xmltodict
@@ -101,7 +101,7 @@ def main(LOGGER=LOGGER,MONGO=MONGO,*args):
             publish(records)
             records = []
             #TODO: Throttling?
-            
+
     LOGGER.debug('[%s] Read took %0.1fs' % (target,(time.time()-s)))
     #Publish any leftovers in case the total was not evenly divisibly
     if args.async:
