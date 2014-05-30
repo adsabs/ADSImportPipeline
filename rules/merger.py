@@ -117,12 +117,16 @@ def originTrustMerger(f1,f2,fieldName,*args,**kwargs):
 
 def equalTrustFallback(f1,f2,*args,**kwargs):
   # Return priority:
+  # 0. (if same origin, return most recent)
   # 1. field with most content
   # 2. field with most recent modtime
   # 3. f1
   dateformat = '%Y-%m-%dT%H:%M:%S'
   f1['modtime'] = datetime.datetime.strptime(f1['modtime'],dateformat) if f1['modtime'] else 0
   f2['modtime'] = datetime.datetime.strptime(f2['modtime'],dateformat) if f2['modtime'] else 0
+
+  if f1['@origin'] == f2['@origin'] and f1['modtime'] != f2['modtime']:
+   return f1 if f1['modtime'] > f2['modtime'] else f2
 
   if len(f1['content']) != len(f2['content']):
     return f1 if len(f1['content']) > len(f2['content']) else f2
