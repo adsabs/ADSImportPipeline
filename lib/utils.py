@@ -227,9 +227,10 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   block='general'
 
   #  arxivcategories
-  record[m][block]['arxivcategories'] = record[m][block].get('arxivcategories',[])
-  if record[m][block]['arxivcategories']:
-    current = getCurrent(record[m][block]['arxivcategories'])
+  f = 'arxivcategories'
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    current = getCurrent(record[m][block][f])
     res = []
     for i in current:
       content = i['arxivcategory']
@@ -238,34 +239,20 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
           res.append(j)
         elif isinstance(j,dict):
           res.append(j['#text'])
-    record[m][block]['arxivcategories'] = res
+    record[m][block][f] = res
 
   #  keywords
-  record[m][block]['keywords'] = record[m][block].get('keywords',[])
-  if record[m][block]['keywords']:
-    current = getCurrent(record[m][block]['keywords'])
-    print current
-    print '--'
-    res = []
-    
-    record[m][block]['keywords'] = res
+  f = 'keywords'
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    current = getCurrent(record[m][block][f])
+    #res = []
+    #record[m][block]['keywords'] = res
 
-  # record[m][block]['keywords'] = record[m][block].get('keywords',[])
-  # if record[m][block]['keywords']:
-  #   res = []
-  #   current = record[m][block]['keywords']
-  #   for content in current:
-  #     origin = content.get('@type',None)
-  #     print content
-  #     for keyword in ensureList(content['keyword']):
-  #       print keyword
-  #       record[m][block]['keywords'].append({
-  #         '@origin': origin,
-  #         'channel': keyword.get('channel',None),
-  #         'original': keyword.get('original',None),
-  #         'normalized': keyword.get('normalized',None),
-  #       })
-
+  for f in ['titles','abstract']:
+    record[m][block][f] = record[m][block].get(f,[])
+    if record[m][block][f]:
+      record[m][block][f] = getCurrent(record[m][block][f])
 
 
 
