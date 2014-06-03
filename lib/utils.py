@@ -205,7 +205,7 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     try:
       del current_loc[deletion[-1]]
     except KeyError:
-      pass
+       pass
 
   if 'electronic_id' in record:
     for field in ['page','page_range']:
@@ -215,16 +215,56 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     del record['page_range']
 
   #2. Apply schema manipulation in settings.py
+  m='metadata'
+
+  def getCurrent(r):
+    try:
+      return  r['content'] #In the case of merged data
+    except (KeyError,TypeError):
+      return r #In the case of non-merged data
+
+  #Metadatablock "general"
+  block='general'
+
   #  arxivcategories
-  record['metadata']['properties']['arxivcategories'] = record['metadata']['properties'].get('arxivcategories',[])
-  if record['metadata']['properties']['arxivcategories']:
-    current = record['metadata']['properties']['arxivcategories']
-    record['metadata']['properties']['arxivcategories'] = [i['arxivcategory']['#text'] for i in current]
+  record[m][block]['arxivcategories'] = record[m][block].get('arxivcategories',[])
+  if record[m][block]['arxivcategories']:
+    current = getCurrent(record[m][block]['arxivcategories'])
+    res = []
+    for i in current:
+      content = i['arxivcategory']
+      for j in ensureList(content):
+        if isinstance(j,str):
+          res.append(j)
+        elif isinstance(j,dict):
+          res.append(j['#text'])
+    record[m][block]['arxivcategories'] = res
+
   #  keywords
-  record['metadata']['properties']['keywords'] = record['metadata']['properties'].get('keywords',[])
-  if record['metadata']['properties']['keywords']:
-    current = record['metadata']['properties']['keywords']
-    record['metadata']['properties']['keywords'] = [i for i in current['content']]
+  record[m][block]['keywords'] = record[m][block].get('keywords',[])
+  if record[m][block]['keywords']:
+    current = getCurrent(record[m][block]['keywords'])
+    print current
+    print '--'
+    res = []
+    
+    record[m][block]['keywords'] = res
+
+  # record[m][block]['keywords'] = record[m][block].get('keywords',[])
+  # if record[m][block]['keywords']:
+  #   res = []
+  #   current = record[m][block]['keywords']
+  #   for content in current:
+  #     origin = content.get('@type',None)
+  #     print content
+  #     for keyword in ensureList(content['keyword']):
+  #       print keyword
+  #       record[m][block]['keywords'].append({
+  #         '@origin': origin,
+  #         'channel': keyword.get('channel',None),
+  #         'original': keyword.get('original',None),
+  #         'normalized': keyword.get('normalized',None),
+  #       })
 
 
 
