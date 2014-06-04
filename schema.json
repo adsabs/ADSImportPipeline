@@ -46,7 +46,6 @@ general = {
   'author': [
     {
       '@nr': '',
-      '@origin': '',
       'type': '',
       'affiliations': ['',],
       'emails': ['',]

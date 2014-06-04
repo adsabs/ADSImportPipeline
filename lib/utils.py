@@ -219,9 +219,9 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   def getCurrent(r):
     try:
-      return  r['content'] #In the case of merged data
+      return  ensureList(r['content']) #In the case of merged data
     except (KeyError,TypeError):
-      return r #In the case of non-merged data
+      return ensureList(r) #In the case of non-merged data
 
   #Metadatablock "general"
   block='general'
@@ -254,9 +254,28 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     if record[m][block][f]:
       record[m][block][f] = getCurrent(record[m][block][f])
 
+  # authors
+  f = 'author'
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    record[m][block][f] = getCurrent(record[m][block][f])
+    res = []
+    for a in record[m][block][f]:
+      res.append( {
+        '@nr': a['@nr'],
+        'type': a.get('type',None),
+        'affiliations': [i.get('affiliation',None) for i in ensureList(a.get('affiliations',[]))],
+        'emails': [i for i in a.get('email',[])],
+        'orcid': a.get('orcid',None),
+        'name': {
+          'native': a['name'].get('native',None),
+          'western': a['name'].get('western',None),
+          'normalized': a['name'].get('normalized',None),
+        },
+      })
+    record[m][block][f] = res
 
-
-  #3. Unique based on key,value within lists:
+  #3. Unique based on key,value within lists of dicts:
 
   return record
 
