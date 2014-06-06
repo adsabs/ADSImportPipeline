@@ -24,13 +24,15 @@ def dispatcher(f1,f2,fieldName,*args,**kwargs):
     assert MERGER_RULES[fieldName] in dir(sys.modules[__name__])
     return eval(MERGER_RULES[fieldName])(f1,f2,fieldName,*args,**kwargs)
 
+def ensureList(item):
+  return item if isinstance(item,list) else [item]
+
 def booleanMerger(f1,f2,*args,**kwargs):
   f = stringConcatenateMerger(f1,f2) #use stringConcatMerger to ensure formatting even though @origin isn't very useful in this content
   f['content'] = False
   if any([  i for i in [int(f1['content']),int(f2['content'])]  ]):
     f['content'] = True
   return f
-
 
 def takeAll(f1,f2,*args,**kwargs):
   c1,c2 = f1['content'],f2['content']
@@ -43,32 +45,45 @@ def takeAll(f1,f2,*args,**kwargs):
 
   #If the elements aren't dicts, simply return the union
   if not isinstance(c1[0], dict):
-    return list( set(c1).union(c2) ) 
+    res = []
+    for c in set(c1).union(c2):
+      origin = []
+      if c in c1:
+        origin.append(f1['@origin'])
+      if c in c2:
+        origin.append(f2['@origin'])
+      res.append({
+        'content': c,
+        '@origin': '; '.join(origin),
+        })
+    return res
 
   #If the elements are dicts, we need to deconstruct each dict, compare if it is duplicated, and then re-constuct
   #We won't go deeper than the k,v pair: ie, we will ignore if v is a nested structure
   elif isinstance(c1[0], dict):
-    result = {}
-    for L in [c1,c2]:
-      L = L if isinstance(L,list) else [L]
-      for D in L:
-        for k,v in D.iteritems():
-          v = v if isinstance(v,list) else [v]
-          if k not in result:
-            result[k] = []
-          if v not in result[k]:
-            result[k].append(v)
-    for k,v in result.iteritems():
-      #Flatten the values of the dict
-      result[k] = list(itertools.chain(*v))
-    return {'content':[result], '@origin': '%s; %s' % (f1['@origin'],f2['@origin'])}
+    res = []
+    for f in [f1,f2]:
+      for c in ensureList(f['content']):
+        if c in res:
+          continue
+        origin = []
+        if c in ensureList(f1['content']):
+          origin.append(f1['@origin'])
+        if c in ensureList(f2['content']):
+          origin.append(f2['@origin'])
+        res.append({
+          'content': c,
+          '@origin': '; '.join(origin),
+        })
+    print {'content':res,'@origin': '%s; %s' % (f1['@origin'],f2['@origin'])}
+    return {'content':res,'@origin': '%s; %s' % (f1['@origin'],f2['@origin'])}
 
   #If elements are neither, we have a problem!
   LOGGER.critical('takeAll merger didnt get normalized data')
   raise TypeError (c1,c2)
 
 def stringConcatenateMerger(f1,f2,*args,**kwargs):
-  f1['content'] = "%s,%s" % (f1['content'],f2['content'])
+  f1['content'] = "%s; %s" % (f1['content'],f2['content'])
   f1['@origin'] = "%s; %s" % (f1['@origin'],f2['@origin'])
   return f1
 
