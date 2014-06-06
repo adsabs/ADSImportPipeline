@@ -21,6 +21,7 @@ general = {
   'keywords': [
     {
     '@origin': '',
+    '@type': '',
     'channel': '',
     'original': '',
     'normalized': '',
@@ -76,7 +77,15 @@ general = {
   },
  },
 
-  'eid': {
+  'dates':[
+    {
+      '@origin': '',
+      'type': '',
+      'content': '',
+    },
+  ]
+
+  'electronic_id': {
     '@origin': '',
     'content': '',
   },
@@ -123,7 +132,6 @@ general = {
       'content': '',
     },
   ],
-
 }
 
 // PROPERTIES
