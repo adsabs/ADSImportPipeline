@@ -6,7 +6,7 @@
 2010AAS...21542816H	(BAAS alternate bibcode, journal field?)
 2010AAS...21642816K	(no BAAS alternate)
 2011AIPC.1379.....G	(phy vs. ast - author diff, title case diff)
-2010PhRvL.104j1101A	(phy vs. ast - diff in author list)
+2010PhRvL.104j1101A	(phy vs. ast - diff in author list; keywords merging)
 1980A&A....88..149V	(bad STI title, includes both Part I and II)
 1985AZh....62....1G	(journal field has AZh and SvA - preprocess to remove?)(compare to 1985SvA....29....1G)
 1985A&A...142....1K	(junk in RECON jnl field vs. Knudsen vs. Simbad)(fielding of simbad journal data with no "v." and "p."?)

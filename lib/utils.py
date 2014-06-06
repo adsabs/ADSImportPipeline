@@ -176,8 +176,12 @@ def updateRecords(records,targets,LOGGER=settings.LOGGER):
     #and build a 'needsMerging' list to merge in the next step
     for metadataBlock in r['metadata']: 
       for field,data in metadataBlock.iteritems():
-        if field in NORMALIZE_SCHEMA:
-          metadataBlock[field] = NORMALIZE_SCHEMA[field](data)
+        if field not in ['@origin','modification_time','creation_time','@type']:
+          metadataBlock[field] = {
+            '@origin':metadataBlock['@origin'].upper(),
+            'content':NORMALIZE_SCHEMA[field](data) if field in NORMALIZE_SCHEMA else data,
+            'modtime':metadataBlock.get('modification_time',metadataBlock.get('creation_time',0))
+          }
       if metadataBlock['@type'] not in needsMerging:
         cr['metadata'].update({metadataBlock['@type']:metadataBlock})
       else: #If it shows up more than once, it needs merging.
@@ -217,11 +221,6 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   #2. Apply schema manipulation in settings.py
   m='metadata'
 
-  def getCurrent(r):
-    try:
-      return  ensureList(r['content']) #In the case of merged data
-    except (KeyError,TypeError):
-      return ensureList(r) #In the case of non-merged data
 
   #Metadatablock "general"
   block='general'
@@ -230,7 +229,7 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   f = 'arxivcategories'
   record[m][block][f] = record[m][block].get(f,[])
   if record[m][block][f]:
-    current = getCurrent(record[m][block][f])
+    current = record[m][block][f]['content']
     res = []
     for i in current:
       content = i['arxivcategory']
@@ -245,20 +244,31 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   f = 'keywords'
   record[m][block][f] = record[m][block].get(f,[])
   if record[m][block][f]:
-    current = getCurrent(record[m][block][f])
-    #res = []
-    #record[m][block]['keywords'] = res
+    res = []
+    for c in record[m][block][f].get('content',record[m][block][f]):
+      content = c.get('content',c)
+      origin = c['@origin'] if '@origin' in c else record[m][block][f]['@origin']
+      type_ =  content['@type']
+      for keyword in ensureList(content['keyword']):
+        res.append({
+          '@origin':origin,
+          '@type': type_,
+          'channel': keyword.get('channel',None),
+          'original': keyword.get('original',None),
+          'normalized': keyword.get('normalized',None),
+          })
+    record[m][block][f] = res
 
-  for f in ['titles','abstract']:
+  for f in ['title','abstract']:
     record[m][block][f] = record[m][block].get(f,[])
     if record[m][block][f]:
-      record[m][block][f] = getCurrent(record[m][block][f])
+      record[m][block][f] = record[m][block][f]['content']
 
   # authors
   f = 'author'
   record[m][block][f] = record[m][block].get(f,[])
   if record[m][block][f]:
-    record[m][block][f] = getCurrent(record[m][block][f])
+    record[m][block][f] = record[m][block][f]['content']
     res = []
     for a in record[m][block][f]:
       res.append( {
@@ -274,6 +284,82 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
         },
       })
     record[m][block][f] = res
+
+  #  pages
+  f = 'pages'
+  subfields = ['pagenumber','page_range','page_last','page']
+  record[m][block][f] = {}
+  origins = []
+  for sf in subfields:
+    res = record[m][block].get(sf,None)
+    record[m][block][f][sf] = None
+    if res:
+      record[m][block][f][sf] = res['content']
+      origins.append(res['@origin'])
+    try:
+      del record[m][block][sf]
+    except KeyError:
+      pass
+  try:
+    record[m][block][f]['@origin'] = max(collections.Counter([i for i in origins if i]))
+  except ValueError:
+    record[m][block][f]['@origin'] = None
+
+  #  journal
+  f = 'journal'
+  subfields = ['volume','issue']
+  raw = record[m][block].get(f,{}).get('content',None)
+  record[m][block][f] = {}
+  record[m][block][f]['name'] = {
+    'raw': raw,
+    'canonical': record[m][block].get('canonical_journal',{}).get('content',None),
+  }
+  try:
+    del record[m][block]['canonical_journal']
+  except KeyError:
+    pass
+  origins = []
+  for sf in subfields:
+    res = record[m][block].get(sf,None)
+    record[m][block][f][sf] = None
+    if res:
+      record[m][block][f][sf] = res['content']
+      origins.append(res['@origin'])
+    try:
+      del record[m][block][sf]
+    except KeyError:
+      pass
+  try:
+    record[m][block][f]['@origin'] = max(collections.Counter([i for i in origins if i]))
+  except ValueError:
+    record[m][block][f]['@origin'] = None
+
+  # electronic_id, conf_metadata, DOI, copyright
+  fields = ['electronic_id','conf_metadata','DOI','copyright']
+  for f in fields:
+    record[m][block][f.lower()] = record[m][block].get(f,{})
+    try:
+      del record[m][block][f]['modtime']
+    except KeyError:
+      pass
+
+  # isbns, issns, objects
+  fields = ['isbns','issns','objects']
+  for f in fields:
+    record[m][block][f] = record[m][block].get(f,[])
+    if record[m][block][f]:
+      res = []
+      for c in record[m][block][f].get('content',record[m][block][f]):
+        res.append({
+          '@origin':c.get('@origin',record[m][block][f]['@origin']),
+          'content':c.get('content',c)[f[:-1]],
+          })
+      record[m][block][f] = res
+
+
+
+
+
 
   #3. Unique based on key,value within lists of dicts:
 
@@ -293,14 +379,14 @@ def merge(metadataBlocks,bibcode,entryType,LOGGER=settings.LOGGER):
   #store the necessary metadata for mergingfg
   fields = {}
   for block in metadataBlocks:
-    for fieldName,content in block.iteritems():
+    for fieldName,data in block.iteritems():
       if fieldName not in multipleDefinedFields:
         continue
       if fieldName not in fields:
         fields[fieldName] = []
       fields[fieldName].append({
         '@origin':block['@origin'].upper(),
-        'content':content,
+        'content':data['content'] if isinstance(data,dict) else data,
         'modtime':block.get('modification_time',block.get('creation_time',0))
       })
 

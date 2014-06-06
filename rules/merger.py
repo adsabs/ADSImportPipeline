@@ -75,7 +75,6 @@ def takeAll(f1,f2,*args,**kwargs):
           'content': c,
           '@origin': '; '.join(origin),
         })
-    print {'content':res,'@origin': '%s; %s' % (f1['@origin'],f2['@origin'])}
     return {'content':res,'@origin': '%s; %s' % (f1['@origin'],f2['@origin'])}
 
   #If elements are neither, we have a problem!
