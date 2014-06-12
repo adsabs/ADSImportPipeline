@@ -173,7 +173,8 @@ references = [
     'bibcode':    '',
     'doi':        '',
     'score':      '',
-    'extension':  '', //Is this really necessary to keep?
+    'extension':  '',
+    'content':    '',
   },
 ],
 

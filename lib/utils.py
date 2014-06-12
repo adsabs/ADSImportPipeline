@@ -423,6 +423,26 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
       else:
         record[m][block][f] = record[m][block][f]['content']
 
+  block = 'references'
+  record[m][block] = record[m].get(block,[])
+  if record[m][block]:
+    res = []
+    for c in record[m][block]['reference']['content']:
+      origin = c.get('@origin',record[m][block]['reference']['@origin'])
+      if 'content' in c: #This happens in the case of certain merged cases
+        c = c['content']
+        origin = c.get('@origin',origin)
+      res.append({
+        '@origin':origin,
+        'bibcode':c.get('@bibcode',None),
+        'doi':c.get('@doi',None),
+        'score':c.get('@score',None),
+        'extension':c.get('@extension',None),
+        'arxid': c.get('@arxid',None),
+        'content': c.get('#text',None)
+        })
+    record[m][block] = res
+
   #3. Unique based on key,value within lists of dicts:
   for block,fields in record[m].iteritems():
     for field in fields:
