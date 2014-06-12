@@ -4,6 +4,7 @@ import time
 import itertools
 import json
 import copy
+import uuid
 
 import settings
 from rules import merger
@@ -154,6 +155,8 @@ def readRecords(records,LOGGER=settings.LOGGER):
 
   records = ensureList(xmltodict.parse(records.__str__())['records']['record'])
   assert(len(records)==len(targets)-len(failures))
+  # with open('%s.pickle' % uuid.uuid4(),'w') as fp:
+  #   pickle.dump(records,fp)
   return records,targets
 
 def updateRecords(records,targets,LOGGER=settings.LOGGER):
@@ -305,6 +308,7 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   except ValueError:
     record[m][block][f]['@origin'] = None
 
+
   #  journal
   f = 'journal'
   subfields = ['volume','issue']
@@ -356,6 +360,18 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
           })
       record[m][block][f] = res
 
+  # instruments
+  f = 'instruments'
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    res = []
+    for c in ensureList(record[m][block][f]):
+      res.append({
+          '@origin':c.get('@origin',record[m][block][f]['@origin']),
+          'content':c.get('content',c),
+        })
+    record[m][block][f] = res
+
   #3. Unique based on key,value within lists of dicts:
   for block,fields in record[m].iteritems():
     for field in fields:
@@ -367,7 +383,7 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
           for c in field:
             if c not in res:
               res.append(c)
-
+          field = res
 
   return record
 
