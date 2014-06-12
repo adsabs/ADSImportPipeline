@@ -389,6 +389,40 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
         })
     record[m][block][f] = res
 
+  #Metadatablock "properties"
+  block='properties'
+
+  fields = ['databases','bibgroups']
+  for f in fields:
+    record[m][block][f] = record[m][block].get(f,[])
+    if record[m][block][f]:
+      res = []
+      for c in record[m][block][f].get('content',record[m][block][f]):
+        res.append({
+          '@origin':c.get('@origin',record[m][block][f]['@origin']),
+          'content':c.get('content',c)[f[:-1]],
+          })
+      record[m][block][f] = res
+
+  f = 'pubtype'
+  record[m][block][f] = record[m][block].get(f,{})
+  if record[m][block][f]:
+    record[m][block][f] = {
+      '@origin':record[m][block][f]['@origin'],
+      'content':record[m][block][f]['content'],
+    }
+
+  fields = ['openaccess','nonarticle','ocrabstract','private','refereed']
+  for f in fields:
+    record[m][block][f] = record[m][block].get(f,None)
+    if record[m][block][f]:
+      if record[m][block][f]['content']=="1" or record[m][block][f]['content']==True:
+        record[m][block][f] = True
+      elif record[m][block][f]['content']=="0" or record[m][block][f]['content']==False:
+        record[m][block][f] = False
+      else:
+        record[m][block][f] = record[m][block][f]['content']
+
   #3. Unique based on key,value within lists of dicts:
   for block,fields in record[m].iteritems():
     for field in fields:

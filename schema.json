@@ -96,14 +96,14 @@ general = {
 
   'isbns': [
     {
-      '@origin':'',
+      '@origin': '',
       'content': '',
     },
   ],
 
   'issns': [
     {
-      '@origin':'',
+      '@origin': '',
       'content': '',
     },
   ],
@@ -114,8 +114,8 @@ general = {
   },
 
   'instruments': [
-    
-{      '@origin':'',
+    { 
+      '@origin': '',
       'content': '',
     },
   ],
@@ -127,7 +127,7 @@ general = {
 
   'objects': [
     {
-      '@origin':'',
+      '@origin': '',
       'content': '',
     },
   ],
@@ -137,7 +137,7 @@ general = {
 properties = {
   'databases': [
     {
-      '@origin':'',
+      '@origin': '',
       'content': '',
     },
   ],
