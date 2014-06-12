@@ -29,9 +29,9 @@ def ensureList(item):
 
 def booleanMerger(f1,f2,*args,**kwargs):
   f = stringConcatenateMerger(f1,f2) #use stringConcatMerger to ensure formatting even though @origin isn't very useful in this content
-  f['content'] = False
+  f['content'] = "0"
   if any([  i for i in [int(f1['content']),int(f2['content'])]  ]):
-    f['content'] = True
+    f['content'] = "1"
   return f
 
 def takeAll(f1,f2,*args,**kwargs):

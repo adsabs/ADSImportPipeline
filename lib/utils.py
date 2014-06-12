@@ -416,9 +416,9 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   for f in fields:
     record[m][block][f] = record[m][block].get(f,None)
     if record[m][block][f]:
-      if record[m][block][f]['content']=="1" or record[m][block][f]['content']==True:
+      if record[m][block][f]['content']=="1":
         record[m][block][f] = True
-      elif record[m][block][f]['content']=="0" or record[m][block][f]['content']==False:
+      elif record[m][block][f]['content']=="0":
         record[m][block][f] = False
       else:
         record[m][block][f] = record[m][block][f]['content']
