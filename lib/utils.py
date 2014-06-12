@@ -308,6 +308,23 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   except ValueError:
     record[m][block][f]['@origin'] = None
 
+  # dates
+  f = 'dates'
+  record[m][block][f] = record[m][block].get(f,{})
+  if record[m][block][f]:
+    res = {}
+    if 'publication_year' in record[m][block]:
+      res['publication_year'] = {
+        '@origin': record[m][block]['publication_year']['@origin'],
+        'content': record[m][block]['publication_year']['content'],
+      }
+      del record[m][block]['publication_year']
+    for c in ensureList(record[m][block][f].get('content',[])):
+      res[c['date']['@type']] = {
+        '@origin': c.get('@origin',record[m][block][f]['@origin']),
+        'content': c['date']['#text'],
+      }
+    record[m][block][f] = res
 
   #  journal
   f = 'journal'
