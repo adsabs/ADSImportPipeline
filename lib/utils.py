@@ -440,8 +440,8 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
         'extension':c.get('@extension',None),
         'arxid': c.get('@arxid',None),
         'content': c.get('#text',None)
-        })
-    record[m][block] = res
+      })
+    record[m][block] = res  
 
   #3. Unique based on key,value within lists of dicts:
   for block,fields in record[m].iteritems():
@@ -480,7 +480,8 @@ def merge(metadataBlocks,bibcode,entryType,LOGGER=settings.LOGGER):
       fields[fieldName].append({
         '@origin':block['@origin'].upper(),
         'content':data['content'] if isinstance(data,dict) else data,
-        'modtime':block.get('modification_time',block.get('creation_time',0))
+        'modtime':block.get('modification_time',block.get('creation_time',0)),
+        '@primary': block.get('@primary',{}).get('content',"True"),
       })
 
   #Merge those fields that are multiply defined      

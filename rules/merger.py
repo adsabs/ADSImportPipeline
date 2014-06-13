@@ -109,11 +109,10 @@ def referencesMerger(f1,f2,*args,**kwargs):
     return result
   return originTrustMerger(f1,f2,'reference')
 
-
 def originTrustMerger(f1,f2,fieldName,*args,**kwargs):
   assert(f1['@origin'])
   assert(f2['@origin'])
-  
+
   if fieldName not in PRIORITIES:
     fieldName = 'default'
   
@@ -131,10 +130,17 @@ def originTrustMerger(f1,f2,fieldName,*args,**kwargs):
 
 def equalTrustFallback(f1,f2,*args,**kwargs):
   # Return priority:
-  # 0. (if same origin, return most recent)
-  # 1. field with most content
-  # 2. field with most recent modtime
-  # 3. f1
+  # 0. the field with @primary="True", if both the other has @primary="False"
+  # 1. (if same origin, return most recent)
+  # 2. field with most content
+  # 3. field with most recent modtime
+  # 4. f1
+
+  f1['@priority'] == True if f1['@priority'].lower() = "true" else False
+  f2['@priority'] == True if f2['@priority'].lower() = "true" else False
+
+
+
   dateformat = '%Y-%m-%dT%H:%M:%S'
   f1['modtime'] = datetime.datetime.strptime(f1['modtime'],dateformat) if f1['modtime'] else 0
   f2['modtime'] = datetime.datetime.strptime(f2['modtime'],dateformat) if f2['modtime'] else 0
