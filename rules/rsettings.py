@@ -47,7 +47,7 @@ MERGER_RULES = {
 
   #<metadata type="relations">
   'preprintid':           'takeAll',
-  'alternatives':         'takeAll',
+  'alternates':           'takeAll',
   'associates':           'takeAll',
   'links':                'takeAll',
 }

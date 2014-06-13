@@ -38,7 +38,7 @@ NORMALIZE_SCHEMA = {
   'databases':        lambda d: ensureList(d),
   'bibgroups':        lambda d: ensureList(d),
   'reference':        lambda d: ensureList(d),
-  'alternatives':     lambda d: ensureList(d),
+  'alternates':     lambda d: ensureList(d),
   'associates':       lambda d: ensureList(d),
   'links':            lambda d: ensureList(d),
 }
@@ -441,7 +441,91 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
         'arxid': c.get('@arxid',None),
         'content': c.get('#text',None)
       })
-    record[m][block] = res  
+    record[m][block] = res
+
+  block='relations'
+  f = 'preprintid'
+  res = []
+  record[m][block] = record[m].get(block,{})
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    c = ensureList(record[m][block][f]['content'])
+    assert len(c) == 1
+    c = c[0]
+    origin = c.get('@origin',record[m][block][f]['@origin'])
+    if 'content' in c: #This happens in the case of certain merged cases
+      c = c['content']
+      origin = c.get('@origin',origin)
+    res = {
+      '@origin':origin,
+      '@ecode': c.get('@ecode',None),
+      'content': c.get('#text',None)
+    }
+  record[m][block]['preprints'] = res
+  del record[m][block][f]
+
+  f = 'alternates'
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    res = []
+    for c in ensureList(record[m][block][f]['content']):
+      if not c:
+        continue
+      origin = c.get('@origin',record[m][block][f]['@origin'])
+      if 'content' in c: #This happens in the case of certain merged cases
+        c = c['content']
+        origin = c.get('@origin',origin)
+        for alt in ensureList(c['alternate']):
+          res.append({
+            '@origin':origin,
+            '@type':alt.get('@type',None),
+            'content': alt.get('#text',None)
+          })
+      else:
+        res.append({
+          '@origin':origin,
+          '@type': c['alternate'].get('@type',None),
+          'content': c['alternate'].get('#text',None)
+        })
+    record[m][block][f] = res
+
+  f = 'associates'
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    res = []
+    for c in ensureList(record[m][block][f]['content']):
+      origin = c.get('@origin',record[m][block][f]['@origin'])
+      if 'content' in c: #This happens in the case of certain merged cases
+        c = c['content']
+        origin = c.get('@origin',origin)
+      res.append({
+        '@origin': origin,
+        'comment': c.get('comment',None),
+        'content': c.get('#text',None),
+      })
+  record[m][block][f] = res
+
+  f = 'links'
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    res = []
+    for c in ensureList(record[m][block][f]['content']):
+      if not c:
+        continue
+      origin = c.get('@origin',record[m][block][f]['@origin'])
+      if 'content' in c: #This happens in the case of certain merged cases
+        c = c['content']
+        origin = c.get('@origin',origin)
+      for ln in ensureList(c['link']):
+        if ln.get('@type',None) == "ADSlink":
+          continue
+        res.append({
+          '@origin':origin,
+          '@type':ln.get('@type',None),
+          'content': ln.get('@url',None)
+        })
+    record[m][block][f] = res
+
 
   #3. Unique based on key,value within lists of dicts:
   for block,fields in record[m].iteritems():

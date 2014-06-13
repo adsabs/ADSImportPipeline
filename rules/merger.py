@@ -135,7 +135,7 @@ def equalTrustFallback(f1,f2,*args,**kwargs):
   # 2. field with most content
   # 3. field with most recent modtime
   # 4. f1
-  print f1
+
   f1['@primary'] == True if f1['@primary'].lower() == "true" else False
   f2['@primary'] == True if f2['@primary'].lower() == "true" else False
 
