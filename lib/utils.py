@@ -288,6 +288,10 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
       })
     record[m][block][f] = res
 
+  # language
+  f = 'language'
+  record[m][block][f] = record[m][block].get(f,[])
+
   #  pages
   f = 'pages'
   subfields = ['pagenumber','page_range','page_last','page']
@@ -445,9 +449,9 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   block='relations'
   f = 'preprintid'
-  res = []
+  res = {}
   record[m][block] = record[m].get(block,{})
-  record[m][block][f] = record[m][block].get(f,[])
+  record[m][block][f] = record[m][block].get(f,{})
   if record[m][block][f]:
     c = ensureList(record[m][block][f]['content'])
     assert len(c) == 1
@@ -461,7 +465,7 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
       '@ecode': c.get('@ecode',None),
       'content': c.get('#text',None)
     }
-  record[m][block]['preprints'] = res
+  record[m][block]['preprint'] = res
   del record[m][block][f]
 
   f = 'alternates'
