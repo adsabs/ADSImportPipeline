@@ -180,25 +180,19 @@ references = [
 
 // RELATIONS
 relations = {
-  //Not sure the role these play. Are they necessary?
-  '@primary': true||false,
-  '@alternate_journal': true||false,
-
-
-  //This field doesn't exist in many of the test cases. Is it necessary?
   'preprints': [
     {
       '@origin':'',
+      '@ecode': '',
       'content': '',
     },
   ],
 
-  'alternatives': [
+  'alternates': [
     {
       '@origin':'',
-      'alternate': ['',],
-      'deleted': ['',],
-      'eprint': [''],
+      '@type': '',
+      'content': '',,
     },
   ],
 
