@@ -145,8 +145,14 @@ def equalTrustFallback(f1,f2,*args,**kwargs):
     return f2
 
   dateformat = '%Y-%m-%dT%H:%M:%S'
-  f1['modtime'] = datetime.datetime.strptime(f1['modtime'],dateformat) if f1['modtime'] else 0
-  f2['modtime'] = datetime.datetime.strptime(f2['modtime'],dateformat) if f2['modtime'] else 0
+  for f in [f1,f2]:
+    if f['modtime']:
+      try:
+        f['modtime'] = datetime.datetime.strptime(f['modtime'],dateformat)
+      except (TypeError,ValueError):
+        pass
+    else:
+      f['modtime'] = 0
 
   if f1['@origin'] == f2['@origin'] and f1['modtime'] != f2['modtime']:
    return f1 if f1['modtime'] > f2['modtime'] else f2
