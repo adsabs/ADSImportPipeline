@@ -37,3 +37,5 @@
 2014A&A...564A..12C	(native authors)
 1980MNRAS.190P..69W	(Pages)
 1994PDS...101...96T	(instruments)
+2013PAZh...99..249G	(more than 1 publication venue)
+1980IAUCo..51...51A	(more than 1 publication venue)
