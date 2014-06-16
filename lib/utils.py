@@ -155,6 +155,7 @@ def readRecords(records,LOGGER=settings.LOGGER):
 
   records = ensureList(xmltodict.parse(records.__str__())['records']['record'])
   assert(len(records)==len(targets)-len(failures))
+
   # with open('%s.pickle' % uuid.uuid4(),'w') as fp:
   #   pickle.dump(records,fp)
   return records,targets
@@ -374,7 +375,7 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     record[m][block][f] = record[m][block].get(f,[])
     if record[m][block][f]:
       res = []
-      for c in record[m][block][f].get('content',record[m][block][f]):
+      for c in ensureList(record[m][block][f].get('content',record[m][block][f])):
         res.append({
           '@origin':c.get('@origin',record[m][block][f]['@origin']),
           'content':c.get('content',c)[f[:-1]],
