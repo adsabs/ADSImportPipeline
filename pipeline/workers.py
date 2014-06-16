@@ -19,6 +19,7 @@ class RabbitMQWorker:
     self.channel = self.connection.channel()
     if confirm_delivery:
       self.channel.confirm_delivery()
+    self.channel.basic_qos(prefetch_count=1)
 
   def publish(self,message,**kwargs):
     for e in self.params['publish']:
@@ -56,15 +57,18 @@ class FindNewRecordsWorker(RabbitMQWorker):
     self.subscribe(self.on_message)
 
 
-class ReadRecordsRecordsWorker(RabbitMQWorker):
+class ReadRecordsWorker(RabbitMQWorker):
   def __init__(self,params):
     self.params=params
     from lib.utils import readRecords #Hack to avoid loading ADSRecords until it is necessary
     self.f = readRecords
 
   def on_message(self, channel, method_frame, header_frame, body):
-    records = json.loads(body)
-    self.publish(json.dumps(self.f(records)))
+    try:
+      records,targets = self.f(json.loads(body))
+    except ValueError:
+      records,targets = [],[]
+    self.publish(json.dumps([records,targets]))
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
   def run(self):
@@ -80,8 +84,10 @@ class UpdateRecordsWorker(RabbitMQWorker):
     self.f = updateRecords
 
   def on_message(self, channel, method_frame, header_frame, body):
-    records = json.loads(body)
-    self.publish(json.dumps(self.f(records)))
+    results = json.loads(body)
+    records = results[0]
+    targets = results[1]
+    self.publish(json.dumps(self.f(records,targets)))
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
   def run(self):

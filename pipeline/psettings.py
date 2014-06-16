@@ -6,7 +6,7 @@
 #Push expected in 0.9.14 release
 #see https://github.com/pika/pika/issues/347
 #RABBITMQ_URL = 'amqp://guest:guest@localhost:5672/%2F?backpressure_detection=t'
-RABBITMQ_URL = 'amqp://guest:guest@localhost:5672/%2F?socket_timeout=10&frame_max=5120000' #Max message size = 500kb
+RABBITMQ_URL = 'amqp://admin:password@localhost:5672/%2F?socket_timeout=10&frame_max=512000' #Max message size = 500kb
 
 PIDFILE = '/tmp/ADSimportpipeline.lock'
 POLL_INTERVAL = 15 #how many seconds to poll each worker to make sure it is alive.
@@ -65,7 +65,6 @@ RABBITMQ_ROUTES = {
 WORKERS = {
   'FindNewRecordsWorker': { 
     'concurrency': 1,
-    'qos_prefetch': 10,
     'publish': [
       {'exchange': 'MergerPipelineExchange', 'routing_key': 'ReadRecordsRoute',},
     ],
@@ -75,8 +74,7 @@ WORKERS = {
   },
 
   'ReadRecordsWorker': { 
-    'concurrency': 1,
-    'qos_prefetch': 10,
+    'concurrency': 3,
     'publish': [
       {'exchange': 'MergerPipelineExchange', 'routing_key': 'UpdateRecordsRoute',},
     ],
@@ -87,7 +85,6 @@ WORKERS = {
 
   'UpdateRecordsWorker': {
     'concurrency': 3,
-    'qos_prefetch': 10,
     'publish': [
       {'exchange': 'MergerPipelineExchange','routing_key': 'MongoWriteRoute',},
     ],
@@ -98,7 +95,6 @@ WORKERS = {
   
   'MongoWriteWorker': {
     'concurrency': 1,
-    'qos_prefetch': 10,
     'publish': [],
     'subscribe': [
       {'queue':'MongoWriteQueue',},
