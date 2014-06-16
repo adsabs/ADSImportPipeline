@@ -27,11 +27,19 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def publish(records,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
+def publish(records,max_queue_size=5,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
   #Its ok that we create/tear down this connection many times within this script; it is not a bottleneck
   #and likely slightly increases stability of the workflow
+
   w = RabbitMQWorker()
   w.connect(psettings.RABBITMQ_URL)
+
+  #Hold onto the message if publishing it would cause the number of queued messages to exceed max_queue_size
+  response = w.channel.queue_declare(queue='ReadRecordsQueue',passive=True)
+  while response.method.message_count >= max_queue_size:
+    time.sleep(5)
+    response = w.channel.queue_declare(queue='ReadRecordsQueue',passive=True)
+  
   w.channel.basic_publish('MergerPipelineExchange','FindNewRecordsRoute',json.dumps(records))
   w.connection.close()
 
