@@ -483,15 +483,9 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
         for alt in ensureList(c['alternate']):
           res.append({
             '@origin':origin,
-            '@type':alt.get('@type',None),
+            '@type': alt.get('@type',None),
             'content': alt.get('#text',None)
           })
-      else:
-        res.append({
-          '@origin':origin,
-          '@type': c['alternate'].get('@type',None),
-          'content': c['alternate'].get('#text',None)
-        })
     record[m][block][f] = res
 
   f = 'associates'
