@@ -6,6 +6,8 @@ import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 
+def date_handler(item):
+    return item.isoformat() if hasattr(item, 'isoformat') else item
 
 class RabbitMQWorker:
   '''
@@ -49,7 +51,7 @@ class FindNewRecordsWorker(RabbitMQWorker):
 
   def on_message(self, channel, method_frame, header_frame, body):
     records = json.loads(body)
-    self.publish(json.dumps(self.f(records)))
+    self.publish(json.dumps(self.f(records),default=date_handler))
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
   def run(self):
@@ -68,7 +70,7 @@ class ReadRecordsWorker(RabbitMQWorker):
       records,targets = self.f(json.loads(body))
     except ValueError:
       records,targets = [],[]
-    self.publish(json.dumps([records,targets]))
+    self.publish(json.dumps([records,targets],default=date_handler))
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
   def run(self):
@@ -87,7 +89,7 @@ class UpdateRecordsWorker(RabbitMQWorker):
     results = json.loads(body)
     records = results[0]
     targets = results[1]
-    self.publish(json.dumps(self.f(records,targets)))
+    self.publish(json.dumps(self.f(records,targets),default=date_handler))
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
   def run(self):
