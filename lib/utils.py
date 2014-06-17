@@ -127,6 +127,7 @@ def readRecords(records,LOGGER=settings.LOGGER):
   '''
   records: [(bibcode,JSON_fingerprint),...]
   '''
+  h = hash(json.dumps(records))
   if not records:
     LOGGER.debug("No records given")
     return []
@@ -151,7 +152,7 @@ def readRecords(records,LOGGER=settings.LOGGER):
   rate = len(targets)/ttc
   if failures:
     LOGGER.warning('ADSRecords failed to retrieve %s records' % len(failures))
-  LOGGER.info('ADSRecords took %0.1fs to query %s records (%0.1f rec/s)' % (ttc,len(targets),rate))
+  LOGGER.info('ADSRecords took %0.1fs to query %s records (%0.1f rec/s)\t[%s]' % (ttc,len(targets),rate,h))
 
   records = ensureList(xmltodict.parse(records.__str__())['records']['record'])
   assert(len(records)==len(targets)-len(failures))
