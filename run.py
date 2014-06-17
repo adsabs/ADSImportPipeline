@@ -35,10 +35,10 @@ def publish(records,max_queue_size=5,url=psettings.RABBITMQ_URL,exchange='Merger
   w.connect(psettings.RABBITMQ_URL)
 
   #Hold onto the message if publishing it would cause the number of queued messages to exceed max_queue_size
-  response = w.channel.queue_declare(queue='ReadRecordsQueue',passive=True)
-  while response.method.message_count >= max_queue_size:
+  responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue']]
+  while any([r.method.message_count >= max_queue_size for r in responses]):
     time.sleep(5)
-    response = w.channel.queue_declare(queue='ReadRecordsQueue',passive=True)
+    responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue']]
   
   w.channel.basic_publish('MergerPipelineExchange','FindNewRecordsRoute',json.dumps(records))
   w.connection.close()
