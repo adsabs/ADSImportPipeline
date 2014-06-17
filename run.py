@@ -27,7 +27,7 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def publish(records,max_queue_size=5,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
+def publish(records,max_queue_size=30,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute',LOGGER=LOGGER):
   #Its ok that we create/tear down this connection many times within this script; it is not a bottleneck
   #and likely slightly increases stability of the workflow
 
@@ -37,10 +37,13 @@ def publish(records,max_queue_size=5,url=psettings.RABBITMQ_URL,exchange='Merger
   #Hold onto the message if publishing it would cause the number of queued messages to exceed max_queue_size
   responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue']]
   while any([r.method.message_count >= max_queue_size for r in responses]):
-    time.sleep(5)
+    LOGGER.debug(">%s messages in the relevant queue(s). I will wait 15s while they get consumed." % max_queue_size)
+    time.sleep(15)
     responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue']]
   
-  w.channel.basic_publish('MergerPipelineExchange','FindNewRecordsRoute',json.dumps(records))
+  payload = json.dumps(records)
+  w.channel.basic_publish('MergerPipelineExchange','FindNewRecordsRoute',payload)
+  LOGGER.debug("Published payload with hash: %s" % hash(payload))
   w.connection.close()
 
 
