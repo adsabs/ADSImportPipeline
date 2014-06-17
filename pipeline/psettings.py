@@ -64,7 +64,7 @@ RABBITMQ_ROUTES = {
 
 WORKERS = {
   'FindNewRecordsWorker': { 
-    'concurrency': 1,
+    'concurrency': 5,
     'publish': [
       {'exchange': 'MergerPipelineExchange', 'routing_key': 'ReadRecordsRoute',},
     ],
@@ -74,7 +74,7 @@ WORKERS = {
   },
 
   'ReadRecordsWorker': { 
-    'concurrency': 3,
+    'concurrency': 5,
     'publish': [
       {'exchange': 'MergerPipelineExchange', 'routing_key': 'UpdateRecordsRoute',},
     ],
@@ -84,7 +84,7 @@ WORKERS = {
   },
 
   'UpdateRecordsWorker': {
-    'concurrency': 3,
+    'concurrency': 5,
     'publish': [
       {'exchange': 'MergerPipelineExchange','routing_key': 'MongoWriteRoute',},
     ],
