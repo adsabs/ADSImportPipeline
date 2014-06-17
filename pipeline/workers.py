@@ -51,7 +51,9 @@ class FindNewRecordsWorker(RabbitMQWorker):
 
   def on_message(self, channel, method_frame, header_frame, body):
     records = json.loads(body)
-    self.publish(json.dumps(self.f(records),default=date_handler))
+    result = self.f(records)
+    if result:
+      self.publish(json.dumps(result,default=date_handler))
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
   def run(self):
