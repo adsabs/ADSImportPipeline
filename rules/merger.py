@@ -72,8 +72,8 @@ def takeAll(f1,f2,*args,**kwargs):
         if c in ensureList(f2['content']):
           origin.append(f2['@origin'])
         res.append({
-          'content': c,
-          '@origin': '; '.join(origin),
+          'content': c.get('content',c),
+          '@origin': '; '.join(list(set(origin))),
         })
     return {'content':res,'@origin': '%s; %s' % (f1['@origin'],f2['@origin'])}
 
