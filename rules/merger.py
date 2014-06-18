@@ -35,12 +35,11 @@ def booleanMerger(f1,f2,*args,**kwargs):
   return f
 
 def takeAll(f1,f2,*args,**kwargs):
-  c1,c2 = f1['content'],f2['content']
+  c1,c2 = ensureList(f1['content']),ensureList(f2['content'])
 
   # Assert:
   # 1. Content is a list
   # 2. There is only one type of element in each list
-  assert type(c1)==type(c2)==list
   assert len(set([type(i) for i in c1]))==len(set([type(i) for i in c1]))==1
 
   #If the elements aren't dicts, simply return the union
@@ -112,10 +111,8 @@ def referencesMerger(f1,f2,*args,**kwargs):
 def originTrustMerger(f1,f2,fieldName,*args,**kwargs):
   assert(f1['@origin'])
   assert(f2['@origin'])
-
   if fieldName not in PRIORITIES:
     fieldName = 'default'
-  
   #Maybe we should pick the one with the highest origin instead of the first one...
   f1['@origin'] = f1['@origin'] if f1['@origin'] in PRIORITIES[fieldName] else f1['@origin'].split(';')[0]
   f2['@origin'] = f2['@origin'] if f2['@origin'] in PRIORITIES[fieldName] else f2['@origin'].split(';')[0]

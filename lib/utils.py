@@ -578,7 +578,7 @@ def merge(metadataBlocks,bibcode,entryType,LOGGER=settings.LOGGER):
     while len(data) > 0:
       f1 = data.pop()
       f2 = result if result else data.pop()
-      result = merger.dispatcher(f1,f2,fieldName) if f1['content'] != f2['content'] else f1
+      result = merger.dispatcher(f1,f2,fieldName)
     mergedResults[fieldName] = result
   
   #Combine all the pieces into the complete <metadata> block
