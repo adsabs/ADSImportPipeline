@@ -296,14 +296,17 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   #  pages
   f = 'pages'
-  subfields = ['pagenumber','page_range','page_last','page']
+  subfields = ['pagenumber','page_range',{'lastpage':'page_last'},'page']
   record[m][block][f] = {}
   origins = []
   for sf in subfields:
+    translation = sf
+    if isinstance(sf,dict):
+      sf,translation = sf.items()[0]
     res = record[m][block].get(sf,None)
-    record[m][block][f][sf] = None
+    record[m][block][f][translation] = None
     if res:
-      record[m][block][f][sf] = res['content']
+      record[m][block][f][translation] = res['content']
       origins.append(res['@origin'])
     try:
       del record[m][block][sf]
