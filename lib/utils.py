@@ -280,7 +280,7 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
         '@nr': a['@nr'],
         'type': a.get('type',None),
         'affiliations': [i.get('affiliation',None) for i in ensureList(a.get('affiliations',[]))],
-        'emails': [i for i in a.get('email',[])],
+        'emails': [i['email'] for i in ensureList(a.get('emails',[]))],
         'orcid': a.get('orcid',None),
         'name': {
           'native': a['name'].get('native',None),
@@ -434,8 +434,8 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   block = 'references'
   record[m][block] = record[m].get(block,[])
+  res = []
   if record[m][block]:
-    res = []
     for c in record[m][block]['reference']['content']:
       origin = c.get('@origin',record[m][block]['reference']['@origin'])
       if 'content' in c: #This happens in the case of certain merged cases
@@ -478,8 +478,8 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   f = 'alternates'
   record[m][block][f] = record[m][block].get(f,[])
+  res = []
   if record[m][block][f]:
-    res = []
     for c in ensureList(record[m][block][f]['content']):
       if not c:
         continue
@@ -497,8 +497,8 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   f = 'associates'
   record[m][block][f] = record[m][block].get(f,[])
+  res = []
   if record[m][block][f]:
-    res = []
     for c in ensureList(record[m][block][f]['content']):
       origin = c.get('@origin',record[m][block][f]['@origin'])
       if 'content' in c: #This happens in the case of certain merged cases
@@ -513,8 +513,8 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   f = 'links'
   record[m][block][f] = record[m][block].get(f,[])
+  res = []
   if record[m][block][f]:
-    res = []
     for c in ensureList(record[m][block][f]['content']):
       if not c:
         continue
