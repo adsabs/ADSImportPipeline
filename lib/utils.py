@@ -458,7 +458,10 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   record[m][block] = record[m].get(block,{})
   record[m][block][f] = record[m][block].get(f,{})
   if record[m][block][f]:
-    c = ensureList(record[m][block][f]['content'])
+    c = []
+    for i in ensureList(record[m][block][f]['content']):
+      if i not in c:
+        c.append(i)
     assert len(c) == 1
     c = c[0]
     origin = c.get('@origin',record[m][block][f]['@origin'])
