@@ -174,7 +174,7 @@ class TaskMaster(Singleton):
     w.declare_all(*[self.rabbitmq_routes[i] for i in ['EXCHANGES','QUEUES','BINDINGS']])
     w.connection.close()
 
-  def poll_loop(self,poll_interval=psettings.POLL_INTERVAL,ttl=None):
+  def poll_loop(self,poll_interval=psettings.POLL_INTERVAL,ttl=7200):
     while self.running:
       time.sleep(poll_interval)
       for worker,params in self.workers.iteritems():
