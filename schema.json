@@ -180,12 +180,13 @@ references = [
 
 // RELATIONS
 relations = {
-  'preprint': 
-  {
-    '@origin':'',
-    '@ecode': '',
-    'content': '',
-  },
+  'preprint': [
+    {
+      '@origin':'',
+      '@ecode': '',
+      'content': '',
+    },
+  ]
 
   'alternates': [
     {

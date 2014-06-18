@@ -454,22 +454,23 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   block='relations'
   f = 'preprintid'
-  res = {}
   record[m][block] = record[m].get(block,{})
-  record[m][block][f] = record[m][block].get(f,{})
+  record[m][block][f] = record[m][block].get(f,[])
   if record[m][block][f]:
-    c = ensureList(record[m][block][f]['content'])
-    assert len(c) == 1
-    c = c[0]
-    origin = c.get('@origin',record[m][block][f]['@origin'])
-    if 'content' in c: #This happens in the case of certain merged cases
-      c = c['content']
-      origin = c.get('@origin',origin)
-    res = {
-      '@origin':origin,
-      '@ecode': c.get('@ecode',None),
-      'content': c.get('#text',None)
-    }
+    res = []
+    for c in ensureList(record[m][block][f]['content']):
+      if not c:
+        continue
+      origin = c.get('@origin',record[m][block][f]['@origin'])
+      if 'content' in c: #This happens in the case of certain merged cases
+        c = c['content']
+        origin = c.get('@origin',origin)
+      for preprint in ensureList(c):
+        res.append({
+          '@origin':origin,
+          '@ecode': preprint.get('@ecode',None),
+          'content': preprint.get('#text',None)
+        })
   record[m][block]['preprint'] = res
   del record[m][block][f]
 
@@ -578,7 +579,7 @@ def merge(metadataBlocks,bibcode,entryType,LOGGER=settings.LOGGER):
     while len(data) > 0:
       f1 = data.pop()
       f2 = result if result else data.pop()
-      result = merger.dispatcher(f1,f2,fieldName) if f1['content'] != f2['content'] else f1
+      result = merger.dispatcher(f1,f2,fieldName)
     mergedResults[fieldName] = result
   
   #Combine all the pieces into the complete <metadata> block
