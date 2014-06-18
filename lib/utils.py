@@ -276,12 +276,15 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     record[m][block][f] = record[m][block][f]['content']
     res = []
     for a in record[m][block][f]:
+      orcid = ensureList(a.get('author_ids',[]))
+      assert len(orcid)==1 or len(orcid)==0
+      orcid = orcid[0]['author_id'].replace('ORCID:','') if orcid else None
       res.append( {
         '@nr': a['@nr'],
         'type': a.get('type',None),
         'affiliations': [i.get('affiliation',None) for i in ensureList(a.get('affiliations',[]))],
-        'emails': [i for i in a.get('email',[])],
-        'orcid': a.get('orcid',None),
+        'emails': [i['email'] for i in ensureList(a.get('emails',[]))],
+        'orcid': orcid,
         'name': {
           'native': a['name'].get('native',None),
           'western': a['name'].get('western',None),
@@ -434,8 +437,8 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   block = 'references'
   record[m][block] = record[m].get(block,[])
+  res = []
   if record[m][block]:
-    res = []
     for c in record[m][block]['reference']['content']:
       origin = c.get('@origin',record[m][block]['reference']['@origin'])
       if 'content' in c: #This happens in the case of certain merged cases
@@ -457,27 +460,28 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   record[m][block] = record[m].get(block,{})
   record[m][block][f] = record[m][block].get(f,[])
   if record[m][block][f]:
-    res = []
-    for c in ensureList(record[m][block][f]['content']):
-      if not c:
-        continue
-      origin = c.get('@origin',record[m][block][f]['@origin'])
-      if 'content' in c: #This happens in the case of certain merged cases
-        c = c['content']
-        origin = c.get('@origin',origin)
-      for preprint in ensureList(c):
-        res.append({
-          '@origin':origin,
-          '@ecode': preprint.get('@ecode',None),
-          'content': preprint.get('#text',None)
-        })
+    c = []
+    for i in ensureList(record[m][block][f]['content']):
+      if i not in c:
+        c.append(i)
+    assert len(c) == 1
+    c = c[0]
+    origin = c.get('@origin',record[m][block][f]['@origin'])
+    if 'content' in c: #This happens in the case of certain merged cases
+      c = c['content']
+      origin = c.get('@origin',origin)
+    res = {
+      '@origin':origin,
+      '@ecode': c.get('@ecode',None),
+      'content': c.get('#text',None)
+    }
   record[m][block]['preprint'] = res
   del record[m][block][f]
 
   f = 'alternates'
   record[m][block][f] = record[m][block].get(f,[])
+  res = []
   if record[m][block][f]:
-    res = []
     for c in ensureList(record[m][block][f]['content']):
       if not c:
         continue
@@ -495,8 +499,8 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   f = 'associates'
   record[m][block][f] = record[m][block].get(f,[])
+  res = []
   if record[m][block][f]:
-    res = []
     for c in ensureList(record[m][block][f]['content']):
       origin = c.get('@origin',record[m][block][f]['@origin'])
       if 'content' in c: #This happens in the case of certain merged cases
@@ -511,8 +515,8 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   f = 'links'
   record[m][block][f] = record[m][block].get(f,[])
+  res = []
   if record[m][block][f]:
-    res = []
     for c in ensureList(record[m][block][f]['content']):
       if not c:
         continue
@@ -533,16 +537,20 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   #3. Unique based on key,value within lists of dicts:
   for block,fields in record[m].iteritems():
-    for field in fields:
-      if isinstance(field,list):
-        if isinstance(field[0],list):
-          field = list(set(field))
-        elif isinstance(field[0],dict):
+    if block=='references':
+      continue
+    for field,value in fields.iteritems():
+      if not value:
+        continue
+      if isinstance(value,list):
+        if isinstance(value[0],list):
+          res = list(set(value))
+        elif isinstance(value[0],dict):
           res = []
-          for c in field:
+          for c in value:
             if c not in res:
               res.append(c)
-          field = res
+      record[m][block][field] = res
 
   return record
 

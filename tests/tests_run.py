@@ -5,6 +5,7 @@ from logging.handlers import RotatingFileHandler
 
 PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'..'))
 sys.path.append(PROJECT_HOME)
+from lib import SolrUpdater
 import run
 from settings import MONGO
 
@@ -38,9 +39,11 @@ def main(*args,**kwargs):
     args.extend(sys.argv[1:])
 
   records = run.main(LOGGER,MONGO,args)
-
-  with open(os.path.join(PROJECT_HOME,'tests','tests_output.txt'),'w') as fp:
-    fp.write(json.dumps(records))
+  if not records:
+    with open(os.path.join(PROJECT_HOME,'tests','export_pp.json'),'r') as fp:
+      records = json.load(fp)
+    print "Loaded records from export_pp.json"
+  SolrUpdater.solrUpdate(records)
 
 
 if __name__ == '__main__':

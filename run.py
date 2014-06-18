@@ -137,6 +137,7 @@ def main(LOGGER=LOGGER,MONGO=MONGO,*args):
       LOGGER.info('Wrote %s records to mongo in %0.1fs' % (len(records),(time.time()-s)))
       
       LOGGER.debug('--End-- (%0.1fs)' % (time.time()-start))
+  return records
 
 if __name__ == '__main__':
   try:
