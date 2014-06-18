@@ -276,12 +276,15 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     record[m][block][f] = record[m][block][f]['content']
     res = []
     for a in record[m][block][f]:
+      orcid = ensureList(a.get('author_ids',[]))
+      assert len(orcid)==1 or len(orcid)==0
+      orcid = orcid[0]['author_id'].replace('ORCID:','') if orcid else None
       res.append( {
         '@nr': a['@nr'],
         'type': a.get('type',None),
         'affiliations': [i.get('affiliation',None) for i in ensureList(a.get('affiliations',[]))],
         'emails': [i['email'] for i in ensureList(a.get('emails',[]))],
-        'orcid': a.get('orcid',None),
+        'orcid': orcid,
         'name': {
           'native': a['name'].get('native',None),
           'western': a['name'].get('western',None),
