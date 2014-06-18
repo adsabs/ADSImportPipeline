@@ -538,16 +538,20 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   #3. Unique based on key,value within lists of dicts:
   for block,fields in record[m].iteritems():
-    for field in fields:
-      if isinstance(field,list):
-        if isinstance(field[0],list):
-          field = list(set(field))
-        elif isinstance(field[0],dict):
+    if block=='references':
+      continue
+    for field,value in fields.iteritems():
+      if not value:
+        continue
+      if isinstance(value,list):
+        if isinstance(value[0],list):
+          res = list(set(value))
+        elif isinstance(value[0],dict):
           res = []
-          for c in field:
+          for c in value:
             if c not in res:
               res.append(c)
-          field = res
+      record[m][block][field] = res
 
   return record
 
