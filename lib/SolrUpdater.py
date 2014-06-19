@@ -70,10 +70,10 @@ class SolrAdapter(object):
         result = r['#text']
     return {'abstract': result}
 
-  @staticmethod
-  def _ack(ADS_record):
-    result = ADS_record['metadata'].get('acknowledgements',None)
-    return {'ack': result}
+  # @staticmethod
+  # def _ack(ADS_record):
+  #   result = ADS_record['metadata'].get('acknowledgements',None)
+  #   return {'ack': result}
 
   @staticmethod
   def _aff(ADS_record):
@@ -83,13 +83,13 @@ class SolrAdapter(object):
 
   @staticmethod
   def _alternate_bibcode(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['relations']['alternates']]
+    result = [i['content'] for i in ADS_record['metadata']['relations']['alternates'] if i]
     return {'alternate_bibcode': result}
 
   @staticmethod
   def _author(ADS_record):
     authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
-    result = [i['name']['western'] for i in authors]
+    result = [i['name']['western'] for i in authors if i]
     return {'author': result}  
 
   @staticmethod
@@ -98,13 +98,54 @@ class SolrAdapter(object):
 
   @staticmethod
   def _bibgroup(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['properties']['bibgroups']]
+    result = [i['content'] for i in ADS_record['metadata']['properties']['bibgroups'] if i]
     return {'bibgroup': result}
 
   @staticmethod
   def _copyright(ADS_record):
-    result = ADS_record['metadata']['general']['copyright'].get('content',None)
+    result = ADS_record['metadata']['general']['copyright']['content']
     return {'copyright': result}
+
+  @staticmethod
+  def _database(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['properties']['databases'] if i]
+    return {'database': result}
+
+  @staticmethod
+  def _doi(ADS_record):
+    result = ADS_record['metadata']['general']['doi']['content']    
+    return {'doi': result}
+
+  @staticmethod
+  def _email(ADS_record):
+    authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
+    result = ['; '.join([j for j in i['emails']]) for i in authors if i]
+    return {'email': result}
+
+  @staticmethod
+  def _first_author(ADS_record):
+    authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))   
+    return {'first_author': authors[0]['name']['western']}
+
+  @staticmethod
+  def _issn(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['general']['issns'] if i]
+    return {'issn': result}
+
+  @staticmethod
+  def _isbn(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['general']['issbns'] if i]
+    return {'isbn': result}
+      
+  @staticmethod
+  def _keyword(ADS_record):
+    result = [i['original'] for i in ADS_record['metadata']['general']['keywords'] if i]
+    return {'keyword': result}
+
+  @staticmethod
+  def _reference(ADS_record):
+    result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i]
+    return {'reference': result}
 
 
   #------------------------------------------------
