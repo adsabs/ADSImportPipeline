@@ -216,19 +216,17 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     except KeyError:
        pass
 
-  if 'electronic_id' in record:
-    for field in ['page','page_range']:
-      if field in record:
-        del record[field]
-  if 'page' in record and 'page_range' in record and record['page'] == record['page_range']:
-    del record['page_range']
-
-  #2. Apply schema manipulation in settings.py
-  m='metadata'
 
 
   #Metadatablock "general"
   block='general'
+  m='metadata'
+  if 'electronic_id' in record[m][block]:
+    for field in ['page','page_range']:
+      if field in record[m][block]:
+        del record[m][block][field]
+  if 'page' in record[m][block] and 'page_range' in record[m][block] and record[m][block]['page'] == record[m][block]['page_range']:
+    del record[m][block]['page_range']
 
   #  arxivcategories
   f = 'arxivcategories'
@@ -306,11 +304,9 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     translation = sf
     if isinstance(sf,dict):
       sf,translation = sf.items()[0]
-    res = record[m][block].get(sf,None)
-    record[m][block][f][translation] = None
-    if res:
-      record[m][block][f][translation] = res['content']
-      origins.append(res['@origin'])
+    res = record[m][block].get(sf,{})
+    record[m][block][f][translation] = res.get('content',None)
+    origins.append(res.get('@origin',None))
     try:
       del record[m][block][sf]
     except KeyError:
@@ -542,6 +538,7 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
     for field,value in fields.iteritems():
       if not value:
         continue
+      res = value
       if isinstance(value,list):
         if isinstance(value[0],list):
           res = list(set(value))
