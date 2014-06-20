@@ -1,6 +1,7 @@
 import requests
 import argparse
 import json
+import requests
 
 class SolrAdapter(object):
   SCHEMA = {
@@ -16,7 +17,7 @@ class SolrAdapter(object):
       'bibgroup': ['',],
       'bibstem': ['',],
       'citation': ['',],
-      'ciration_count': 0,
+      'citation_count': 0,
       'cite_read_boost': 0.0,
       'classic_factor': 0,
       'copyright': '',
@@ -78,7 +79,7 @@ class SolrAdapter(object):
   @staticmethod
   def _aff(ADS_record):
     authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
-    result = ['; '.join([j for j in i['affiliations']]) for i in authors]
+    result = ['; '.join([j for j in i['affiliations'] if j]) for i in authors]
     return {'aff': result}
 
   @staticmethod
@@ -103,7 +104,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _copyright(ADS_record):
-    result = ADS_record['metadata']['general']['copyright']['content']
+    result = ADS_record['metadata']['general']['copyright'].get('content',None)
     return {'copyright': result}
 
   @staticmethod
@@ -113,13 +114,13 @@ class SolrAdapter(object):
 
   @staticmethod
   def _doi(ADS_record):
-    result = ADS_record['metadata']['general']['doi']['content']    
+    result = ADS_record['metadata']['general']['doi'].get('content',None) 
     return {'doi': result}
 
   @staticmethod
   def _email(ADS_record):
     authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
-    result = ['; '.join([j for j in i['emails']]) for i in authors if i]
+    result = ['; '.join([j for j in i['emails'] if j]) for i in authors if i]
     return {'email': result}
 
   @staticmethod
@@ -134,7 +135,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _isbn(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['general']['issbns'] if i]
+    result = [i['content'] for i in ADS_record['metadata']['general']['isbns'] if i]
     return {'isbn': result}
       
   @staticmethod
@@ -149,15 +150,18 @@ class SolrAdapter(object):
 
 
   #------------------------------------------------
-  #Public Entrypoints  
-
+  #Public Entrypoints
   @classmethod
   def adapt(cls,ADS_record):
     assert isinstance(ADS_record,dict)
     result = {}
     for k in cls.SCHEMA:
       try:
-        result.update(eval('cls._%s' % k)(ADS_record))
+        D = eval('cls._%s' % k)(ADS_record)
+        v = D.values()
+        if not v[0] or not v[0][0]:
+          D = {}
+        result.update(D)
       except AttributeError as e:
         print "NotImplementedWarning:", e
         #raise NotImplementedError
@@ -179,15 +183,15 @@ class SolrAdapter(object):
         assert len(set([type(i) for i in v])) == 1
         assert isinstance(v[0],type(SCHEMA[k][0]))
 
-
-def solrUpdate(ADSrecords,url='http://localhost:9001/solr/update/json'):
+def solrUpdate(ADSrecords,url='http://localhost:9001/solr/update/json?commit=true'):
   solrRecords = []
   for r in ADSrecords:
     r = SolrAdapter.adapt(r)
-    print r
-    SolrAdapter.validate(r)
+    #SolrAdapter.validate(r) #Raises AssertionError if not validated
     solrRecords.append(r)
-    #Raises AssertionError if not validated
+  payload = json.dumps(solrRecords)
+  headers = {'content-type': 'application/json'}
+  r = requests.post(solrRecords,data=payload,headers=headers)
 
 def main():
   parser = argparse.ArgumentParser()
@@ -203,7 +207,7 @@ def main():
 
   parser.add_argument(
     '--solr_url',
-    default='http://localhost:9001/solr/update/json',
+    default='http://localhost:9001/solr/update/json?commit=true',
     dest='url',
     help='solr update endpoint'
     )
