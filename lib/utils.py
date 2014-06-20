@@ -453,6 +453,7 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
 
   block='relations'
   f = 'preprintid'
+  res = []
   record[m][block] = record[m].get(block,{})
   record[m][block][f] = record[m][block].get(f,[])
   if record[m][block][f]:
