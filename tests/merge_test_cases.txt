@@ -39,3 +39,5 @@
 1994PDS...101...96T	(instruments)
 2013PAZh...99..249G	(more than 1 publication venue)
 1980IAUCo..51...51A	(more than 1 publication venue)
+1985A&A...142....1K	(relations.associates populated)
+2000eaa..bookE1583H	(editor test case)
