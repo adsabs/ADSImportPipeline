@@ -191,7 +191,7 @@ def solrUpdate(ADSrecords,url='http://localhost:9001/solr/update/json?commit=tru
     solrRecords.append(r)
   payload = json.dumps(solrRecords)
   headers = {'content-type': 'application/json'}
-  r = requests.post(solrRecords,data=payload,headers=headers)
+  r = requests.post(url,data=payload,headers=headers)
 
 def main():
   parser = argparse.ArgumentParser()
