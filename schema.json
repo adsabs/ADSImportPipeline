@@ -169,6 +169,14 @@ properties = {
     },
   ],
 
+  'associates': [
+    {
+      '@origin':'',
+      'content': '',
+      'comment': '',
+    },
+  ],
+
 // Should these all be booleans?
   'openaccess': true||false,
 
@@ -208,14 +216,6 @@ relations = {
       '@origin':'',
       '@type': '',
       'content': '',,
-    },
-  ],
-
-  'associates': [
-    {
-      '@origin':'',
-      'content': '',
-      'comment': '',
     },
   ],
 
