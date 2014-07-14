@@ -133,10 +133,12 @@ general = {
     'content': '',
   },
   
-  'comment': {
-    '@origin': '',
-    'content': '',
-  },
+  'comments': [
+    {
+      '@origin': '',
+      'content': '',
+    }
+  ],
 
 
 //Plan to ignore ADSExports; instead this info will be stored in the 'supplemental' collection
