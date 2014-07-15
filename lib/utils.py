@@ -312,10 +312,6 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   f = 'language'
   record[m][block][f] = record[m][block].get(f,[])
 
-  # pubnote
-  f = 'pubnote'
-  record[m][block][f] = record[m][block].get(f,None)
-
   #  pages
   f = 'pages'
   subfields = ['pagenumber','page_range',{'lastpage':'page_last'},'page']
@@ -392,6 +388,18 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
       del record[m][block][f]['modtime']
     except KeyError:
       pass
+
+  #comment, pubnote
+  fields = ['comment','pubnote']
+  for f in fields:
+    record[m][block][f] = record[m][block].get(f,{})
+    if record[m][block][f]:
+      res = record[m][block][f]
+      record[m][block][f] = {
+        'content': res['content']['#text'],
+        '@origin': res['@origin'],
+      }
+
 
   # isbns, issns, objects
   fields = ['isbns','issns','objects']

@@ -28,6 +28,7 @@ MERGER_RULES = {
   'copyright':            'originTrustMerger',
   'objects':              'takeAll',
   'language':             'originTrustMerger',
+  'comment':              'originTrustMerger',
 
   #<metadata type="properties">
   'databases':            'takeAll',
