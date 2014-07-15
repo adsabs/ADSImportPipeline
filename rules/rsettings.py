@@ -41,6 +41,7 @@ MERGER_RULES = {
   'ocrabstract':          'booleanMerger',
   'private':              'booleanMerger',
   'refereed':             'booleanMerger',
+  'associates':           'takeAll',
 
   #<metadata type="references">
   'reference':            'referencesMerger',
@@ -48,7 +49,6 @@ MERGER_RULES = {
   #<metadata type="relations">
   'preprintid':           'takeAll',
   'alternates':           'takeAll',
-  'associates':           'takeAll',
   'links':                'takeAll',
 }
 

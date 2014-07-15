@@ -295,6 +295,10 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   f = 'language'
   record[m][block][f] = record[m][block].get(f,[])
 
+  # pubnote
+  f = 'pubnote'
+  record[m][block][f] = record[m][block].get(f,None)
+
   #  pages
   f = 'pages'
   subfields = ['pagenumber','page_range',{'lastpage':'page_last'},'page']
@@ -400,6 +404,23 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
   #Metadatablock "properties"
   block='properties'
 
+  f = 'associates'
+  record[m][block][f] = record[m][block].get(f,[])
+  res = []
+  if record[m][block][f]:
+    for c in ensureList(record[m][block][f]['content']):
+      origin = c.get('@origin',record[m][block][f]['@origin'])
+      if 'content' in c: #This happens in the case of certain merged cases
+        c = c['content']
+        origin = c.get('@origin',origin)
+      for a in c['associate']:
+        res.append({
+          '@origin': origin,
+          'comment': a.get('@comment',None),
+          'content': a.get('#text',None),
+        })
+  record[m][block][f] = res
+
   fields = ['databases','bibgroups']
   for f in fields:
     record[m][block][f] = record[m][block].get(f,[])
@@ -493,22 +514,6 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
             'content': alt.get('#text',None)
           })
     record[m][block][f] = res
-
-  f = 'associates'
-  record[m][block][f] = record[m][block].get(f,[])
-  res = []
-  if record[m][block][f]:
-    for c in ensureList(record[m][block][f]['content']):
-      origin = c.get('@origin',record[m][block][f]['@origin'])
-      if 'content' in c: #This happens in the case of certain merged cases
-        c = c['content']
-        origin = c.get('@origin',origin)
-      res.append({
-        '@origin': origin,
-        'comment': c.get('comment',None),
-        'content': c.get('#text',None),
-      })
-  record[m][block][f] = res
 
   f = 'links'
   record[m][block][f] = record[m][block].get(f,[])

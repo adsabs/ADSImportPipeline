@@ -102,6 +102,8 @@ general = {
     'content': '',
   },
 
+  'pubnote' : '',
+
   'isbns': [
     {
       '@origin': '',
