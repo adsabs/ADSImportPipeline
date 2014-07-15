@@ -262,10 +262,27 @@ def enforceSchema(record,LOGGER=settings.LOGGER):
           })
     record[m][block][f] = res
 
-  for f in ['title','abstract']:
-    record[m][block][f] = record[m][block].get(f,[])
-    if record[m][block][f]:
-      record[m][block][f] = record[m][block][f]['content']
+  f = 'title'
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    record[m][block][f] = record[m][block][f]['content']
+
+  f = 'abstract'
+  record[m][block][f] = record[m][block].get(f,[])
+  if record[m][block][f]:
+    res = []
+    c = record[m][block][f]['content']
+    origin = record[m][block][f].get('@origin',None)
+    if 'content' in c:
+      c = c['content']
+      origin = c.get('@origin',origin)
+    for a in c:
+      res.append({
+        '@origin' : origin,
+        '@lang': a['@lang'],
+        '#text': a['#text'],
+        })
+    record[m][block][f] = res
 
   # authors
   f = 'author'

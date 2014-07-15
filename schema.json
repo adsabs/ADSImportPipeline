@@ -45,6 +45,7 @@ general = {
 
   'abstract: [
     {
+      '@origin' : '',
       '@lang': '',
       '#text': '',
     },
