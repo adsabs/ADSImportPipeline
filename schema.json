@@ -68,15 +68,16 @@ general = {
     },
   ],
 
-  'pages': {
+  'pagination': {
     '@origin': '',
-    'page_number': '',
-    'page_range': '',
+    'page': '',
     'page_last': '',
-    'page': ''
+    'page_range': '',       // somewhat redundant, but there are weird cases (e.g. STI) where it's not just "firstpage-lastpage"
+    'page_count': '',       // number of pages (int)
+    'electronic_id': '',    // usually populated when page is null, but not always 
   },
 
-  'journal': {
+  'publication': {
     '@origin': '',
     'volume': '',
     'issue': '',
@@ -87,18 +88,44 @@ general = {
  },
 
   'dates': {
-    'identifier-string-N': {
+    'identifier-string-N': {   // ???
       '@origin': '',
       'content': '',
     },
-  }
-
-  'electronic_id': {
-    '@origin': '',
-    'content': '',
   },
 
-  'conf_metadata': {
+  // We need a structure to maintain alternate publication venues
+  // This is where we'd put publication info that we have handled with
+  // alternate bibcodes (but not _all_ alternate bibcodes, which makes 
+  // it difficult to deal with).  We need this medatadata for two reasons:
+  // 1. so we can create complete output when required (e.g. bibtex)
+  // 2. so we can resolve references made to the alternate venue (more important)
+  // To be reviewed by CSG, etc.
+  'altpublication': [
+    '@origin': '',
+    'publication': {
+      '@origin': '',
+      'volume': '',
+      'issue': '',
+      'name': '',
+      'canonical': '',
+    },
+    'pagination': {
+      'page': '',
+      'page_last': '',
+      'page_range': '',
+      'page_count': '',
+      'electronic_id': '',
+    }
+    'dates': {
+      'identifier-string-N': {   // ???
+        '@origin': '',
+        'content': '',
+      },
+    },
+  ],
+
+  'conf_metadata': {           // this should be covered by the proper associates
     '@origin': '',
     'content': '',
   },
@@ -119,17 +146,20 @@ general = {
     },
   ],
 
-  'doi': {
-    '@origin': '',
-    'content': '',
-  },
-
-  'instruments': [
-    { 
+  'doi': [              // we'll have documents with multiple dois for sure
+    {
       '@origin': '',
       'content': '',
     },
   ],
+
+// This should also be ignored I think in favor of 'supplemental' 
+  //  'instruments': [
+  //  { 
+  //    '@origin': '',
+  //    'content': '',
+  //  },
+  //],
 
   'copyright': {
     '@origin': '',
@@ -231,4 +261,15 @@ relations = {
       'count': '',
     },
   ],
+}
+
+// FULLTEXT
+// Note: right now we only have 'body' and 'acknowledgments' but some day we expect
+// to have more fields, e.g. 'captions', etc.
+text = {
+  '@origin':'',
+  '@provider':'',     // could be different from origin (e.g. ADS is origing of OCR text but provider is AAS)
+  'body':'',
+  'acknowledgments':'',
+  'last_mod':'',
 }
