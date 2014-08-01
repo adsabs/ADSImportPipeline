@@ -262,3 +262,14 @@ relations = {
     },
   ],
 }
+
+// FULLTEXT
+// Note: right now we only have 'body' and 'acknowledgments' but some day we expect
+// to have more fields, e.g. 'captions', etc.
+text = {
+  '@origin':'',
+  '@provider':'',     // could be different from origin (e.g. ADS is origing of OCR text but provider is AAS)
+  'body':'',
+  'acknowledgments':'',
+  'last_mod':'',
+}
