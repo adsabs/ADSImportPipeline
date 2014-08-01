@@ -1,6 +1,5 @@
 import sys,os
 from rules.rsettings import (MERGER_RULES,PRIORITIES,REFERENCES_ALWAYS_APPEND)
-from settings import LOGGER
 import datetime
 import settings
 import types
@@ -77,7 +76,6 @@ def takeAll(f1,f2,*args,**kwargs):
     return {'content':res,'@origin': '%s; %s' % (f1['@origin'],f2['@origin'])}
 
   #If elements are neither, we have a problem!
-  LOGGER.critical('takeAll merger didnt get normalized data')
   raise TypeError (c1,c2)
 
 def stringConcatenateMerger(f1,f2,*args,**kwargs):
