@@ -14,7 +14,6 @@ def dispatcher(f1,f2,fieldName,*args,**kwargs):
   if fieldName not in MERGER_RULES:
     fieldName = 'default'
 
-
   if type(MERGER_RULES[fieldName])==types.FunctionType:
     return MERGER_RULES[fieldName](f1,f2,fieldName, *args, **kwargs)
   else:
@@ -22,9 +21,6 @@ def dispatcher(f1,f2,fieldName,*args,**kwargs):
     assert type(eval(MERGER_RULES[fieldName]))==types.FunctionType
     assert MERGER_RULES[fieldName] in dir(sys.modules[__name__])
     return eval(MERGER_RULES[fieldName])(f1,f2,fieldName,*args,**kwargs)
-
-def ensureList(item):
-  return item if isinstance(item,list) else [item]
 
 def booleanMerger(f1,f2,*args,**kwargs):
   f = stringConcatenateMerger(f1,f2) #use stringConcatMerger to ensure formatting even though @origin isn't very useful in this content

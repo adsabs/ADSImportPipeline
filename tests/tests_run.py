@@ -13,6 +13,8 @@ from settings import MONGO,CLASSIC_BIBCODES
 
 from lib import SolrUpdater
 from lib import MongoConnection
+from lib import EnforceSchema
+from stubdata import stubdata
 
 class TestADSExportsConnection(unittest.TestCase):
   def test_instantiation(self):
@@ -94,18 +96,49 @@ class TestMongo(unittest.TestCase):
     self.mongo.conn.drop_database(self.mongo.database)
     self.mongo.close()
 
+class TestEnforceSchema(unittest.TestCase):
+  def setUp(self):
+    self.e = EnforceSchema.Enforcer()
+    self.general = stubdata.GENERAL
+    self.properties = stubdata.PROPERTIES
+    self.references = stubdata.REFERENCES
+    self.relations = stubdata.RELATIONS
+    self.blocks = [self.general,self.properties,self.references,self.relations]
+
+  def test_enforceSchema(self):
+    blocks = self.e.enforceSchema(self.blocks)
+    e = self.e
+    self.assertIsInstance(blocks,list)
+    self.assertEqual(blocks,[
+      e._generalEnforcer(self.general),
+      e._propertiesEnforcer(self.properties),
+      e._referencesEnforcer(self.references),
+      e._relationsEnforcer(self.relations),
+      ])
+
+  def test_generalEnforcer(self):
+    self.maxDiff=None
+    r = self.e._generalEnforcer(self.general)
+    self.assertEqual(r,stubdata.GENERAL_ENFORCED)
+
+  def test_propertiesEnforcer(self):
+    self.maxDiff=None
+    r = self.e._propertiesEnforcer(self.properties)
+    self.assertEqual(r,stubdata.PROPERTIES_ENFORCED)
+
 test_cases = (
   TestBibcodeFiles, 
   TestMongo, 
   TestADSExportsConnection,
+  TestEnforceSchema,
   )
 
 if __name__ == '__main__':
-
 
   suite = unittest.TestSuite()
   for test_class in test_cases:
     tests = unittest.TestLoader().loadTestsFromTestCase(test_class)
     suite.addTests(tests)
+    print "Loaded", test_class
 
   unittest.TextTestRunner(verbosity=3).run(suite)

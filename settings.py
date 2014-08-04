@@ -16,14 +16,6 @@ CLASSIC_BIBCODES = {}
 
 BIBCODES_PER_JOB = 200
 
-SCHEMA = {
-  'deletions': [
-    ['metadata','properties','JSON_timestamp'],
-    ['metadata','general','bibcode'],
-    ['metadata','general','language'],
-  ],
-}
-
 MONGO = {
   'HOST': os.environ.get('MONGO_HOST','localhost'),
   'PORT': os.environ.get('MONGO_PORT',27017),
