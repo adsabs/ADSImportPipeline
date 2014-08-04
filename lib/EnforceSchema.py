@@ -39,25 +39,13 @@ def enforceSchema(record):
   translates schema from ADSRecords to alternative schema
   '''
 
-  #1. Delete fields that we no longer want
-  for deletion in settings.SCHEMA['deletions']:
-    current_loc=record
-    for key in deletion[:-1]:
-      current_loc=current_loc[key]
-    try:
-      del current_loc[deletion[-1]]
-    except KeyError:
-       pass
+
 
   #Metadatablock "general"
   block='general'
   m='metadata'
-  if 'electronic_id' in record[m][block]:
-    for field in ['page','page_range']:
-      if field in record[m][block]:
-        del record[m][block][field]
-  if 'page' in record[m][block] and 'page_range' in record[m][block] and record[m][block]['page'] == record[m][block]['page_range']:
-    del record[m][block]['page_range']
+
+
 
   #  arxivcategories
   f = 'arxivcategories'
@@ -138,10 +126,6 @@ def enforceSchema(record):
         },
       })
     record[m][block][f] = res
-
-  # language
-  f = 'language'
-  record[m][block][f] = record[m][block].get(f,[])
 
   #  pages
   f = 'pages'
@@ -392,8 +376,18 @@ def enforceSchema(record):
         })
     record[m][block][f] = res
 
+  # Delete fields that we no longer want
+  for deletion in settings.SCHEMA['deletions']:
+    current_loc=record
+    for key in deletion[:-1]:
+      current_loc=current_loc[key]
+    try:
+      del current_loc[deletion[-1]]
+    except KeyError:
+       pass
 
-  #3. Unique based on key,value within lists of dicts:
+
+  # Unique based on key,value within lists of dicts:
   for block,fields in record[m].iteritems():
     if block=='references':
       continue

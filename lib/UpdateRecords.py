@@ -1,6 +1,7 @@
 import os,sys
 import collections
 import itertools
+import datetime
 
 from rules import merger
 import EnforceSchema
@@ -13,6 +14,8 @@ def updateRecords(records):
       'bibcode': r['@bibcode'],
       'JSON_fingerprint': r['JSON_fingerprint'],
       'metadata' : {},
+      'text': {},
+      'modtime': '',
     }
 
     #Multiply defined blocks need merging.
@@ -36,7 +39,8 @@ def updateRecords(records):
     #Now merge the multiply defined metadataBlocks
     for entryType,data in needsMerging.iteritems():
       cr['metadata'].update({entryType:_merge(data,r['@bibcode'],entryType)})
-    
+    cr['modtime'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+
     #Finally, we have a complete record
     completeRecords.append(EnforceSchema.enforceSchema(cr))
 
@@ -54,7 +58,12 @@ def _merge(metadataBlocks,bibcode,entryType):
   #Create intermediate data structure that lets us easily iterate over those fields that merging, and
   #store the necessary metadata for mergingfg
   fields = {}
+  altpubs = []
   for block in metadataBlocks:
+    primary = block.get('@primary',{}).get('content',"True")
+    primary = False if primary.lower()=="false" else True
+    if not primary:
+      altpubs.append(block)
     for fieldName,data in block.iteritems():
       if fieldName not in multipleDefinedFields:
         continue
@@ -64,7 +73,7 @@ def _merge(metadataBlocks,bibcode,entryType):
         '@origin':block['@origin'].upper(),
         'content':data['content'] if isinstance(data,dict) else data,
         'modtime':block.get('modification_time',block.get('creation_time',0)),
-        '@primary': block.get('@primary',{}).get('content',"True"),
+        '@primary': primary,
       })
 
   #Merge those fields that are multiply defined      
@@ -80,6 +89,7 @@ def _merge(metadataBlocks,bibcode,entryType):
   #Combine all the pieces into the complete <metadata> block
   completeBlock = {'@type':entryType,}
   singleDefined = dict([(k,v) for block in metadataBlocks for k,v in block.iteritems() if k in singleDefinedFields])
+  completeBlock.update({'altpubs':altpubs})
   completeBlock.update(singleDefined)
   completeBlock.update(mergedResults)
 

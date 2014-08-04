@@ -20,6 +20,7 @@ SCHEMA = {
   'deletions': [
     ['metadata','properties','JSON_timestamp'],
     ['metadata','general','bibcode'],
+    ['metadata','general','language'],
   ],
 }
 
