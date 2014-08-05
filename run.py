@@ -121,7 +121,7 @@ def main(MONGO=MONGO,*args):
       else:
         records = ReadRecords.readRecordsFromADSExports(records)
 
-      records = UpdateRecords.updateRecords(records)
+      records = UpdateRecords.mergeRecords(records)
       mongo.upsertRecords(records)
       
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 import collections
 import settings
+import datetime
 
 class Enforcer:
   '''
@@ -20,7 +21,7 @@ class Enforcer:
         'text': item
       }]
     else:
-      L = ensureList(item)
+      L = self.ensureList(item)
       for i in L:
         if '@lang' not in i:
           i['lang'] = 'en'
@@ -35,18 +36,39 @@ class Enforcer:
     return item if isinstance(item,list) else [item]
 
   def parseBool(self,item):
-    return False if item in ['false','False',False,'FALSE','f'] else True
+    return False if item in ['false','False',False,'FALSE','f',0,'0'] else True
 
-  def enforceSchema(self,blocks):
+  def finalPassEnforceSchema(self,record):
+    '''
+    Responsible for final cleanup of data before writing to mongo
+    . Removes 'tempdata'
+    . De-duplicates
+    . Attempts to coerce types
+    '''
+    for block in record['metadata']:
+      if 'tempdata' in block:
+        del block['tempdata']
+    #De-duplicate
+    #Coerce to correct type
+    return record
+
+
+  def enforceTopLevelSchema(self,record,JSON_fingerprint):
+    r = record
+    r['JSON_fingerprint'] = JSON_fingerprint
+    r['bibcode'] = record['@bibcode']
+    r['modtime'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+    #explicitly skip 'text', 'metadata'
+    return r
+
+  def enforceMetadataSchema(self,blocks):
     results = []
-    for block in blocks:
+    for block in self.ensureList(blocks):
       b = self.dispatcher[block['@type']](block)
       results.append(b)
     return results
 
-
   def _generalEnforcer(self,block):
-    
     #Shorthands
     g = block.get
     eL = self.ensureList
@@ -59,6 +81,7 @@ class Enforcer:
       'primary':            self.parseBool(g('@primary',True)) ,
       'alternate_journal':  self.parseBool(g('@alternate_journal',False)),
       'type':               g('@type'),
+      'origin':             g('@origin'),
       'bibcode':            g('bibcode'),
       'modtime':            g('modification_time'),
     }
@@ -103,18 +126,15 @@ class Enforcer:
         },
       })
 
-    r['pagination'] = {}
-    r['pagination']['origin'] =         g('@origin')
-    r['pagination']['page'] =           g('page')
-    r['pagination']['page_last'] =      g('lastpage')
-    r['pagination']['page_range'] =     g('page_range')
-    r['pagination']['page_count'] =     g('pagenumber')
-    r['pagination']['electronic_id'] =  g('electronic_id')
-
     r['publication'] = {}
-    r['publication']['origin'] =  g('@origin')
-    r['publication']['volume'] =  g('volume')
-    r['publication']['issue'] =   g('issue')
+    r['publication']['origin'] =        g('@origin')
+    r['publication']['volume'] =        g('volume')
+    r['publication']['issue'] =         g('issue')
+    r['publication']['page'] =          g('page')
+    r['publication']['page_last'] =     g('lastpage')
+    r['publication']['page_range'] =    g('page_range')
+    r['publication']['page_count'] =    g('pagenumber')
+    r['publication']['electronic_id'] = g('electronic_id')
     r['publication']['name'] = {
       'raw':        g('journal'),
       'canonical':  g('canonical_journal'),
@@ -135,6 +155,7 @@ class Enforcer:
           'content': g('publication_year'),
           }
         })
+      del block['publication_year']
 
     r['conf_metadata'] = {
       'origin': g('@origin'),
@@ -159,6 +180,7 @@ class Enforcer:
       'primary':            self.parseBool(g('@primary',True)) ,
       'alternate_journal':  self.parseBool(g('@alternate_journal',False)),
       'type':               g('@type'),
+      'origin':             g('@origin'),
       'modtime':            g('modification_time'),
     }
 

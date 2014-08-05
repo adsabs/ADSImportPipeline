@@ -7,7 +7,7 @@ import logging.handlers
 
 from lib import xmltodict
 from lib import collections
-from EnforceSchema import ensureList
+from lib import EnforceSchema
 
 try:
   import cPickle as pickle
@@ -46,26 +46,26 @@ def readRecordsFromADSExports(records):
 
   targets = dict(records)
 
-
   s = time.time()
-  records = ADSRecords('full','XML')
+  adsrecords = ADSRecords('full','XML')
   failures = []
   for bibcode in targets.keys():
     try:
-      records.addCompleteRecord(bibcode)
+      adsrecords.addCompleteRecord(bibcode)
     except KeyboardInterrupt:
       raise
     except:
       failures.append(bibcode)
-  records = records.export()
-  if not records.content:
+  adsrecords = adsrecords.export()
+  if not adsrecords.content:
     logger.warning('readRecordsFromADSExports: Recieved %s records, but ADSExports didn\'t return anything!' % len(records))
     return []
   ttc = time.time()-s
   rate = len(targets)/ttc
 
-  records = ensureList(xmltodict.parse(records.__str__())['records']['record'])
-  assert(len(records)==len(targets)-len(failures))
+  e = EnforceSchema.Enforcer()
+  adsrecords = e.ensureList(xmltodict.parse(adsrecords.__str__())['records']['record'])
+  assert(len(adsrecords)==len(targets)-len(failures))
   logger.info("readRecordsFromADSExports: Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" % 
     {
       'num_records': len(records),
@@ -75,13 +75,15 @@ def readRecordsFromADSExports(records):
   if failures:
     logger.warning("readRecordsFromADSExports: ADSExports failed to retrieve %s/%s records" % (len(failures),len(records)))
 
-  for r in records:
-    r['JSON_fingerprint'] = targets[r['@bibcode']]
+  for r in adsrecords:
+    r = e.enforceTopLevelSchema(record=r,JSON_fingerprint=targets[r['@bibcode']])
+    r['metadata'] = e.enforceMetadataSchema(r['metadata'])
+    #r['text'] = e.enforceTextSchema() TODO, once implemneted in ADSExports
 
   # import uuid
   # with open('%s.pickle' % uuid.uuid4(),'w') as fp:
   #   pickle.dump(records,fp)
-  return records
+  return adsrecords
 
 def readRecordsFromPickles(records,files):
   '''
@@ -99,6 +101,8 @@ def readRecordsFromPickles(records,files):
   records.extend( [r for r in recs if r['@bibcode'] in targets] )
 
   for r in records:
-    r['JSON_fingerprint'] = targets[r['@bibcode']]
+    r = e.enforceTopLevelSchema(record=r,JSON_fingerprint=targets[r['@bibcode']])
+    r['metadata'] = e.enforceMetadataSchema(r['metadata'])
+    #r['text'] = e.enforceTextSchema() TODO, once implemneted in ADSExports
   logger.info('readRecordsFromPickles: Read %s records from %s files' % (len(records),len(files)))
   return records

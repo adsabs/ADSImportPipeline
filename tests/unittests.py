@@ -14,6 +14,8 @@ from settings import MONGO,CLASSIC_BIBCODES
 from lib import SolrUpdater
 from lib import MongoConnection
 from lib import EnforceSchema
+from lib import UpdateRecords
+from lib import merger
 from stubdata import stubdata
 
 class TestADSExportsConnection(unittest.TestCase):
@@ -105,8 +107,8 @@ class TestEnforceSchema(unittest.TestCase):
     self.relations = stubdata.RELATIONS
     self.blocks = [self.general,self.properties,self.references,self.relations]
 
-  def test_enforceSchema(self):
-    blocks = self.e.enforceSchema(self.blocks)
+  def test_enforceMetadataSchema(self):
+    blocks = self.e.enforceMetadataSchema(self.blocks)
     e = self.e
     self.assertIsInstance(blocks,list)
     self.assertEqual(blocks,[
@@ -136,11 +138,22 @@ class TestEnforceSchema(unittest.TestCase):
     r = self.e._relationsEnforcer(self.relations)
     self.assertEqual(r,stubdata.RELATIONS_ENFORCED)
 
+class testMerger(unittest.TestCase):
+  def setUp(self):
+    self.records=stubdata.RECORDS
+    self.merger = merger.Merger(self.records[0]['metadata'])
+  def test_mergeRecords(self):  
+    self.assertEqual(UpdateRecords.mergeRecords(self.records),self.records)
+ 
+  def test_mergerlogic_takeAll(self):
+    self.assertEqual(self.merger.takeAll('foo'),['bar','bar2'])
+
 test_cases = (
   TestBibcodeFiles, 
   TestMongo, 
   #TestADSExportsConnection,
   TestEnforceSchema,
+  testMerger,
   )
 
 if __name__ == '__main__':
