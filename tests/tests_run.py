@@ -117,19 +117,29 @@ class TestEnforceSchema(unittest.TestCase):
       ])
 
   def test_generalEnforcer(self):
-    self.maxDiff=None
+    #self.maxDiff=None
     r = self.e._generalEnforcer(self.general)
     self.assertEqual(r,stubdata.GENERAL_ENFORCED)
 
   def test_propertiesEnforcer(self):
-    self.maxDiff=None
+    #self.maxDiff=None
     r = self.e._propertiesEnforcer(self.properties)
     self.assertEqual(r,stubdata.PROPERTIES_ENFORCED)
+
+  def test_referencesEnforcer(self):
+    #self.maxDiff=None
+    r = self.e._referencesEnforcer(self.references)
+    self.assertEqual(r,stubdata.REFERENCES_ENFORCED)
+
+  def test_relationsEnforcer(self):
+    #self.maxDiff=None
+    r = self.e._relationsEnforcer(self.relations)
+    self.assertEqual(r,stubdata.RELATIONS_ENFORCED)
 
 test_cases = (
   TestBibcodeFiles, 
   TestMongo, 
-  TestADSExportsConnection,
+  #TestADSExportsConnection,
   TestEnforceSchema,
   )
 

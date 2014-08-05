@@ -30,6 +30,8 @@ class Enforcer:
     return L
 
   def ensureList(self,item):
+    if item is None:
+      return []
     return item if isinstance(item,list) else [item]
 
   def parseBool(self,item):
@@ -58,6 +60,7 @@ class Enforcer:
       'alternate_journal':  self.parseBool(g('@alternate_journal',False)),
       'type':               g('@type'),
       'bibcode':            g('bibcode'),
+      'modtime':            g('modification_time'),
     }
 
     r['arxivcategories'] = eL(g('arxivcategories',[]))
@@ -88,7 +91,7 @@ class Enforcer:
       assert len(orcid)==1 or len(orcid)==0
       orcid = orcid[0]['author_id'].replace('ORCID:','') if orcid else None
       r['authors'].append({
-        'number': int(i['@nr']),
+        'number': i.get('@nr'),
         'type': i.get('type'),
         'affiliations': [j.get('affiliation') for j in eL(i.get('affiliations',[]))],
         'emails': [j['email'] for j in eL(i.get('emails',[]))],
@@ -156,6 +159,7 @@ class Enforcer:
       'primary':            self.parseBool(g('@primary',True)) ,
       'alternate_journal':  self.parseBool(g('@alternate_journal',False)),
       'type':               g('@type'),
+      'modtime':            g('modification_time'),
     }
 
     r['associates'] = []
@@ -187,6 +191,70 @@ class Enforcer:
 
 
   def _referencesEnforcer(self,block):
-    print "_referencesEnforcer NotYetImplemented"
+    r = {}
+    g = block.get
+    eL = self.ensureList
+
+    r['tempdata'] = {
+      'primary':            self.parseBool(g('@primary',True)) ,
+      'alternate_journal':  self.parseBool(g('@alternate_journal',False)),
+      'type':               g('@type'),
+      'modtime':            g('modification_time'),
+      'origin':             g('@origin'),
+    }
+
+    r['references'] = []
+    for i in eL(g('reference',[])):
+      r['references'].append({
+        'origin':     g('@origin'),
+        'bibcode':    i.get('@bibcode'),
+        'doi':        i.get('@doi'),
+        'score':      i.get('@score'),
+        'extension':  i.get('@extension'),
+        'arxid':      i.get('@arxiv'),
+        'content':    i.get('#text'),
+        })
+    return r
+
   def _relationsEnforcer(self,block):
-    print "_relationsEnforcer NotYetImplemented"
+    r = {}
+    g = block.get
+    eL = self.ensureList
+
+    r['tempdata'] = {
+      'primary':            self.parseBool(g('@primary',True)) ,
+      'alternate_journal':  self.parseBool(g('@alternate_journal',False)),
+      'type':               g('@type'),
+      'modtime':            g('modification_time'),
+      'origin':             g('@origin'),
+    }
+
+    r['preprints'] = []
+    for i in eL(g('preprintid',[])):
+      r['preprints'].append({
+        'origin':   g('origin'),
+        'ecode':    i.get('@ecode'),
+        'content':  i.get('#text'),
+      })
+
+    r['alternates'] = []
+    for i in eL(g('alternates',[])):
+      for j in eL(i.get('alternate',[])):
+        r['alternates'].append({
+          'origin':   g('origin'),
+          'type':     j.get('@type'),
+          'content':  j.get('#text'),
+        })
+
+    r['links'] = []
+    for i in eL(g('links',[])):
+      for j in eL(i.get('link',[])):
+        if j.get('@type')=='ADSlink': continue
+        r['links'].append({
+          'origin':   g('origin'),
+          'type':     j.get('@type'),
+          'url':      j.get('@url'),
+          'title':    j.get('@title'),
+          'count':    j.get('@count'),
+        })
+    return r

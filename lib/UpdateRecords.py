@@ -15,7 +15,7 @@ def updateRecords(records):
       'JSON_fingerprint': r['JSON_fingerprint'],
       'metadata' : {},
       'text': {},
-      'modtime': '',
+      'modtime': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
     }
 
     #Multiply defined blocks need merging.
@@ -39,7 +39,6 @@ def updateRecords(records):
     #Now merge the multiply defined metadataBlocks
     for entryType,data in needsMerging.iteritems():
       cr['metadata'].update({entryType:_merge(data,r['@bibcode'],entryType)})
-    cr['modtime'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 
     #Finally, we have a complete record
     completeRecords.append(EnforceSchema.enforceSchema(cr))
