@@ -159,9 +159,6 @@ class Enforcer:
         'type': 'publication_year',
         'content':  g('publication_year'),
       })
-      del block['publication_year']
-    if 'dates' in block:
-      del block['dates']
 
 
     r['conf_metadata'] = {

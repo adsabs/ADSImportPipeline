@@ -101,47 +101,41 @@ class TestMongo(unittest.TestCase):
 class TestEnforceSchema(unittest.TestCase):
   def setUp(self):
     self.e = EnforceSchema.Enforcer()
-    self.general = stubdata.GENERAL
-    self.properties = stubdata.PROPERTIES
-    self.references = stubdata.REFERENCES
-    self.relations = stubdata.RELATIONS
-    self.blocks = [self.general,self.properties,self.references,self.relations]
+    self.general = self.e._generalEnforcer(stubdata.GENERAL)
+    self.properties = self.e._propertiesEnforcer(stubdata.PROPERTIES)
+    self.references = self.e._referencesEnforcer(stubdata.REFERENCES)
+    self.relations = self.e._relationsEnforcer(stubdata.RELATIONS)
 
   def test_enforceMetadataSchema(self):
-    blocks = self.e.enforceMetadataSchema(self.blocks)
-    e = self.e
+    blocks = self.e.enforceMetadataSchema([stubdata.GENERAL,stubdata.PROPERTIES,stubdata.REFERENCES,stubdata.RELATIONS])
     self.assertIsInstance(blocks,list)
     self.assertEqual(blocks,[
-      e._generalEnforcer(self.general),
-      e._propertiesEnforcer(self.properties),
-      e._referencesEnforcer(self.references),
-      e._relationsEnforcer(self.relations),
-      ])
+      self.general,
+      self.properties,
+      self.references,
+      self.relations,
+    ])
 
   def test_generalEnforcer(self):
     #self.maxDiff=None
-    r = self.e._generalEnforcer(self.general)
-    self.assertEqual(r,stubdata.GENERAL_ENFORCED)
+    self.assertEqual(self.general,stubdata.GENERAL_ENFORCED)
 
   def test_propertiesEnforcer(self):
     #self.maxDiff=None
-    r = self.e._propertiesEnforcer(self.properties)
-    self.assertEqual(r,stubdata.PROPERTIES_ENFORCED)
+    self.assertEqual(self.properties,stubdata.PROPERTIES_ENFORCED)
 
   def test_referencesEnforcer(self):
     #self.maxDiff=None
-    r = self.e._referencesEnforcer(self.references)
-    self.assertEqual(r,stubdata.REFERENCES_ENFORCED)
+    self.assertEqual(self.references,stubdata.REFERENCES_ENFORCED)
 
   def test_relationsEnforcer(self):
     #self.maxDiff=None
-    r = self.e._relationsEnforcer(self.relations)
-    self.assertEqual(r,stubdata.RELATIONS_ENFORCED)
+    self.assertEqual(self.relations,stubdata.RELATIONS_ENFORCED)
 
 class testMerger(unittest.TestCase):
   def setUp(self):
-    self.records=stubdata.RECORDS
-    self.merger = merger.Merger(self.records[0]['metadata'])
+    self.records=stubdata.METADATA_BLOCKS
+    self.merger = merger.Merger(self.records)
   def test_mergeRecords(self):  
     self.assertEqual(UpdateRecords.mergeRecords(self.records),self.records)
  
@@ -153,7 +147,7 @@ test_cases = (
   TestMongo, 
   #TestADSExportsConnection,
   TestEnforceSchema,
-  testMerger,
+  #testMerger,
   )
 
 if __name__ == '__main__':
