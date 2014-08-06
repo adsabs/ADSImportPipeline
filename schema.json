@@ -33,7 +33,7 @@ general = {
     'channel': '',
     'original': '',
     'normalized': '',
-    },
+    }
   ]
 
   'titles': [
@@ -152,12 +152,12 @@ general = {
     },
   ],
 
-  'copyrights': {
+  'copyright': {
     'origin': '',
     'content': '',
   },
   
-  'comments': {
+  'comment': {
     'origin': '',
     'content': '',
   },
