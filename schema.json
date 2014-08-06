@@ -1,7 +1,7 @@
 //          TOP LEVEL SCHEMA
 [
   {
-    '@bibcode':         '',
+    'bibcode':         '',
     'JSON_fingerprint': '',
     'metadata': {
       'general':    {},
@@ -15,7 +15,7 @@
       'creation': '',
       'last_mod': '',
     },
-    'last_mod': '',
+    'modtime': '',
 
   },
 ]
@@ -36,14 +36,14 @@ general = {
     },
   ]
 
-  'title': [
+  'titles': [
     {
       '@lang': '',
       '#text': '',
     },
   ],
 
-  'abstract: [
+  'abstracts: [
     {
       '@origin' : '',
       '@lang': '',
@@ -53,9 +53,9 @@ general = {
 
 //-affiliations are currently combined to a single long string. Is splitting on ";" correct to uncombine?
 // ...Or, should we keep the current implementation of 1 author-> 1 affiliation, where affiliation is a long string?
-  'author': [
+  'authors': [
     {
-      '@nr': '',
+      'nr': '',
       'type': '',
       'affiliations': ['',],
       'emails': ['',]
@@ -68,30 +68,25 @@ general = {
     },
   ],
 
-  'pagination': {
-    '@origin': '',
+  'publication': {
+    'origin': '',
     'page': '',
     'page_last': '',
     'page_range': '',       // somewhat redundant, but there are weird cases (e.g. STI) where it's not just "firstpage-lastpage"
     'page_count': '',       // number of pages (int)
     'electronic_id': '',    // usually populated when page is null, but not always 
-  },
-
-  'publication': {
-    '@origin': '',
     'volume': '',
     'issue': '',
     'name': {
       'raw': '',
       'canonical': '',
-  },
- },
-
-  'dates': {
-    'identifier-string-N': {   // ???
-      '@origin': '',
-      'content': '',
     },
+    'dates': [ 
+      {
+        'type': '',
+        'content': '',
+      },
+    ],
   },
 
   // We need a structure to maintain alternate publication venues
@@ -102,109 +97,96 @@ general = {
   // 2. so we can resolve references made to the alternate venue (more important)
   // To be reviewed by CSG, etc.
   'altpublication': [
-    '@origin': '',
-    'publication': {
-      '@origin': '',
+    {
+      'origin': '',
       'volume': '',
       'issue': '',
-      'name': '',
-      'canonical': '',
-    },
-    'pagination': {
+      'name': {
+        'raw': '',
+        'canonical': '',
+      },
       'page': '',
       'page_last': '',
       'page_range': '',
       'page_count': '',
       'electronic_id': '',
-    }
-    'dates': {
-      'identifier-string-N': {   // ???
-        '@origin': '',
-        'content': '',
-      },
+      'dates': [ 
+        {
+          'type': '',
+          'content': '',
+        },
+      ],
     },
   ],
 
-  'conf_metadata': {           // this should be covered by the proper associates
-    '@origin': '',
+  'conf_metadata': {
+    'origin': '',
     'content': '',
   },
 
-  'pubnote' : '',
+  'pubnote' : [
+    {
+      'origin': '',
+      'content': '',
+    }
+  ],
 
   'isbns': [
     {
-      '@origin': '',
+      'origin': '',
       'content': '',
     },
   ],
 
   'issns': [
     {
-      '@origin': '',
+      'origin': '',
       'content': '',
     },
   ],
 
-  'doi': [              // we'll have documents with multiple dois for sure
+  'doi': [
     {
-      '@origin': '',
+      'origin': '',
       'content': '',
     },
   ],
 
-// This should also be ignored I think in favor of 'supplemental' 
-  //  'instruments': [
-  //  { 
-  //    '@origin': '',
-  //    'content': '',
-  //  },
-  //],
-
-  'copyright': {
-    '@origin': '',
+  'copyrights': {
+    'origin': '',
     'content': '',
   },
   
-  'comment': {
-    '@origin': '',
+  'comments': {
+    'origin': '',
     'content': '',
   },
-
-
-//Plan to ignore ADSExports; instead this info will be stored in the 'supplemental' collection
-  // 'objects': [
-  //   {
-  //     '@origin': '',
-  //     'content': '',
-  //   },
-  // ],
 }
 
 // PROPERTIES 
 properties = {
   'databases': [
     {
-      '@origin': '',
+      'origin': '',
       'content': '',
     },
   ],
 
   'pubtype': {
-    '@origin': '',
+    'origin': '',
     'content': '',
   },
 
   'bibgroups': [
     {
-      '@origin':'',
+      'origin':'',
       'content': '',
     },
   ],
 
   'associates': [
     {
-      '@origin':'',
+      'origin':'',
       'content': '',
       'comment': '',
     },
@@ -225,7 +207,7 @@ properties = {
 // REFERENCES
 references = [
   {
-    '@origin':    '',
+    'origin':    '',
     'bibcode':    '',
     'doi':        '',
     'score':      '',
@@ -236,25 +218,25 @@ references = [
 
 // RELATIONS
 relations = {
-  'preprint': [
+  'preprints': [
     {
-      '@origin':'',
-      '@ecode': '',
+      'origin':'',
+      'ecode': '',
       'content': '',
     },
   ]
 
   'alternates': [
     {
-      '@origin':'',
-      '@type': '',
+      'origin':'',
+      'type': '',
       'content': '',,
     },
   ],
 
   'links': [
     {
-      '@origin': '',
+      'origin': '',
       'type': '',
       'url': '',
       'title': '',
@@ -267,9 +249,9 @@ relations = {
 // Note: right now we only have 'body' and 'acknowledgments' but some day we expect
 // to have more fields, e.g. 'captions', etc.
 text = {
-  '@origin':'',
-  '@provider':'',     // could be different from origin (e.g. ADS is origing of OCR text but provider is AAS)
+  'origin':'',
+  'provider':'',     // could be different from origin (e.g. ADS is origing of OCR text but provider is AAS)
   'body':'',
   'acknowledgments':'',
-  'last_mod':'',
+  'modtime':'',
 }

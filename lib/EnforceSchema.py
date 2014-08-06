@@ -45,9 +45,17 @@ class Enforcer:
     . De-duplicates
     . Attempts to coerce types
     '''
-    for block in record['metadata']:
-      if 'tempdata' in block:
-        del block['tempdata']
+    blocklevel_removals = ['tempdata']
+    toplevel_removals = ['@bibcode']
+
+    for i in toplevel_removals:
+      if i in record:
+        del record[i]
+
+    for key,block in record['metadata'].iteritems():
+      for i in blocklevel_removals:
+        if i in block:
+          del block[i]
     #De-duplicate
     #Coerce to correct type
     return record
@@ -140,28 +148,26 @@ class Enforcer:
       'canonical':  g('canonical_journal'),
     }
 
-    r['dates'] = []
+    r['publication']['dates'] = []
     for i in eL(g('dates',[])):
-      r['dates'].append({
-        i['date'].get('@type'): {
-            'origin': g('@origin'),
-            'content': i['date'].get('#text'),
-          }
-        })
+      r['publication']['dates'].append({
+        'type':     i['date'].get('@type'),
+        'content':  i['date'].get('#text'),
+      })
     if 'publication_year' in block:
-      r['dates'].append({
-        'publication_year': {
-          'origin': g('@origin'),
-          'content': g('publication_year'),
-          }
-        })
+      r['publication']['dates'].append({
+        'type': 'publication_year',
+        'content':  g('publication_year'),
+      })
       del block['publication_year']
+    if 'dates' in block:
+      del block['dates']
+
 
     r['conf_metadata'] = {
       'origin': g('@origin'),
       'content': g('conf_metadata')
     }
-
 
     keys = ['pubnote','comment','copyright','isbns','issns','DOI']
     for k in keys:

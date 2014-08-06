@@ -84,7 +84,7 @@ class UpdateRecordsWorker(RabbitMQWorker):
   def __init__(self,params):
     self.params=params
     from lib import UpdateRecords #Hack to avoid loading ADSRecords until it is necessary
-    self.f = UpdateRecords.updateRecords
+    self.f = UpdateRecords.mergeRecords
 
   def on_message(self, channel, method_frame, header_frame, body):
     results = json.loads(body)

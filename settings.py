@@ -36,7 +36,6 @@ MERGER_RULES = {
   'authors':              'authorMerger',
   'publication':          'publicationMerger',
   'conf_metadata':        'originTrustMerger',
-  'dates':                'originTrustMerger',
   'isbns':                'takeAll',
   'issns':                'takeAll',
   'doi':                  'originTrustMerger',
@@ -58,10 +57,10 @@ MERGER_RULES = {
   'associates':           'takeAll',
 
   #<metadata type="references">
-  'references':            'referencesMerger',
+  'references':           'referencesMerger',
 
   #<metadata type="relations">
-  'preprints':           'takeAll',
+  'preprints':            'takeAll',
   'alternates':           'takeAll',
   'links':                'takeAll',
 }
@@ -299,9 +298,6 @@ PRIORITIES = {
     for score, sources in __PRIORITIES_DEFAULT.iteritems()
     for source in sources),
   'journals': dict((source, score)
-    for score, sources in __PRIORITIES_JOURNALS.iteritems()
-    for source in sources),
-  'canonical_journals': dict((source, score)
     for score, sources in __PRIORITIES_JOURNALS.iteritems()
     for source in sources),
   'authors': dict((source, score)

@@ -77,7 +77,7 @@ class Merger:
           #This will blindly pick the first one that matched, which isn't necessarily correct.
           if matches:
             author['affiliations'] = matches[0]['affiliations']
-    return result
+    return result[0]
 
   def booleanMerger(self,field):
     if any([i[field] for i in self.blocks if field in i]):
@@ -91,7 +91,8 @@ class Merger:
     while len(data) > 0:
       f1 = data.pop()
       f2 = result if result else data.pop()
-      result = list(self._getBestOrigin(f1,f2,'references'))
+      result = self._getBestOrigin(f1,f2,'references')
+    result = list(result[0])
     #Second pass: append if the origin is in REFERENCES_ALWAYS_APPEND
     data = [ (i[field],i['tempdata']) for i in self.blocks if field in i]
     for f in data:
@@ -100,21 +101,49 @@ class Merger:
     return result
 
   def publicationMerger(self,field):
-    primaries = [ (i['publication'],i['tempdata']) for i in self.blocks if not i['tempdata']['alternate_journal'] ]
-    alternates = [ i['publication'] for i in self.blocks if i['tempdata']['alternate_journal'] ]
-    assert len(primaries)+len(alternates) == len(self.blocks)
+    primaries = [({
+        'origin':         i['publication']['origin'],
+        'issue':          i['publication']['issue'],
+        'page':           i['publication']['page'],
+        'page_last':      i['publication']['page_last'],
+        'page_range':     i['publication']['page_range'],
+        'page_count':     i['publication']['page_count'],
+        'electronic_id':  i['publication']['electronic_id'],
+        'name':           i['publication']['name'],
+        'dates':           i['publication']['dates'],
+      },i['tempdata']) for i in self.blocks if not i['tempdata']['alternate_journal'] ]    
 
-    self.altpublications = alternates if alternates else []
+    altpublications = [{
+        'origin':         i['publication']['origin'],
+        'issue':          i['publication']['issue'],
+        'page':           i['publication']['page'],
+        'page_last':      i['publication']['page_last'],
+        'page_range':     i['publication']['page_range'],
+        'page_count':     i['publication']['page_count'],
+        'electronic_id':  i['publication']['electronic_id'],
+        'name':           i['publication']['name'],
+        'dates':           i['publication']['dates'],
+    } for i in self.blocks if i['tempdata']['alternate_journal'] ]
+
+    self.altpublications = altpublications
+
+    assert len(primaries)+len(altpublications) == len(self.blocks)
+
+    if len(primaries) == 1:
+      return primaries[0][0]
+
     result = None
     while len(primaries) > 0:
       f1 = primaries.pop()
       f2 = result if result else primaries.pop()
       result = self._getBestOrigin(f1,f2,'journals')
-    return result
+
+    return result[0]
+
 
   def takeAll(self,field):
     r = []
-    r.extend( [i[field] for i in self.blocks if field in i] )
+    r.extend( [i[field] for i in self.blocks if field in i[field]] )
     return r
 
   def _getBestOrigin(self,f1,f2,field):
@@ -156,4 +185,4 @@ class Merger:
     if f1[1]['modtime'] != f2[1]['modtime']:
       return f1 if f1[1]['modtime'] > f2[1]['modtime'] else f2
     #5. Doesn't matter anymore. Return one of them.
-    return f1
+    return f1[0]

@@ -34,7 +34,7 @@ def mergeRecords(records):
 
     #Finally, we have a complete record
     r['metadata'] = completeMetadata
-    completeRecords.append(r)
+    completeRecords.append(e.finalPassEnforceSchema(r))
 
 
   return completeRecords
