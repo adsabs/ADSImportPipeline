@@ -1,5 +1,7 @@
 # ADSimportpipeline
 
+[![Build Status](https://travis-ci.org/adsabs/ADSimportpipeline.svg?branch=master)](https://travis-ci.org/adsabs/ADSimportpipeline)
+
 ## Overview
 
 Coordinates ingest of a full ADS record.
@@ -21,7 +23,7 @@ Step 1 is initiated by invoking `run.py`.
 - Workers are controlled via a master process in `pipeline/ADSimportpipeliny.py`.
  
 
-## Requirements (version numbers will come at release time)
+## Requirements
 - pika
 - rabbitmq
 - ADSExports
