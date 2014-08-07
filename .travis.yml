@@ -8,4 +8,4 @@ install:
 services:
   - mongodb
   - rabbitmq
-script: tests/unittests
+script: tests/unittests.py
