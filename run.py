@@ -2,6 +2,7 @@ import os, sys
 import pymongo
 import pika
 import json
+import logging
 from settings import (CLASSIC_BIBCODES, MONGO, BIBCODES_PER_JOB)
 
 import time
@@ -16,6 +17,20 @@ try:
   import argparse
 except ImportError: #argparse not in python2.6, careful!
   from lib import argparse
+
+logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
+datefmt= '%m/%d/%Y %H:%M:%S'
+formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
+LOGGER = logging.getLogger(__file__)
+fn = os.path.join(os.path.dirname(__file__),'logs','%s.log' % 'run')   
+rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+rfh.setFormatter(formatter)
+ch = logging.StreamHandler() #console handler
+ch.setFormatter(formatter)
+LOGGER.addHandler(ch)
+LOGGER.addHandler(rfh)
+LOGGER.setLevel(logging.DEBUG)
+logger = LOGGER
 
 class cd:
     """Context manager for changing the current working directory"""
@@ -134,7 +149,7 @@ def main(MONGO=MONGO,*args):
         records = ReadRecords.readRecordsFromPickles(records,args.load_from_files)
       else:
         records = ReadRecords.readRecordsFromADSExports(records)
-
+        
       merged = UpdateRecords.mergeRecords(records)
       if args.outfile:
         with open(args.outfile[0],'w') as fp:

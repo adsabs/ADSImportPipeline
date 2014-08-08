@@ -11,6 +11,7 @@ class SolrAdapter(object):
       'alternate_bibcode': ['',],
       'arxiv_class': ['',],
       'author': ['',],
+      'author_native': ['',],
       'author_facet_hier': ['',], #???
       'author_norm': ['',],
       'bibcode': '',
@@ -67,7 +68,7 @@ class SolrAdapter(object):
   def _abstract(ADS_record):
     result = None
     for r in ADS_record['metadata']['general']['abstract']:
-      if r['@lang'] == "en" or not result['abstract']:
+      if r['@lang'] == "en" or not result['abstract']: #fallback to other language if en not present
         result = r['#text']
     return {'abstract': result}
 
@@ -92,6 +93,12 @@ class SolrAdapter(object):
     authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
     result = [i['name']['western'] for i in authors if i]
     return {'author': result}  
+
+  @staticmethod
+  def _author_native(ADS_record):
+    authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
+    result = [i['name']['native'] for i in authors if i]
+    return {'author_native': result}  
 
   @staticmethod
   def _bibcode(ADS_record):

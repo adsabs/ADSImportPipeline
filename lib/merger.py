@@ -82,11 +82,11 @@ class Merger:
     for field in multipleDefinedFields:
       try:
         r[field] = self._dispatcher(field)
-      except:
-        self.logger.error('Merger: some error with dispatcher on %s' % field)
-        raise
+      except Exception, err:
+        self.logger.error('Error with merger dispatcher on %s: %s' % (field,err))
     self.block = r
-    self.block['altpublications'] = self.altpublications
+    if self.altpublications:
+      self.block['altpublications'] = self.altpublications
 
   def authorMerger(self,field='authors'):
     data = [ [i[field],i['tempdata']] for i in self.blocks if field in i]
@@ -170,7 +170,9 @@ class Merger:
 
   def takeAll(self,field):
     r = []
-    r.extend( [i[field] for i in self.blocks if field in i[field]] )
+    for i in [j for j in self.blocks if field in j]:
+      r.extend(i[field])
+    r = [i for i in r if i]
     return r
 
   def _getBestOrigin(self,f1,f2,field):

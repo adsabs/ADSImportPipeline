@@ -13,7 +13,7 @@ class Enforcer:
       'references':self._referencesEnforcer,
       'relations':self._relationsEnforcer,
     }
-    self.datefmt='%Y-%m-%dT%H:%M:%S'
+    self.datefmt='%Y-%m-%dT%H:%M:%S.%fZ'
 
   def ensureLanguageSchema(self,item):
     if isinstance(item,basestring):
@@ -37,6 +37,8 @@ class Enforcer:
     return item if isinstance(item,list) else [item]
 
   def parseBool(self,item):
+    if item is None:
+      return item
     return False if item in ['false','False',False,'FALSE','f',0,'0'] else True
 
   def finalPassEnforceSchema(self,record):
@@ -120,12 +122,11 @@ class Enforcer:
       'alternate_journal':  self.parseBool(g('@alternate_journal',False)),
       'type':               g('@type'),
       'origin':             g('@origin'),
-      'bibcode':            g('bibcode'),
       'modtime':            g('modification_time'),
     }
 
-    r['arxivcategories'] = eL(g('arxivcategories',[]))
-    
+    r['arxivcategories'] = [i['#text'] if isinstance(i,dict) else i for i in eL(g('arxivcategories',{}).get('arxivcategory',[]))]
+
     r['keywords'] = []
     for i in eL(g('keywords',[])):
       for j in eL(i.get('keyword',[])):
@@ -152,11 +153,11 @@ class Enforcer:
       assert len(orcid)==1 or len(orcid)==0
       orcid = orcid[0]['author_id'].replace('ORCID:','') if orcid else None
       r['authors'].append({
-        'number': i.get('@nr'),
-        'type': i.get('type'),
-        'affiliations': [j.get('affiliation') for j in eL(i.get('affiliations',[]))],
-        'emails': [j['email'] for j in eL(i.get('emails',[]))],
-        'orcid': orcid,
+        'number':         i.get('@nr'),
+        'type':           i.get('type'),
+        'affiliations':   [j.get('affiliation') for j in eL(i.get('affiliations',[]))],
+        'emails':         [j['email'] for j in eL(i.get('emails',[]))],
+        'orcid':          orcid,
         'name': {
           'native':     i['name'].get('native'),
           'western':    i['name'].get('western'),
@@ -239,7 +240,7 @@ class Enforcer:
       })
 
     for k in ['openaccess','nonarticle','ocrabstract','private','refereed']:
-      r[k] = self.parseBool(g(k,False))
+      r[k] = self.parseBool(g(k))
 
     return r
 
@@ -262,7 +263,6 @@ class Enforcer:
     for i in eL(g('reference',[])):
       r['references'].append({
         'origin':     g('@origin'),
-        'bibcode':    i.get('@bibcode'),
         'doi':        i.get('@doi'),
         'score':      i.get('@score'),
         'extension':  i.get('@extension'),

@@ -23,7 +23,7 @@ MONGO = {
 
 MERGER_RULES = {
   #<metadata type="general">
-  'arxivcategories':      'originTrustMerger',
+  'arxivcategories':      'takeAll',
   'keywords':             'takeAll',
   'titles':               'originTrustMerger',
   'abstracts':            'originTrustMerger',

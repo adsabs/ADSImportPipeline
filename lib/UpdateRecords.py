@@ -2,6 +2,7 @@ import os,sys
 import collections
 import itertools
 import datetime
+import copy
 
 from lib import merger
 from lib import EnforceSchema
@@ -9,7 +10,7 @@ from lib import EnforceSchema
 def mergeRecords(records):
   completeRecords = []
   e = EnforceSchema.Enforcer()
-  for r in e.ensureList(records):
+  for r in copy.deepcopy(records):
     r['text'] = merger.Merger().mergeText(r['text'])
     blocks = e.ensureList(r['metadata'])
     #Multiply defined blocks need merging.
@@ -36,5 +37,4 @@ def mergeRecords(records):
     #Finally, we have a complete record
     r['metadata'] = completeMetadata
     completeRecords.append(e.finalPassEnforceSchema(r))
-
   return completeRecords
