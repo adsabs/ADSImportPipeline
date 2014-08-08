@@ -10,6 +10,7 @@ def mergeRecords(records):
   completeRecords = []
   e = EnforceSchema.Enforcer()
   for r in e.ensureList(records):
+    r['text'] = merger.Merger().mergeText(r['text'])
     blocks = e.ensureList(r['metadata'])
     #Multiply defined blocks need merging.
     metadatablockCounter = collections.Counter([i['tempdata']['type'] for i in blocks])
@@ -35,6 +36,5 @@ def mergeRecords(records):
     #Finally, we have a complete record
     r['metadata'] = completeMetadata
     completeRecords.append(e.finalPassEnforceSchema(r))
-
 
   return completeRecords

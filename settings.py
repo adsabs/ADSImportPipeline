@@ -3,16 +3,12 @@ import sys
 
 PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
 
-# CLASSIC_BIBCODES = {
+CLASSIC_BIBCODES = {
 #   'AST': '/proj/ads/abstracts/ast/load/current/index.status',
 #   'PHY': '/proj/ads/abstracts/phy/load/current/index.status',
 #   'GEN': '/proj/ads/abstracts/gen/load/current/index.status',
 #   'PRE': '/proj/ads/abstracts/pre/load/current/index.status',
-# }
-# CLASSIC_BIBCODES = {
-#   'AST': 'ast.txt',
-# }
-CLASSIC_BIBCODES = {}
+}
 
 BIBCODES_PER_JOB = 200
 
@@ -26,8 +22,6 @@ MONGO = {
 }
 
 MERGER_RULES = {
-  'default':              'stringConcatenateMerger',
-
   #<metadata type="general">
   'arxivcategories':      'originTrustMerger',
   'keywords':             'takeAll',
@@ -314,4 +308,5 @@ PRIORITIES = {
 
 
 #References with these origins will always be added to merged reference metadata blocks.
-REFERENCES_ALWAYS_APPEND = ['ISI', 'AUTHOR', 'OTHER', 'CROSSREF']
+#REFERENCES_ALWAYS_APPEND = ['ISI', 'AUTHOR', 'OTHER', 'CROSSREF']
+REFERENCES_ALWAYS_APPEND = ['ISI', 'AUTHOR', 'OTHER',]

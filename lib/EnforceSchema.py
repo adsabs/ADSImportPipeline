@@ -13,6 +13,7 @@ class Enforcer:
       'references':self._referencesEnforcer,
       'relations':self._relationsEnforcer,
     }
+    self.datefmt='%Y-%m-%dT%H:%M:%S'
 
   def ensureLanguageSchema(self,item):
     if isinstance(item,basestring):
@@ -52,21 +53,50 @@ class Enforcer:
       if i in record:
         del record[i]
 
-    for key,block in record['metadata'].iteritems():
-      for i in blocklevel_removals:
-        if i in block:
-          del block[i]
-    #De-duplicate
-    #Coerce to correct type
-    return record
+    for blocks in [record['metadata'],record['text']]:
+      for key,block in blocks.iteritems():
+        for i in blocklevel_removals:
+          if i in block:
+            del block[i]
+      #De-duplicate
+      #Coerce to correct type
+      return record
 
+  def enforceTextSchema(self,block):
+    g = block.get
+    eL = self.ensureList
+    eLS = self.ensureLanguageSchema
+    
+    r = {}
+    r['body'] = g('body')
+    r['acknowledgments'] = g('acknowledgments')
+    r['creation'] = g('creation')
 
   def enforceTopLevelSchema(self,record,JSON_fingerprint):
-    r = record
+    r = {}
     r['JSON_fingerprint'] = JSON_fingerprint
     r['bibcode'] = record['@bibcode']
-    r['modtime'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-    #explicitly skip 'text', 'metadata'
+    r['modtime'] = datetime.datetime.now().strftime(self.datefmt)
+    r['text'] = {}
+    r['text']['body'] = []
+    r['text']['acknowledgement'] = []
+    fields = ['body','acknowledgement']
+    for f in fields:
+      t = record.get('text') if record.get('text') else {}
+      blocks = self.ensureList(t.get(f))
+      for b in blocks:
+        r['text'][f].append({
+          'content':b['#text'],
+          'provider': b['@origin'],
+          'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(self.datefmt),
+          'tempdata': {
+            'origin': b['@origin'],
+            'primary': True,
+            'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(self.datefmt),
+            },
+        })
+
+    r['metadata'] = record['metadata']    
     return r
 
   def enforceMetadataSchema(self,blocks):

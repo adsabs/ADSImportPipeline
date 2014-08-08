@@ -63,7 +63,7 @@ def main(MONGO=MONGO,*args):
     )
 
   parser.add_argument(
-    '--bibcodes',
+    '--target-bibcodes',
     nargs='*',
     default=None,
     dest='targetBibcodes',
@@ -86,6 +86,15 @@ def main(MONGO=MONGO,*args):
     help='Load XML records from files via pickle instead of ADSExports',
     )
 
+  parser.add_argument(
+    '--dump-output-to-file',
+    nargs=1,
+    type=str,
+    default=None,
+    dest='outfile',
+    help='Output records to a file'
+    )
+
   args = parser.parse_args()
   for target in args.updateTargets:
     targetRecords = []
@@ -96,7 +105,12 @@ def main(MONGO=MONGO,*args):
         for line in fp:
           if not line or line.startswith("#"):
             continue
+
           r = tuple(line.strip().split('\t'))
+          if len(r) != 2:
+            msg = "A bibcode entry should be \"bibcode\tJSON_fingerprint\". Skipping: %s" % r
+            logger.warning(msg)
+            continue
           if args.targetBibcodes:
             if r[0] in args.targetBibcodes:
               records.append(r)
@@ -121,8 +135,13 @@ def main(MONGO=MONGO,*args):
       else:
         records = ReadRecords.readRecordsFromADSExports(records)
 
-      records = UpdateRecords.mergeRecords(records)
-      mongo.upsertRecords(records)
+      merged = UpdateRecords.mergeRecords(records)
+      if args.outfile:
+        with open(args.outfile[0],'w') as fp:
+          r = {'merged': merged, 'nonmerged': records}
+          json.dump(r,fp,indent=1)
+      else:
+        mongo.upsertRecords(merged)
       
 if __name__ == '__main__':
   try:

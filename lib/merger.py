@@ -8,15 +8,16 @@ import collections
 from lib import EnforceSchema
 
 class Merger:
-  def __init__(self,blocks,logger=None):
+  def __init__(self,blocks=None,logger=None):
     self.blocks = blocks
     self.logger=logger
     self.block = {}
     self.altpublications = []
-    #Assert that there is only block type being merged
-    assert len(set([i['tempdata']['type'] for i in blocks]))==1
-    self.blocktype = blocks[0]['tempdata']['type']
     self.eL = EnforceSchema.Enforcer().ensureList
+    if blocks:
+      #Assert that there is only block type being merged
+      assert len(set([i['tempdata']['type'] for i in blocks]))==1
+      self.blocktype = blocks[0]['tempdata']['type']
     if not self.logger:
       self.initializeLogging()
 
@@ -38,8 +39,34 @@ class Merger:
 
   def _dispatcher(self,field):
     if field not in MERGER_RULES:
-      field = 'default'
+      self.logger.error("%s not in MERGER_RULES" % field)
+      raise
     return eval('self. '+ MERGER_RULES[field])(field)
+
+
+  def mergeText(self,blocks):
+    mergedBlock = {}
+    #Order matters here; we prioritize data coming from body over acknow.
+    fields = ['acknowledgement','body']
+    for f in fields:
+      mergedBlock[f] = {}
+      if len(blocks[f])<2:
+        result = blocks[f][0] if blocks[f] else {}
+        blocks[f] = result
+      else:
+        result = None
+        data = [ (i,i['tempdata']) for i in blocks[f]]
+        while len(data) > 0:
+          f1 = data.pop()
+          f2 = result if result else data.pop()
+          result = self._getBestOrigin(f1,f2,'default')
+        result = result[0]
+      mergedBlock[f]['content'] = result.get('content')
+      mergedBlock[f]['provider'] = result.get('provider')
+      mergedBlock[f]['modtime'] = result.get('modtime')
+
+    return mergedBlock
+
 
   def merge(self):
     fieldsHist = collections.Counter([i for i in list(itertools.chain(*self.blocks)) if i!='tempdata'])
@@ -185,4 +212,4 @@ class Merger:
     if f1[1]['modtime'] != f2[1]['modtime']:
       return f1 if f1[1]['modtime'] > f2[1]['modtime'] else f2
     #5. Doesn't matter anymore. Return one of them.
-    return f1[0]
+    return f1

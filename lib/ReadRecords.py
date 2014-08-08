@@ -51,39 +51,45 @@ def readRecordsFromADSExports(records):
   failures = []
   for bibcode in targets.keys():
     try:
-      adsrecords.addCompleteRecord(bibcode)
+      adsrecords.addCompleteRecord(bibcode,fulltext=True)
+      #adsrecords.addCompleteRecord(bibcode)
     except KeyboardInterrupt:
       raise
-    except:
+    except Exception, err:
       failures.append(bibcode)
+      logger.warning('ADSExports failed: %s (%s)' % (bibcode,err))
+
   adsrecords = adsrecords.export()
   if not adsrecords.content:
-    logger.warning('readRecordsFromADSExports: Recieved %s records, but ADSExports didn\'t return anything!' % len(records))
+    logger.error('Recieved %s records, but ADSExports didn\'t return anything!' % len(records))
     return []
   ttc = time.time()-s
   rate = len(targets)/ttc
 
   e = EnforceSchema.Enforcer()
   adsrecords = e.ensureList(xmltodict.parse(adsrecords.__str__())['records']['record'])
-  assert(len(adsrecords)==len(targets)-len(failures))
-  logger.info("readRecordsFromADSExports: Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" % 
+  # print len(adsrecords),len(targets),len(failures)
+  # with open('foo','w') as fp:
+  #   fp.write('%s' %adsrecords)
+  #assert(len(adsrecords)==len(targets)-len(failures))
+  logger.info("Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" % 
     {
       'num_records': len(records),
       'duration': ttc,
       'rate': rate,
     })
   if failures:
-    logger.warning("readRecordsFromADSExports: ADSExports failed to retrieve %s/%s records" % (len(failures),len(records)))
+    logger.warning("ADSExports failed to retrieve %s/%s records" % (len(failures),len(records)))
 
+  results = []
   for r in adsrecords:
     r = e.enforceTopLevelSchema(record=r,JSON_fingerprint=targets[r['@bibcode']])
     r['metadata'] = e.enforceMetadataSchema(r['metadata'])
-    #r['text'] = e.enforceTextSchema() TODO, once implemneted in ADSExports
-
+    results.append(r)    
   # import uuid
   # with open('%s.pickle' % uuid.uuid4(),'w') as fp:
   #   pickle.dump(records,fp)
-  return adsrecords
+  return results
 
 def readRecordsFromPickles(records,files):
   '''
