@@ -60,9 +60,14 @@ class Enforcer:
         for i in blocklevel_removals:
           if i in block:
             del block[i]
-      #De-duplicate
-      #Coerce to correct type
-      return record
+    del record['metadata']['publication']['altbibcode']
+
+    #De-duplicate
+
+
+
+    #Coerce to correct type
+    return record
 
   def enforceTextSchema(self,block):
     g = block.get
@@ -174,6 +179,7 @@ class Enforcer:
     r['publication']['page_range'] =    g('page_range')
     r['publication']['page_count'] =    g('pagenumber')
     r['publication']['electronic_id'] = g('electronic_id')
+    r['publication']['altbibcode'] =    g('altbibcode')
     r['publication']['name'] = {
       'raw':        g('journal'),
       'canonical':  g('canonical_journal'),
@@ -202,7 +208,6 @@ class Enforcer:
       r[k.lower()] = [{'origin': g('@origin'), 'content': i} for i in eL(g(k,[]))]
     
     return r
-
 
   def _propertiesEnforcer(self,block):
     r = {}
@@ -236,15 +241,13 @@ class Enforcer:
     for i in eL(g('databases',[])):
       r['databases'].append({
         'origin': g('@origin'),
-        'conent': i.get('database'),
+        'content': i.get('database'),
       })
 
     for k in ['openaccess','nonarticle','ocrabstract','private','refereed']:
       r[k] = self.parseBool(g(k))
 
     return r
-
-
 
   def _referencesEnforcer(self,block):
     r = {}
@@ -263,6 +266,7 @@ class Enforcer:
     for i in eL(g('reference',[])):
       r['references'].append({
         'origin':     g('@origin'),
+        'bibcode':    i.get('@bibcode'),
         'doi':        i.get('@doi'),
         'score':      i.get('@score'),
         'extension':  i.get('@extension'),

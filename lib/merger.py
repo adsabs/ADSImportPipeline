@@ -69,14 +69,19 @@ class Merger:
 
 
   def merge(self):
-    fieldsHist = collections.Counter([i for i in list(itertools.chain(*self.blocks)) if i!='tempdata'])
+    fieldsHist = {}
+    for fieldName in [i for i in list(itertools.chain(*self.blocks)) if i != 'tempdata']:
+      fieldsHist[fieldName] = 0
+      for block in self.blocks:
+        if block[fieldName]:
+          fieldsHist[fieldName] += 1
     singleDefinedFields = [k for k,v in fieldsHist.iteritems() if v==1]
     multipleDefinedFields = [k for k,v in fieldsHist.iteritems() if v>1]
     r = {}
     # First pass: construct the record from singly defined fields
     for field in singleDefinedFields:
       for block in self.blocks:
-        if field in block:
+        if block[field]:
           r[field] = block[field]
     # Second pass: merge the multiply defined fields
     for field in multipleDefinedFields:
@@ -85,8 +90,7 @@ class Merger:
       except Exception, err:
         self.logger.error('Error with merger dispatcher on %s: %s' % (field,err))
     self.block = r
-    if self.altpublications:
-      self.block['altpublications'] = self.altpublications
+    self.block['altpublications'] = self.altpublications
 
   def authorMerger(self,field='authors'):
     data = [ [i[field],i['tempdata']] for i in self.blocks if field in i]
@@ -96,9 +100,9 @@ class Merger:
       f2 = result if result else data.pop()
       result = self._getBestOrigin(f1,f2,'authors')
       for author in result[0]:
-        if 'affiliations' not in author:
+        if not author['affiliations']:
           _all = f1[0]+f2[0]
-          matches = [i for i in _all if i['name']['normalized']==author['name']['normalized'] and 'affiliations' in i]
+          matches = [i for i in _all if i['name']['normalized']==author['name']['normalized'] and i['affiliations']]
           #TODO: levenstein word distance fallback if no matches
           #In the case that a there are multiple authors with the same normalized name in the list, matches will have len>1.
           #This will blindly pick the first one that matched, which isn't necessarily correct.
@@ -124,17 +128,19 @@ class Merger:
     data = [ (i[field],i['tempdata']) for i in self.blocks if field in i]
     for f in data:
       if f[1]['origin'] in REFERENCES_ALWAYS_APPEND:
-        result.append(f[0])
+        result.extend(f[0])
     return result
 
   def publicationMerger(self,field):
     primaries = [({
         'origin':         i['publication']['origin'],
+        'volume':         i['publication']['volume'],
         'issue':          i['publication']['issue'],
         'page':           i['publication']['page'],
         'page_last':      i['publication']['page_last'],
         'page_range':     i['publication']['page_range'],
         'page_count':     i['publication']['page_count'],
+        'altbibcode':     i['publication']['altbibcode'],
         'electronic_id':  i['publication']['electronic_id'],
         'name':           i['publication']['name'],
         'dates':           i['publication']['dates'],
@@ -142,10 +148,12 @@ class Merger:
 
     altpublications = [{
         'origin':         i['publication']['origin'],
+        'volume':         i['publication']['volume'],
         'issue':          i['publication']['issue'],
         'page':           i['publication']['page'],
         'page_last':      i['publication']['page_last'],
         'page_range':     i['publication']['page_range'],
+        'altbibcode':     i['publication']['altbibcode'],
         'page_count':     i['publication']['page_count'],
         'electronic_id':  i['publication']['electronic_id'],
         'name':           i['publication']['name'],
@@ -164,7 +172,6 @@ class Merger:
       f1 = primaries.pop()
       f2 = result if result else primaries.pop()
       result = self._getBestOrigin(f1,f2,'journals')
-
     return result[0]
 
 
