@@ -66,6 +66,7 @@ class Enforcer:
 
 
 
+
     #Coerce to correct type
     return record
 
@@ -232,7 +233,7 @@ class Enforcer:
           'content': j.get('#text'),
         })
 
-    r['pubtype'] = {
+    r['doctype'] = {
       'origin':   g('@origin'),
       'content':  g('pubtype'),
     }
@@ -244,7 +245,7 @@ class Enforcer:
         'content': i.get('database'),
       })
 
-    for k in ['openaccess','nonarticle','ocrabstract','private','refereed']:
+    for k in ['openaccess','ocrabstract','private','refereed']:
       r[k] = self.parseBool(g(k))
 
     return r

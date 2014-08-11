@@ -39,12 +39,11 @@ MERGER_RULES = {
 
   #<metadata type="properties">
   'databases':            'takeAll',
-  'pubtype':              'originTrustMerger',
+  'doctype':              'originTrustMerger',
   'bibgroups':            'takeAll',
   'openaccess':           'booleanMerger',
   'private':              'originTrustMerger',
   'bibgroups':            'takeAll',
-  'nonarticle':           'booleanMerger',
   'ocrabstract':          'booleanMerger',
   'private':              'booleanMerger',
   'refereed':             'booleanMerger',

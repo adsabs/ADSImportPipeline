@@ -173,7 +173,7 @@ properties = {
     },
   ],
 
-  'pubtype': {
+  'doctype': {
     'origin': '',
     'content': '',
   },
@@ -195,8 +195,6 @@ properties = {
 
 // Should these all be booleans?
   'openaccess': true||false,
-
-  'nonarticle': true||false,
 
   'ocrabstract': true||false,
 
