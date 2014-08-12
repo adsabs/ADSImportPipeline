@@ -52,16 +52,32 @@ class PipelineMongoConnection:
   def initializeCollection(self,_index='bibcode',**kwargs):
     self.logger.info('Initialize index %s for %s/%s' % (_index,self.database,self.collection))
     self.db[self.collection].ensure_index(_index,unique=True)
+    
+    self.db['%s_seq' % self.collection].insert({
+      "_id": "docs",
+      "counter": 0,
+    })
+
+  def _getNextSequence(self,name='docs'):
+    #Todo: Implement a collection that records deleted docs, enabling us to re-use those _ids.
+    result = self.db['%s_seq' % self.collection].find_and_modify(
+      query={'_id':name},
+      update={'$inc': {'counter':1}},
+      new=True
+    )
+    return result['counter']
 
   def upsertRecords(self,records,querykey='bibcode',**kwargs):
     '''
     Upserts records(@type dict) to mongo
     '''
     if not records:
-      self.logger.debug('upsertRecords: No records given')
+      self.logger.warning('upsertRecords: No records given')
+
     for r in records:
       #query = {"bibcode": {"$in": [r['bibcode'] for r in records]}}
       query = {querykey: r[querykey]}
+      r['_id'] = self._getNextSequence()
       self.db[self.collection].update(query,r,upsert=True,w=kwargs.get('w',1),multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary
 
   def findNewRecords(self,records):
