@@ -128,7 +128,9 @@ class Merger:
     data = [ (i[field],i['tempdata']) for i in self.blocks if field in i]
     for f in data:
       if f[1]['origin'] in REFERENCES_ALWAYS_APPEND:
-        result.extend(f[0])
+        for reference in f[0]:
+          if reference not in result:
+            result.extend(reference)
     return result
 
   def publicationMerger(self,field):
@@ -143,7 +145,7 @@ class Merger:
         'altbibcode':     i['publication']['altbibcode'],
         'electronic_id':  i['publication']['electronic_id'],
         'name':           i['publication']['name'],
-        'dates':           i['publication']['dates'],
+        'dates':          i['publication']['dates'],
       },i['tempdata']) for i in self.blocks if not i['tempdata']['alternate_journal'] ]    
 
     altpublications = [{
@@ -157,7 +159,7 @@ class Merger:
         'page_count':     i['publication']['page_count'],
         'electronic_id':  i['publication']['electronic_id'],
         'name':           i['publication']['name'],
-        'dates':           i['publication']['dates'],
+        'dates':          i['publication']['dates'],
     } for i in self.blocks if i['tempdata']['alternate_journal'] ]
 
     self.altpublications = altpublications
@@ -178,8 +180,8 @@ class Merger:
   def takeAll(self,field):
     r = []
     for i in [j for j in self.blocks if field in j]:
-      r.extend(i[field])
-    r = [i for i in r if i]
+      if r[field] and i[field] not in r:
+        r.extend(i[field])
     return r
 
   def _getBestOrigin(self,f1,f2,field):

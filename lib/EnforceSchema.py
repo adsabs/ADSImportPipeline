@@ -41,11 +41,11 @@ class Enforcer:
       return item
     return False if item in ['false','False',False,'FALSE','f',0,'0'] else True
 
+
   def finalPassEnforceSchema(self,record):
     '''
     Responsible for final cleanup of data before writing to mongo
     . Removes 'tempdata'
-    . De-duplicates
     . Attempts to coerce types
     '''
     blocklevel_removals = ['tempdata']
@@ -61,11 +61,6 @@ class Enforcer:
           if i in block:
             del block[i]
     del record['metadata']['publication']['altbibcode']
-
-    #De-duplicate
-
-
-
 
     #Coerce to correct type
     return record
