@@ -58,7 +58,7 @@ MERGER_RULES = {
   'links':                'takeAll',
 }
 
-__PRIORITIES_DEFAULT = {
+_PRIORITIES_DEFAULT = {
   10: ['ADS METADATA',],
   1.0: ['ISI'],
   0.5: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
@@ -103,7 +103,7 @@ __PRIORITIES_DEFAULT = {
   0.2: ['ARXIV',],
 }
 
-__PRIORITIES_JOURNALS = {
+_PRIORITIES_JOURNALS = {
   10: ['ADS METADATA',],
   1.0: ['ISI'],
   0.5: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
@@ -149,7 +149,7 @@ __PRIORITIES_JOURNALS = {
   0.2: ['ARXIV',],
 }
 
-__PRIORITIES_AUTHORS = {
+_PRIORITIES_AUTHORS = {
   10: ['ADS METADATA',],
   1.0: ['ISI'],
   0.5: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
@@ -195,7 +195,7 @@ __PRIORITIES_AUTHORS = {
   0.2: ['ARXIV',],
 }
 
-__PRIORITIES_ABSTRACTS = {
+_PRIORITIES_ABSTRACTS = {
   10: ['ADS METADATA',],
   1.0: ['ISI'],
   0.5: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
@@ -241,7 +241,7 @@ __PRIORITIES_ABSTRACTS = {
   0.2: ['STI'],
 }
 
-__PRIORITIES_REFERENCES = {
+_PRIORITIES_REFERENCES = {
   10: ['AUTHOR',],
   9.5: ['ISI',],
   9.1: ['SPRINGER',],
@@ -270,7 +270,7 @@ __PRIORITIES_REFERENCES = {
       'QJRAS', 'RMXAA', 'RMXAC', 'ROAJ', 'RVMA', 'S&T', 'SABER', 'SAI',
       'SAJ', 'SAO', 'SAS', 'SCI', 'SCIENCE', 'SERB', 'SF2A', 'SLO',
       'SPIE', 'SPIKA', 'SPITZER', 'SPRN', 'STARD', 'STECF',
-      'STSCI', 'SerAJ', 'T+F', 'TERRAPUB', 'UCP', 'UMI', 'USCI', 'USNO',
+      'STSCI', 'SERAJ', 'T+F', 'TERRAPUB', 'UCP', 'UMI', 'USCI', 'USNO',
       'VATICAN', 'VERSITA', 'WGN', 'WILEY', 'WSPC', 'XMM', 'XTE',
       'ARI', 'KATKAT', 'ARIBIB', 'JSTOR', 'CARL', 'CFA', 'HOLLIS', 'LIBRARY',
       'POS', 'PRINCETON', 'SIMBAD', 'CDS','UTAL', 'STI', 'WEB',
@@ -288,24 +288,23 @@ __PRIORITIES_REFERENCES = {
 
 PRIORITIES = {
   'default': dict((source, score)
-    for score, sources in __PRIORITIES_DEFAULT.iteritems()
+    for score, sources in _PRIORITIES_DEFAULT.iteritems()
     for source in sources),
   'journals': dict((source, score)
-    for score, sources in __PRIORITIES_JOURNALS.iteritems()
+    for score, sources in _PRIORITIES_JOURNALS.iteritems()
     for source in sources),
   'authors': dict((source, score)
-    for score, sources in __PRIORITIES_AUTHORS.iteritems()
+    for score, sources in _PRIORITIES_AUTHORS.iteritems()
     for source in sources),
   'references': dict((source, score)
-    for score, sources in __PRIORITIES_REFERENCES.iteritems()
+    for score, sources in _PRIORITIES_REFERENCES.iteritems()
     for source in sources),
   'abstracts': dict((source, score)
-    for score, sources in __PRIORITIES_ABSTRACTS.iteritems()
+    for score, sources in _PRIORITIES_ABSTRACTS.iteritems()
     for source in sources),
 }
 
 
 
 #References with these origins will always be added to merged reference metadata blocks.
-#REFERENCES_ALWAYS_APPEND = ['ISI', 'AUTHOR', 'OTHER', 'CROSSREF']
 REFERENCES_ALWAYS_APPEND = ['ISI', 'AUTHOR', 'OTHER',]
