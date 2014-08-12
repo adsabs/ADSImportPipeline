@@ -13,6 +13,8 @@ import signal
 import pika
 import subprocess
 import argparse
+import logging
+import logging.handlers
 
 import psettings
 import workers
@@ -22,6 +24,20 @@ from workers import RabbitMQWorker
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from lib import daemon
 
+
+logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
+datefmt= '%m/%d/%Y %H:%M:%S'
+formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
+LOGGER = logging.getLogger('pipeline')
+fn = os.path.join(os.path.dirname(__file__),'..','logs','pipeline.log')   
+rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+rfh.setFormatter(formatter)
+ch = logging.StreamHandler() #console handler
+ch.setFormatter(formatter)
+LOGGER.addHandler(ch)
+LOGGER.addHandler(rfh)
+LOGGER.setLevel(logging.DEBUG)
+logger = LOGGER
 
 #----------------------------------------------------------
 # Define usage args: status|stop|start
@@ -35,7 +51,7 @@ def send_signal(sig,pid):
   try:
     os.kill(pid,sig)
   except OSError:
-    print "Unable to send signal to pid=%s, maybe stale pid file?" % (pid)
+    logger.info("Unable to send signal to pid=%s, maybe stale pid file?" % (pid))
     raise
 
 @command
@@ -43,28 +59,28 @@ def status():
   L=Lockfile()
   if L.exists and L.old_pid:
     #Poll the controller process that has been previously started.
-    print "Main controller.py process seems to be running with pid=%s" % L.old_pid
+    logger.info("Main controller.py process seems to be running with pid=%s" % L.old_pid)
     send_signal(signal.SIGUSR1,L.old_pid)
   else:
-    print "No master instances could be found."
+    logger.info("No master instances could be found.")
 
 @command
 def stop():
   L=Lockfile()
   if L.exists and L.old_pid:
-    print "Shutting down master process=%s and its workers" % L.old_pid
+    logger.info("Shutting down master process=%s and its workers" % L.old_pid)
     send_signal(signal.SIGHUP,L.old_pid)
   else:
-    print "No master instances could be found."
+    logger.info("No master instances could be found.")
 
 @command
 def start():
   L=Lockfile()
   if L.exists and L.old_pid:
-    print "Process seems to be running already:"
+    logger.info("Process seems to be running already:")
     status()
   else:
-    print "Starting master process and workers..."
+    logger.info("Starting master process and workers...")
     TM = TaskMaster(psettings.RABBITMQ_URL,psettings.RABBITMQ_ROUTES,psettings.WORKERS)
     dc = daemon.DaemonContext()
     dc.signal_map = {
@@ -78,10 +94,10 @@ def start():
       with dc:
         TM.getLock()
         if not TM.lockfile.acquired:
-          print "ERR: Could not acquire logfile, exiting"
+          logger.error("ERR: Could not acquire logfile, exiting")
         TM.initialize_rabbitmq()
         TM.start_workers()
-        print "OK."
+        logger.info("OK.")
         TM.poll_loop()
     except:
       L.release()
@@ -117,7 +133,6 @@ class Lockfile(Singleton):
     try:
       with open(self.path,'w') as fp:
         fp.write('%s' % 
-
           self.this_pid)
         self.acquired = True
     except:
@@ -151,22 +166,22 @@ class TaskMaster(Singleton):
     #Kill child workers if master gets SIGTERM
     try:
       self.stop_workers()
-    except:
-      print "WARN: Workers not stopped gracefully."
+    except Exception, err:
+      logger.warning("Workers not stopped gracefully: %s" % err)
     finally:
       if not self.lockfile.release():
-        print "WARN: Lockfile [%s] wasn't removed properly" % (self.lockfile.path)
+        logger.warning("Lockfile [%s] wasn't removed properly" % (self.lockfile.path))
       self.running = False
       sys.exit(0)
 
   def status(self,signal,frame):
     #Print status of master+workers
-    print "Running workers:"
+    logger.info("Running workers:")
     for worker,params in self.workers.iteritems():
       for a in params['active']:
         s = "  %s:\t(uptime %0.2f hours)"
-        print s % (worker,((time.time()-a['start'])/60/60))
-      print "Total: %s" % (len(params['active']))
+        logger.info(s % (worker,((time.time()-a['start'])/60/60)))
+      logger.info("Total: %s" % (len(params['active'])))
   def initialize_rabbitmq(self):
     #Make sure the plumbing in rabbitMQ is correct; this procedure is idempotent
     w = RabbitMQWorker()
