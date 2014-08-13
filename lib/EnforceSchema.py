@@ -6,14 +6,20 @@ class Enforcer:
   '''
   translates schema from ADSRecords to alternative schema
   '''
-  def __init__(self):
+  def __init__(self,datefmt='%Y-%m-%dT%H:%M:%S.%fZ',solrTimeoffset={'minutes':30}):
+    '''
+    datefmt and solrTimeoffset should be synchronized with what solr expects.
+    If they are not, solr will return incorrect dates in some cases.
+    '''
+
     self.dispatcher = {
       'general': self._generalEnforcer,
       'properties':self._propertiesEnforcer,
       'references':self._referencesEnforcer,
       'relations':self._relationsEnforcer,
     }
-    self.datefmt='%Y-%m-%dT%H:%M:%S.%fZ'
+    self.datefmt=datefmt
+    self.solrTimeoffset=solrTimeoffset
 
   def ensureLanguageSchema(self,item):
     if isinstance(item,basestring):
@@ -41,6 +47,30 @@ class Enforcer:
       return item
     return False if item in ['false','False',False,'FALSE','f',0,'0'] else True
 
+  def parseDate(self,datestr):
+    formats = [
+      self.datefmt,
+      '%Y-%m-%d',
+      '%Y-%m',
+      '%Y',
+    ]
+    
+    fullDate = True
+    if '-00' in datestr:
+      datestr = datestr.replace('-00','-01')
+      fullDate = False
+    if len(datestr)<10:
+      fullDate = False
+
+    for f in formats:
+      try:
+        date = datetime.datetime.strptime(datestr,f)
+        if fullDate:
+          date += datetime.timedelta(**self.solrTimeoffset)
+        date = date.strftime(self.datefmt)
+      except ValueError:
+        pass
+    return date
 
   def finalPassEnforceSchema(self,record):
     '''
@@ -189,12 +219,12 @@ class Enforcer:
     for i in eL(g('dates',[])):
       r['publication']['dates'].append({
         'type':     i['date'].get('@type'),
-        'content':  i['date'].get('#text'),
+        'content':  self.parseDate(i['date'].get('#text')),
       })
     if 'publication_year' in block:
       r['publication']['dates'].append({
         'type': 'publication_year',
-        'content':  g('publication_year'),
+        'content':  self.parseDate(g('publication_year')),
       })
 
 

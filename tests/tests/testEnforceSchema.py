@@ -1,4 +1,6 @@
 import unittest
+import datetime
+
 import sys, os
 PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
 sys.path.append(PROJECT_HOME)
@@ -24,7 +26,7 @@ class TestEnforceSchema(unittest.TestCase):
     ])
 
   def test_generalEnforcer(self):
-    self.maxDiff=None
+    #self.maxDiff=None
     self.assertEqual(self.general,stubdata.GENERAL_ENFORCED)
 
   def test_propertiesEnforcer(self):
@@ -38,3 +40,14 @@ class TestEnforceSchema(unittest.TestCase):
   def test_relationsEnforcer(self):
     #self.maxDiff=None
     self.assertEqual(self.relations,stubdata.RELATIONS_ENFORCED)
+
+  def test_parseDate(self):
+    testCases = {
+      '2012-01-01': '2012-01-01T00:30:00.000000Z',
+      '2012-01':    '2012-01-01T00:00:00.000000Z',
+      '2012':       '2012-01-01T00:00:00.000000Z',
+      '2012-01-00': '2012-01-01T00:00:00.000000Z',
+      '2012-00-00': '2012-01-01T00:00:00.000000Z',
+    }
+    for _input, _output in testCases.iteritems():
+      self.assertEqual(self.e.parseDate(_input),_output)
