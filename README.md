@@ -4,23 +4,25 @@
 
 ## Overview
 
-Coordinates ingest of a full ADS record.
+Coordinates ingest of a full ADS record. The workflow is as follows.
 
-1. Parses "classic" bibcodes files defined in settings.py
-1. Operates on any bibcode whose "timestamp" differs from the cooresponding "JSON_fingerprint" field in the mongodb
-1. Uses ads.ADSExports.ADSRecords to consolidate data from classic based on bibcodes in 2.
-1. Parses resulting xmlobject to python dict via xmltodict.py
-1. Enforces type=list on any potentially repeated entries
-1. Merges any repeated blocks having the same @type attribute
-1. Insert (upsert=True) data to mongodb
+1. Read bibcodes from file
+1. Query mongo for changed records. A changed record is one whose `record.JSON_fingerprint` is different than that parsed from disk
+1. Call ads.ADSExports.ADSRecords to consolidate each record's data (ADS-classic)
+1. Parses resulting xmlobject to a native python structure via `xmltodict.py`
+1. Enforces a set schema that is documented in `schema.json`
+1. Merges any repeated metadata blocks
+1. Insert/update record in mongodb. Insert if it is new, update if that bibcode or one of its alternate bibcodes exists.
 
-Step 1 is initiated by invoking `run.py`. 
+The workflow is initiated by invoking `run.py`. 
 
 ## Async workflow with rabbitMQ
 
 - Invoking `run.py --async` publishes the `[(bibcode, fingerprint),...]` records to rabbitmq. 
 - Workers that consume these messages are defined in `pipeline/psettings.py` and `pipeline/workers.py`.
 - Workers are controlled via a master process in `pipeline/ADSimportpipeliny.py`.
+- Workers perform their tasks independently and (optionally) concurrently.
+- Workers expect and return JSON.
  
 
 ## Requirements
