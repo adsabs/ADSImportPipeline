@@ -123,7 +123,7 @@ def main(MONGO=MONGO,*args):
 
           r = tuple(line.strip().split('\t'))
           if len(r) != 2:
-            msg = "A bibcode entry should be \"bibcode\tJSON_fingerprint\". Skipping: %s" % r
+            msg = "A bibcode entry should be \"bibcode<tab>JSON_fingerprint\". Skipping: %s" % r
             logger.warning(msg)
             continue
           if args.targetBibcodes:

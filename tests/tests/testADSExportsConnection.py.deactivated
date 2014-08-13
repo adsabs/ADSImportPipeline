@@ -1,0 +1,15 @@
+import sys, os
+import unittest
+PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
+sys.path.append(PROJECT_HOME)
+
+class TestADSExportsConnection(unittest.TestCase):
+  def test_instantiation(self):
+    try:
+      from ads.ADSExports import ADSRecords
+    except ImportError:
+      sys.path.append('/proj/ads/soft/python/lib/site-packages')
+      from ads.ADSExports import ADSRecords
+      print "Warning: Fallback to explicit path declaration for import"
+    self.adsRecords = ADSRecords('full','XML')
+    self.assertIsInstance(self.adsRecords,ADSRecords)

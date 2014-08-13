@@ -180,7 +180,7 @@ class Merger:
   def takeAll(self,field):
     r = []
     for i in [j for j in self.blocks if field in j]:
-      if r[field] and i[field] not in r:
+      if i[field] and i[field] not in r:
         r.extend(i[field])
     return r
 

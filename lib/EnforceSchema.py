@@ -45,8 +45,8 @@ class Enforcer:
   def finalPassEnforceSchema(self,record):
     '''
     Responsible for final cleanup of data before writing to mongo
-    . Removes 'tempdata'
-    . Attempts to coerce types
+    . Removes unnecessary fields
+    . ensures metadata elements are defined
     '''
     blocklevel_removals = ['tempdata']
     toplevel_removals = ['@bibcode']
@@ -60,7 +60,11 @@ class Enforcer:
         for i in blocklevel_removals:
           if i in block:
             del block[i]
-    del record['metadata']['publication']['altbibcode']
+    del record['metadata']['general']['publication']['altbibcode']
+
+    for k in self.dispatcher.keys():
+      if k not in record['metadata']:
+        record['metadata'][k] = {} if k != 'references' else []
 
     #Coerce to correct type
     return record
@@ -99,7 +103,7 @@ class Enforcer:
             },
         })
 
-    r['metadata'] = record['metadata']    
+    r['metadata'] = record['metadata']
     return r
 
   def enforceMetadataSchema(self,blocks):
@@ -175,7 +179,7 @@ class Enforcer:
     r['publication']['page_range'] =    g('page_range')
     r['publication']['page_count'] =    g('pagenumber')
     r['publication']['electronic_id'] = g('electronic_id')
-    r['publication']['altbibcode'] =    g('altbibcode')
+    r['publication']['altbibcode'] =    g('bibcode')
     r['publication']['name'] = {
       'raw':        g('journal'),
       'canonical':  g('canonical_journal'),

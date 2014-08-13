@@ -53,12 +53,13 @@ class PipelineMongoConnection:
     self.logger.info('Initialize index %s for %s/%s' % (_index,self.database,self.collection))
     self.db[self.collection].ensure_index(_index,unique=True)
     
+    self.logger.info('Initialize sequence collection for %s/%s' % (self.database,self.collection))
     self.db['%s_seq' % self.collection].insert({
-      "_id": "docs",
+      "_id": "seq",
       "counter": 0,
     })
 
-  def _getNextSequence(self,name='docs'):
+  def _getNextSequence(self,name='seq'):
     #Todo: Implement a collection that records deleted docs, enabling us to re-use those _ids.
     result = self.db['%s_seq' % self.collection].find_and_modify(
       query={'_id':name},
@@ -67,18 +68,48 @@ class PipelineMongoConnection:
     )
     return result['counter']
 
-  def upsertRecords(self,records,querykey='bibcode',**kwargs):
+  def upsertRecords(self,records,**kwargs):
     '''
     Upserts records(@type dict) to mongo
     '''
+    def update(query,r,current):
+      try:
+        r['_id'] = current['_id']
+        mongo.update(query,r,w=kwargs.get('w',1),multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary)
+      except Exception, err:
+        self.logger.error("Failure to UPDATE record %s: %s" % (query,err))
+
+    def insert(query,r):
+      try:
+        r['_id'] = self._getNextSequence()   
+        mongo.insert(r,w=kwargs.get('w',1),multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary)
+      except Exception, err:
+        self.logger.error("Failure to INSERT record %s: %s" % (query,err))
+
+    mongo = self.db[self.collection]
+
     if not records:
       self.logger.warning('upsertRecords: No records given')
-
+      
     for r in records:
-      #query = {"bibcode": {"$in": [r['bibcode'] for r in records]}}
-      query = {querykey: r[querykey]}
-      r['_id'] = self._getNextSequence()
-      self.db[self.collection].update(query,r,upsert=True,w=kwargs.get('w',1),multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary
+      #Check if a record with this bibcode is already in mongo
+      query = {'bibcode': r['bibcode']}
+      current = mongo.find_one(query)
+      if current:
+        update(query,r,current)
+        return
+
+      #Check if a mongo record with this record's alternate bibcode exists
+      for alternate in r['metadata']['relations'].get('alternates',[]):
+        query = {'bibcode': alternate['content']}
+        current = mongo.find_one(query)
+        if current:
+          self.logger.info('Alternate record %s will be overwritten by %s' % (query,r['bibcode']))
+          update(query,r,current)
+          break
+
+      if not current:
+        insert(query,r)
 
   def findNewRecords(self,records):
     '''

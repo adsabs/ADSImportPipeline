@@ -9,6 +9,7 @@ class SolrAdapter(object):
       'ack': '',
       'aff': ['',],
       'alternate_bibcode': ['',],
+      'alternate_title': ['',],
       'arxiv_class': ['',],
       'author': ['',],
       'author_native': ['',],
@@ -21,10 +22,11 @@ class SolrAdapter(object):
       'citation_count': 0,
       'cite_read_boost': 0.0,
       'classic_factor': 0,
+      'comment': '',
       'copyright': '',
       'database': ['',],
       'date': 'YYYY-MM[-DD]',
-      'doi':['',], #Why is this multiple value'd?
+      'doi':['',], 
       'email': ['',],
       'facility': ['',],
       'first_author': '',
@@ -32,7 +34,7 @@ class SolrAdapter(object):
       'full': '',
       'grant': ['',],
       'grant_facet_hier': ['',],
-      'id': None, #invenio id, let's remove this???
+      'id': 0,
       'identifier': ['',],
       'isbn': ['',],
       'issn': ['',],
@@ -67,20 +69,22 @@ class SolrAdapter(object):
   @staticmethod
   def _abstract(ADS_record):
     result = None
-    for r in ADS_record['metadata']['general']['abstract']:
-      if r['@lang'] == "en" or not result['abstract']: #fallback to other language if en not present
+    for r in ADS_record['metadata']['general']['abstracts']:
+      if r['@lang'] == "en":
         result = r['#text']
+    if not result: #attempt fallback to other language if en not present
+      result = ADS_record['metadata']['general']['abstracts'][0].get('#text','')
     return {'abstract': result}
 
-  # @staticmethod
-  # def _ack(ADS_record):
-  #   result = ADS_record['metadata'].get('acknowledgements',None)
-  #   return {'ack': result}
+  @staticmethod
+  def _ack(ADS_record):
+    result = ADS_record['text'].get('acknowledgements')
+    return {'ack': result}
 
   @staticmethod
   def _aff(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
-    result = ['; '.join([j for j in i['affiliations'] if j]) for i in authors]
+    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['@nr']))
+    result = ['; '.join([j for j in i['affiliations'] if j]) for i in authors if i['affiliations'] else '-']
     return {'aff': result}
 
   @staticmethod
@@ -89,8 +93,21 @@ class SolrAdapter(object):
     return {'alternate_bibcode': result}
 
   @staticmethod
+  def _alternate_title(ADS_record):
+    result = ''
+    for r in ADS_record['metadata']['general']['titles']:
+      if r['@lang'] != "en":
+        result = r['#text']
+    return {'alternate_title': result}
+
+  @staticmethod 
+  def _arxiv_class(ADS_record):
+    results = [i for i in ADS_record['metadata']['general']['arxivcategories']]
+    return {'arxiv_class':results}
+
+  @staticmethod
   def _author(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
+    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['@nr']))
     result = [i['name']['western'] for i in authors if i]
     return {'author': result}  
 
@@ -110,9 +127,19 @@ class SolrAdapter(object):
     return {'bibgroup': result}
 
   @staticmethod
+  def _body(ADS_record):
+    result = ADS_record['text'].get('body')
+    return {'body': result}
+
+  @staticmethod
   def _copyright(ADS_record):
     result = ADS_record['metadata']['general']['copyright'].get('content',None)
     return {'copyright': result}
+
+  @staticmethod
+  def _comment(ADS_record):
+    result = ADS_record['metadata']['general']['comment'].get('content',None)
+    return {'comment': result}
 
   @staticmethod
   def _database(ADS_record):
@@ -121,19 +148,31 @@ class SolrAdapter(object):
 
   @staticmethod
   def _doi(ADS_record):
-    result = ADS_record['metadata']['general']['doi'].get('content',None) 
+    result = [i['content'] for i in ADS_record['metadata']['general']['doi']]
     return {'doi': result}
 
   @staticmethod
   def _email(ADS_record):
     authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
-    result = ['; '.join([j for j in i['emails'] if j]) for i in authors if i]
+    result = ['; '.join([j for j in i['emails'] if j]) for i in authors if i['emails'] else '-']
     return {'email': result}
 
   @staticmethod
   def _first_author(ADS_record):
     authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))   
     return {'first_author': authors[0]['name']['western']}
+
+  @staticmethod
+  def _id(ADS_record):
+    return {'id': ADS_records['_id']}
+
+  @staticmethod
+  def _identifier(ADS_record):
+    result = []
+    result.extend( [i['content'] for i in ADS_record['metadata']['relations']['preprints']] )
+    result.extend( [i['content'] for i in ADS_record['metadata']['general']['doi']] )
+    result.extend( [i['content'] for i in ADS_record['metadata']['relations']['alternates']] )
+    return {'identifier': result}
 
   @staticmethod
   def _issn(ADS_record):
@@ -144,7 +183,19 @@ class SolrAdapter(object):
   def _isbn(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general']['isbns'] if i]
     return {'isbn': result}
+
+  @staticmethod
+  def _issue(ADS_record):
+    return {'issue': ADS_record['metadata']['general']['publication']['issue']}
       
+  @staticmethod
+  def _page(ADS_record):
+    return {'page': ADS_record['metadata']['general']['publication']['page']}
+
+  @staticmethod
+  def _volume(ADS_record):
+    return {'issue': ADS_record['metadata']['general']['publication']['volume']}
+
   @staticmethod
   def _keyword(ADS_record):
     result = [i['original'] for i in ADS_record['metadata']['general']['keywords'] if i]

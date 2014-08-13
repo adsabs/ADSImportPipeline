@@ -1,0 +1,18 @@
+import unittest
+import sys, os
+PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
+sys.path.append(PROJECT_HOME)
+
+from lib import UpdateRecords
+from lib import merger
+from stubdata import stubdata
+
+class TestMerger(unittest.TestCase):
+  def setUp(self):
+    self.records=stubdata.METADATA_BLOCKS
+    self.merger = merger.Merger(self.records)
+  def test_mergeRecords(self):  
+    self.assertEqual(UpdateRecords.mergeRecords(self.records),self.records)
+ 
+  def test_mergerlogic_takeAll(self):
+    self.assertEqual(self.merger.takeAll('foo'),['bar','bar2'])
