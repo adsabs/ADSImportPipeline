@@ -37,6 +37,10 @@ RABBITMQ_ROUTES = {
       'queue': 'MongoWriteQueue',
       'durable': True,
     },
+    {
+      'queue': 'SolrUpdateQueue',
+      'durable': True,
+    }, 
   ],
   'BINDINGS':[
     {
@@ -58,7 +62,12 @@ RABBITMQ_ROUTES = {
       'queue':        'MongoWriteQueue',
       'exchange':     'MergerPipelineExchange',
       'routing_key':  'MongoWriteRoute',
-    },  
+    },
+    {
+      'queue':        'SolrUpdateQueue',
+      'exchange':     'MergerPipelineExchange',
+      'routing_key':  'SolrUpdateRoute',
+    },
   ],
 }
 
@@ -95,9 +104,19 @@ WORKERS = {
   
   'MongoWriteWorker': {
     'concurrency': 1,
-    'publish': [],
+    'publish': [
+      {'exchange': 'MergerPipelineExchange','routing_key': 'SolrUpdateRoute',},
+    ],
     'subscribe': [
       {'queue':'MongoWriteQueue',},
     ],
   },
+
+  'SolrUpdateWorker': {
+    'concurrency': 1,
+    'publish': [],
+    'subscribe': [
+      {'queue':'SolrUpdateQueue',},
+    ],
+  }, 
 }

@@ -2,6 +2,23 @@ import requests
 import argparse
 import json
 import requests
+import logging
+import logging.handlers
+import os
+
+logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
+datefmt= '%m/%d/%Y %H:%M:%S'
+formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
+LOGGER = logging.getLogger(__file__)
+fn = os.path.join(os.path.dirname(__file__),'..','logs','SolrUpdater.log')   
+rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+rfh.setFormatter(formatter)
+ch = logging.StreamHandler() #console handler
+ch.setFormatter(formatter)
+LOGGER.addHandler(ch)
+LOGGER.addHandler(rfh)
+LOGGER.setLevel(logging.DEBUG)
+logger = LOGGER
 
 class SolrAdapter(object):
   SCHEMA = {
@@ -70,10 +87,10 @@ class SolrAdapter(object):
   def _abstract(ADS_record):
     result = None
     for r in ADS_record['metadata']['general']['abstracts']:
-      if r['@lang'] == "en":
-        result = r['#text']
+      if r['lang'] == "en":
+        result = r['text']
     if not result: #attempt fallback to other language if en not present
-      result = ADS_record['metadata']['general']['abstracts'][0].get('#text','')
+      result = ADS_record['metadata']['general']['abstracts'][0].get('text','')
     return {'abstract': result}
 
   @staticmethod
@@ -83,8 +100,8 @@ class SolrAdapter(object):
 
   @staticmethod
   def _aff(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['@nr']))
-    result = ['; '.join([j for j in i['affiliations'] if j]) for i in authors if i['affiliations'] else '-']
+    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))
+    result = ['; '.join([j for j in i['affiliations'] if j]) if i['affiliations'] else '-' for i in authors]
     return {'aff': result}
 
   @staticmethod
@@ -96,8 +113,8 @@ class SolrAdapter(object):
   def _alternate_title(ADS_record):
     result = ''
     for r in ADS_record['metadata']['general']['titles']:
-      if r['@lang'] != "en":
-        result = r['#text']
+      if r['lang'] != "en":
+        result = r['text']
     return {'alternate_title': result}
 
   @staticmethod 
@@ -107,13 +124,13 @@ class SolrAdapter(object):
 
   @staticmethod
   def _author(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['@nr']))
+    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))
     result = [i['name']['western'] for i in authors if i]
     return {'author': result}  
 
   @staticmethod
   def _author_native(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
+    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))
     result = [i['name']['native'] for i in authors if i]
     return {'author_native': result}  
 
@@ -153,13 +170,13 @@ class SolrAdapter(object):
 
   @staticmethod
   def _email(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))
-    result = ['; '.join([j for j in i['emails'] if j]) for i in authors if i['emails'] else '-']
+    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))
+    result = ['; '.join([j for j in i['emails'] if j]) if i['emails'] else '-' for i in authors]
     return {'email': result}
 
   @staticmethod
   def _first_author(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['author'],key=lambda k: int(k['@nr']))   
+    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))   
     return {'first_author': authors[0]['name']['western']}
 
   @staticmethod
@@ -241,13 +258,19 @@ class SolrAdapter(object):
         assert len(set([type(i) for i in v])) == 1
         assert isinstance(v[0],type(SCHEMA[k][0]))
 
-def solrUpdate(ADSrecords,url='http://localhost:9001/solr/update/json?commit=true'):
+def solrUpdate(bibcodes,url='http://localhost:9001/solr/update/json?commit=true'):
   solrRecords = []
-  for r in ADSrecords:
-    r = SolrAdapter.adapt(r)
+  if not bibcodes:
+    logger.warning("solrUpdate did not recieve any bibcodes")
+    return
+
+  for bibcode in bibcodes:
+    #todo: get records from mongo lookup by bibcode
+    r = SolrAdapter.adapt(bibcode)
     #SolrAdapter.validate(r) #Raises AssertionError if not validated
     solrRecords.append(r)
   payload = json.dumps(solrRecords)
+  logger.info(payload)
   headers = {'content-type': 'application/json'}
   r = requests.post(url,data=payload,headers=headers)
 

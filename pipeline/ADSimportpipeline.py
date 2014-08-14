@@ -97,7 +97,6 @@ def start():
           logger.error("ERR: Could not acquire logfile, exiting")
         TM.initialize_rabbitmq()
         TM.start_workers()
-        logger.info("OK.")
         TM.poll_loop()
     except:
       L.release()

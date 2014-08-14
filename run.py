@@ -10,6 +10,7 @@ from lib import xmltodict
 from lib import MongoConnection
 from lib import ReadRecords
 from lib import UpdateRecords
+from lib import SolrUpdater
 from pipeline import psettings
 from pipeline.workers import RabbitMQWorker
 
@@ -156,7 +157,8 @@ def main(MONGO=MONGO,*args):
           r = {'merged': merged, 'nonmerged': records}
           json.dump(r,fp,indent=1)
       else:
-        mongo.upsertRecords(merged)
+        bibcodes = mongo.upsertRecords(merged)
+        SolrUpdater.solrUpdate(bibcodes)
       
 if __name__ == '__main__':
   try:

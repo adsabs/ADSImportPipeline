@@ -81,7 +81,7 @@ class PipelineMongoConnection:
 
     def insert(query,r):
       try:
-        r['_id'] = self._getNextSequence()   
+        r['_id'] = self._getNextSequence()
         mongo.insert(r,w=kwargs.get('w',1),multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary)
       except Exception, err:
         self.logger.error("Failure to INSERT record %s: %s" % (query,err))
@@ -90,13 +90,17 @@ class PipelineMongoConnection:
 
     if not records:
       self.logger.warning('upsertRecords: No records given')
-      
+      return []
+
+    updates = []
+    inserts = []      
     for r in records:
       #Check if a record with this bibcode is already in mongo
       query = {'bibcode': r['bibcode']}
       current = mongo.find_one(query)
       if current:
         update(query,r,current)
+        updates.append(r['bibcode'])
         return
 
       #Check if a mongo record with this record's alternate bibcode exists
@@ -106,10 +110,16 @@ class PipelineMongoConnection:
         if current:
           self.logger.info('Alternate record %s will be overwritten by %s' % (query,r['bibcode']))
           update(query,r,current)
+          updates.append(r['bibcode'])
           break
 
       if not current:
         insert(query,r)
+        inserts.append(r['bibcode'])
+
+    self.logger.info("Performed %s updates and %s inserts to mongo" % (len(updates),len(inserts)))
+    print updates+inserts
+    return updates+inserts
 
   def findNewRecords(self,records):
     '''
