@@ -150,8 +150,6 @@ class Lockfile(Singleton):
 
 
 class TaskMaster(Singleton):
-  '''TODO: Since this class is run as a daemon, the print statments dont make any sense. 
-  Should re-factor to write to a logfile or some other strategy'''
   def __init__(self,rabbitmq_url,rabbitmq_routes,workers):
     self.rabbitmq_url = rabbitmq_url
     self.rabbitmq_routes = rabbitmq_routes

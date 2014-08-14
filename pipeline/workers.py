@@ -24,7 +24,6 @@ class RabbitMQWorker:
     self.channel.basic_qos(prefetch_count=1)
 
   def publish(self,message,**kwargs):
-    print "PUBLISH",kwargs
     for e in self.params['publish']:
       self.channel.basic_publish(e['exchange'],e['routing_key'],message,**kwargs)
 
@@ -107,7 +106,6 @@ class MongoWriteWorker(RabbitMQWorker):
   def on_message(self, channel, method_frame, header_frame, body):
     records = json.loads(body)
     results = self.f(records)
-    print "MongoWriteWorker about to publish",results
     self.publish(json.dumps(results,default=date_handler))
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
@@ -123,7 +121,6 @@ class SolrUpdateWorker(RabbitMQWorker):
   
   def on_message(self, channel, method_frame, header_frame, body):
     records = json.loads(body)
-    print "SolrUpdateWorker recieved:",records
     self.f(records)
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 

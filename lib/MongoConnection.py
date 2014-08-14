@@ -28,14 +28,18 @@ class PipelineMongoConnection:
       self.initializeCollection()
 
 
+  def getRecordsFromBibcodes(self,bibcodes):
+    results = self.db[self.collection].find({"bibcode": {"$in": bibcodes}})
+    return list(results)
+
   def initializeLogging(self,**kwargs):
     if self.logger:
       return
     logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
     datefmt= '%m/%d/%Y %H:%M:%S'
     formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
-    LOGGER = logging.getLogger(__file__)
-    default_fn = os.path.join(os.path.dirname(__file__),'..','logs','%s.log' % self.__class__.__name__)   
+    LOGGER = logging.getLogger('mongo')
+    default_fn = os.path.join(os.path.dirname(__file__),'..','logs','mongo.log')   
     fn = kwargs.get('filename',default_fn)
     rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
     rfh.setFormatter(formatter)
@@ -86,6 +90,7 @@ class PipelineMongoConnection:
       except Exception, err:
         self.logger.error("Failure to INSERT record %s: %s" % (query,err))
 
+
     mongo = self.db[self.collection]
 
     if not records:
@@ -118,7 +123,6 @@ class PipelineMongoConnection:
         inserts.append(r['bibcode'])
 
     self.logger.info("Performed %s updates and %s inserts to mongo" % (len(updates),len(inserts)))
-    print updates+inserts
     return updates+inserts
 
   def findNewRecords(self,records):
