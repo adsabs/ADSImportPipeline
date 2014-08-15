@@ -7,7 +7,8 @@ class PipelineMongoConnection:
 
   def __init__(self,**kwargs):
     self.logger = kwargs.get('logger',None)
-    self.initializeLogging(**kwargs)
+    if not self.logger:
+      self.initializeLogging(**kwargs)
 
     self.host = kwargs.get('HOST',None)
     self.port = kwargs.get('PORT',None)
@@ -33,14 +34,12 @@ class PipelineMongoConnection:
     return list(results)
 
   def initializeLogging(self,**kwargs):
-    if self.logger:
-      return
     logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
     datefmt= '%m/%d/%Y %H:%M:%S'
     formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
-    LOGGER = logging.getLogger('mongo')
-    default_fn = os.path.join(os.path.dirname(__file__),'..','logs','mongo.log')   
-    fn = kwargs.get('filename',default_fn)
+    LOGGER = logging.getLogger('PipelineMongoConnection')
+    default_fn = os.path.join(os.path.dirname(__file__),'..','logs','PipelineMongoConnection.log')   
+    fn = kwargs.get('logfile',default_fn)
     rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
     rfh.setFormatter(formatter)
     ch = logging.StreamHandler() #console handler
@@ -74,12 +73,17 @@ class PipelineMongoConnection:
 
   def upsertRecords(self,records,**kwargs):
     '''
-    Upserts records(@type dict) to mongo
+    Upserts ADS bibliographic records to mongo
     '''
+
+    updates = [] #Just to keep track for logging's sake
+    inserts = []
+
     def update(query,r,current):
       try:
         r['_id'] = current['_id']
         mongo.update(query,r,w=kwargs.get('w',1),multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary)
+        updates.append(r['bibcode'])
       except Exception, err:
         self.logger.error("Failure to UPDATE record %s: %s" % (query,err))
 
@@ -87,40 +91,34 @@ class PipelineMongoConnection:
       try:
         r['_id'] = self._getNextSequence()
         mongo.insert(r,w=kwargs.get('w',1),multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary)
+        inserts.append(r['bibcode'])
       except Exception, err:
         self.logger.error("Failure to INSERT record %s: %s" % (query,err))
-
 
     mongo = self.db[self.collection]
 
     if not records:
       self.logger.warning('upsertRecords: No records given')
-      return []
 
-    updates = []
-    inserts = []      
     for r in records:
-      #Check if a record with this bibcode is already in mongo
+      #1. Check if a record with this bibcode is already in mongo
       query = {'bibcode': r['bibcode']}
       current = mongo.find_one(query)
       if current:
         update(query,r,current)
-        updates.append(r['bibcode'])
-        return
+        continue
 
-      #Check if a mongo record with this record's alternate bibcode exists
+      #2. Check if a mongo record with this record's alternate bibcode exists
       for alternate in r['metadata']['relations'].get('alternates',[]):
         query = {'bibcode': alternate['content']}
         current = mongo.find_one(query)
         if current:
           self.logger.info('Alternate record %s will be overwritten by %s' % (query,r['bibcode']))
           update(query,r,current)
-          updates.append(r['bibcode'])
           break
 
       if not current:
         insert(query,r)
-        inserts.append(r['bibcode'])
 
     self.logger.info("Performed %s updates and %s inserts to mongo" % (len(updates),len(inserts)))
     return updates+inserts

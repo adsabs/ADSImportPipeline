@@ -153,15 +153,19 @@ general = {
     },
   ],
 
-  'copyright': {
-    'origin': '',
-    'content': '',
-  },
+  'copyright': [
+    {
+      'origin': '',
+      'content': '',
+    },
+  ]
   
-  'comment': {
-    'origin': '',
-    'content': '',
-  },
+  'comment': [
+    {
+      'origin': '',
+      'content': '',
+    },
+  ]
 }
 
 // PROPERTIES 

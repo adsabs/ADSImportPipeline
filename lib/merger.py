@@ -73,7 +73,7 @@ class Merger:
     for fieldName in [i for i in list(itertools.chain(*self.blocks)) if i != 'tempdata']:
       fieldsHist[fieldName] = 0
       for block in self.blocks:
-        if block[fieldName]:
+        if fieldName in block:
           fieldsHist[fieldName] += 1
     singleDefinedFields = [k for k,v in fieldsHist.iteritems() if v==1]
     multipleDefinedFields = [k for k,v in fieldsHist.iteritems() if v>1]
@@ -90,7 +90,8 @@ class Merger:
       except Exception, err:
         self.logger.error('Error with merger dispatcher on %s: %s' % (field,err))
     self.block = r
-    self.block['altpublications'] = self.altpublications
+    if self.blocktype == 'general':
+      self.block['altpublications'] = self.altpublications
 
   def authorMerger(self,field='authors'):
     data = [ [i[field],i['tempdata']] for i in self.blocks if field in i]
@@ -130,7 +131,7 @@ class Merger:
       if f[1]['origin'] in REFERENCES_ALWAYS_APPEND:
         for reference in f[0]:
           if reference not in result:
-            result.extend(reference)
+            result.append(reference)
     return result
 
   def publicationMerger(self,field):

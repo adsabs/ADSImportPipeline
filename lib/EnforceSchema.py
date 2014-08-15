@@ -80,7 +80,6 @@ class Enforcer:
     '''
     blocklevel_removals = ['tempdata']
     toplevel_removals = ['@bibcode']
-
     for i in toplevel_removals:
       if i in record:
         del record[i]
@@ -90,11 +89,16 @@ class Enforcer:
         for i in blocklevel_removals:
           if i in block:
             del block[i]
-    del record['metadata']['general']['publication']['altbibcode']
-
+    
     for k in self.dispatcher.keys():
       if k not in record['metadata']:
         record['metadata'][k] = {} if k != 'references' else []
+
+    if record['metadata']['references']:
+      record['metadata']['references'] = record['metadata']['references']['references']
+
+    if record['metadata']['general']:
+      del record['metadata']['general']['publication']['altbibcode']
 
     #Coerce to correct type
     return record
@@ -233,10 +237,14 @@ class Enforcer:
       'content': g('conf_metadata')
     }
 
-    keys = ['pubnote','comment','copyright','isbns','issns','DOI']
+    keys = ['pubnote','comment','copyright','DOI']
     for k in keys:
       r[k.lower()] = [{'origin': g('@origin'), 'content': i} for i in eL(g(k,[]))]
-    
+
+    keys = ['isbns','issns']
+    for k in keys:
+      r[k.lower()] = [{'origin': g('@origin'), 'content': i[k[:-1]]} for i in eL(g(k,[]))]
+      
     return r
 
   def _propertiesEnforcer(self,block):
@@ -273,6 +281,15 @@ class Enforcer:
         'origin': g('@origin'),
         'content': i.get('database'),
       })
+    
+    r['bibgroups'] = []
+    for i in eL(g('bibgroups',[])):
+      r['bibgroups'].append({
+        'origin': g('@origin'),
+        'content': i.get('bibgroup'),
+      })
+    
+
 
     for k in ['openaccess','ocrabstract','private','refereed']:
       r[k] = self.parseBool(g(k))

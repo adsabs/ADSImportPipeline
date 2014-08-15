@@ -6,6 +6,9 @@ import logging
 import logging.handlers
 import os
 
+from lib import MongoConnection
+from settings import MONGO
+
 logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
 datefmt= '%m/%d/%Y %H:%M:%S'
 formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
@@ -22,75 +25,76 @@ logger = LOGGER
 
 class SolrAdapter(object):
   SCHEMA = {
-      'abstract': '',
-      'ack': '',
-      'aff': ['',],
-      'alternate_bibcode': ['',],
-      'alternate_title': ['',],
-      'arxiv_class': ['',],
-      'author': ['',],
-      'author_native': ['',],
-      'author_facet_hier': ['',], #???
-      'author_norm': ['',],
-      'bibcode': '',
-      'bibgroup': ['',],
-      'bibstem': ['',],
-      'citation': ['',],
-      'citation_count': 0,
-      'cite_read_boost': 0.0,
-      'classic_factor': 0,
-      'comment': '',
-      'copyright': '',
-      'database': ['',],
-      'date': 'YYYY-MM[-DD]',
-      'doi':['',], 
-      'email': ['',],
-      'facility': ['',],
-      'first_author': '',
-      'first_author_facet_hier': ['',], #???
-      'full': '',
-      'grant': ['',],
-      'grant_facet_hier': ['',],
-      'id': 0,
-      'identifier': ['',],
-      'isbn': ['',],
-      'issn': ['',],
-      'issue': '',
-      'keyword': ['',],
-      'keyword_facet': ['',],
-      'keyword_norm': ['',],
-      'keyword_schema': ['',],
-      'lang': '',
-      'links_data': ['',],
-      'page': ['',],
-      'property': ['',],
-      'pub': '',
-      'pub_raw': '',
-      'pubdate': '',
-      'read_count': 0,
-      'reader':'',
-      'recid': 0,
-      'reference': ['',],
-      'simbid': [0,],
-      'thesis': '',
-      'title': ['',],
-      'vizier': ['',],
-      'vizier_facet':['',],
-      'volume': '',
-      'year': '',
-    }
+    'abstract': u'',
+    'ack': u'',
+    'aff': [u'',],
+    'alternate_bibcode': [u'',],
+    'alternate_title': [u'',],
+    'arxiv_class': [u'',],
+    'author': [u'',],
+    'author_native': [u'',],
+    'author_facet_hier': [u'',], #???
+    'author_norm': [u'',],
+    'bibcode': u'',
+    'bibgroup': [u'',],
+    'bibstem': [u'',],
+    'citation': [u'',],
+    'citation_count': 0,
+    'cite_read_boost': 0.0,
+    'classic_factor': 0,
+    'comment': u'',
+    'copyright': u'',
+    'database': [u'',],
+    'date': u'YYYY-MM[-DD]',
+    'doi':[u'',], 
+    'email': [u'',],
+    'facility': [u'',],
+    'first_author': u'',
+    'first_author_facet_hier': [u'',], #???
+    'full': u'',
+    'grant': [u'',],
+    'grant_facet_hier': [u'',],
+    'id': 0,
+    'identifier': [u'',],
+    'isbn': [u'',],
+    'issn': [u'',],
+    'issue': u'',
+    'keyword': [u'',],
+    'keyword_facet': [u'',],
+    'keyword_norm': [u'',],
+    'keyword_schema': [u'',],
+    'lang': u'',
+    'links_data': [u'',],
+    'page': u'',
+    'property': [u'',],
+    'pub': u'',
+    'pub_raw': u'',
+    'pubdate': u'',
+    'read_count': 0,
+    'reader':u'',
+    'recid': 0,
+    'reference': [u'',],
+    'simbid': [0,],
+    'thesis': u'',
+    'title': [u'',],
+    'vizier': [u'',],
+    'vizier_facet':[u'',],
+    'volume': u'',
+    'year': u'',
+  }
 
   #------------------------------------------------
   #Private methods; responsible for translating schema: ADS->Solr
 
   @staticmethod
   def _abstract(ADS_record):
+    abstracts = ADS_record['metadata']['general'].get('abstracts',[])
     result = None
-    for r in ADS_record['metadata']['general']['abstracts']:
+    for r in abstracts:
       if r['lang'] == "en":
         result = r['text']
-    if not result: #attempt fallback to other language if en not present
-      result = ADS_record['metadata']['general']['abstracts'][0].get('text','')
+    if not result and abstracts: #attempt fallback to other language if en not present
+      result = abstracts[0].get('text','')
     return {'abstract': result}
 
   @staticmethod
@@ -100,38 +104,41 @@ class SolrAdapter(object):
 
   @staticmethod
   def _aff(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))
-    result = ['; '.join([j for j in i['affiliations'] if j]) if i['affiliations'] else '-' for i in authors]
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))
+    result = ['; '.join([j for j in i['affiliations'] if j]) if i['affiliations'] else u'-' for i in authors]
     return {'aff': result}
 
   @staticmethod
   def _alternate_bibcode(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['relations']['alternates'] if i]
+    result = [i['content'] for i in ADS_record['metadata']['relations'].get('alternates',[])]
     return {'alternate_bibcode': result}
 
   @staticmethod
   def _alternate_title(ADS_record):
     result = ''
-    for r in ADS_record['metadata']['general']['titles']:
+    for r in ADS_record['metadata']['general'].get('titles',[]):
       if r['lang'] != "en":
         result = r['text']
     return {'alternate_title': result}
 
   @staticmethod 
   def _arxiv_class(ADS_record):
-    results = [i for i in ADS_record['metadata']['general']['arxivcategories']]
+    results = [i for i in ADS_record['metadata']['general'].get('arxivcategories',[])]
     return {'arxiv_class':results}
 
   @staticmethod
   def _author(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))
     result = [i['name']['western'] for i in authors if i]
     return {'author': result}  
 
   @staticmethod
   def _author_native(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))
-    result = [i['name']['native'] for i in authors if i]
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))
+    result = [i['name']['native'] if i['name']['native'] else u"-" for i in authors]
     return {'author_native': result}  
 
   @staticmethod
@@ -140,7 +147,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _bibgroup(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['properties']['bibgroups'] if i]
+    result = [i['content'] for i in ADS_record['metadata']['properties'].get('bibgroups',[])]
     return {'bibgroup': result}
 
   @staticmethod
@@ -150,72 +157,74 @@ class SolrAdapter(object):
 
   @staticmethod
   def _copyright(ADS_record):
-    result = ADS_record['metadata']['general']['copyright'].get('content',None)
+    result = [i['content'] for i in ADS_record['metadata']['general'].get('copyright',[])]
     return {'copyright': result}
 
   @staticmethod
   def _comment(ADS_record):
-    result = ADS_record['metadata']['general']['comment'].get('content',None)
+    result = [i['content'] for i in ADS_record['metadata']['general'].get('comment',[])]
     return {'comment': result}
 
   @staticmethod
   def _database(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['properties']['databases'] if i]
+    result = [i['content'] for i in ADS_record['metadata']['properties'].get('databases',[])]
     return {'database': result}
 
   @staticmethod
   def _doi(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['general']['doi']]
+    result = [i['content'] for i in ADS_record['metadata']['general'].get('doi',[])]
     return {'doi': result}
 
   @staticmethod
   def _email(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))
-    result = ['; '.join([j for j in i['emails'] if j]) if i['emails'] else '-' for i in authors]
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))
+    result = ['; '.join([j for j in i['emails'] if j]) if i['emails'] else u'-' for i in authors]
     return {'email': result}
 
   @staticmethod
   def _first_author(ADS_record):
-    authors = sorted(ADS_record['metadata']['general']['authors'],key=lambda k: int(k['number']))   
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))   
     return {'first_author': authors[0]['name']['western']}
 
   @staticmethod
   def _id(ADS_record):
-    return {'id': ADS_records['_id']}
+    return {'id': ADS_record['_id']}
 
   @staticmethod
   def _identifier(ADS_record):
     result = []
-    result.extend( [i['content'] for i in ADS_record['metadata']['relations']['preprints']] )
-    result.extend( [i['content'] for i in ADS_record['metadata']['general']['doi']] )
-    result.extend( [i['content'] for i in ADS_record['metadata']['relations']['alternates']] )
+    result.extend( [i['content'] for i in ADS_record['metadata']['relations'].get('preprints',[])] )
+    result.extend( [i['content'] for i in ADS_record['metadata']['general'].get('doi',[])] )
+    result.extend( [i['content'] for i in ADS_record['metadata']['relations'].get('alternates',[])] )
     return {'identifier': result}
 
   @staticmethod
   def _issn(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['general']['issns'] if i]
+    result = [i['content'] for i in ADS_record['metadata']['general'].get('issns',[])]
     return {'issn': result}
 
   @staticmethod
   def _isbn(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['general']['isbns'] if i]
+    result = [i['content'] for i in ADS_record['metadata']['general'].get('isbns',[])]
     return {'isbn': result}
 
   @staticmethod
   def _issue(ADS_record):
-    return {'issue': ADS_record['metadata']['general']['publication']['issue']}
+    return {'issue': ADS_record['metadata']['general'].get('publication',{}).get('issue')}
       
   @staticmethod
   def _page(ADS_record):
-    return {'page': ADS_record['metadata']['general']['publication']['page']}
+    return {'page': ADS_record['metadata']['general'].get('publication',{}).get('page')}
 
   @staticmethod
   def _volume(ADS_record):
-    return {'issue': ADS_record['metadata']['general']['publication']['volume']}
+    return {'volume': ADS_record['metadata']['general'].get('publication',{}).get('volume')}
 
   @staticmethod
   def _keyword(ADS_record):
-    result = [i['original'] for i in ADS_record['metadata']['general']['keywords'] if i]
+    result = [i['original'] for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword': result}
 
   @staticmethod
@@ -234,11 +243,13 @@ class SolrAdapter(object):
       try:
         D = eval('cls._%s' % k)(ADS_record)
         v = D.values()
-        if not v[0] or not v[0][0]:
+        if not v or (len(v)==1 and not isinstance(v[0],int) and not isinstance(v[0],float) and not v[0]):
           D = {}
         result.update(D)
-      except AttributeError as e:
+      except AttributeError, e:
         print "NotImplementedWarning:", e
+        if "type object 'SolrAdapter'" not in e.message:
+          raise
         #raise NotImplementedError
     return result
 
@@ -252,11 +263,16 @@ class SolrAdapter(object):
     SCHEMA = cls.SCHEMA
     assert isinstance(r,dict)
     for k,v in r.iteritems():
-      assert k in SCHEMA
-      assert isinstance(v,type(SCHEMA[k]))
-      if isinstance(v,list) and v: #No expectation of nested lists
-        assert len(set([type(i) for i in v])) == 1
-        assert isinstance(v[0],type(SCHEMA[k][0]))
+      try:
+        assert k in SCHEMA
+        assert isinstance(v,type(SCHEMA[k]))
+        if isinstance(v,list) and v: #No expectation of nested lists
+          assert len(set([type(i) for i in v])) == 1
+          assert isinstance(v[0],type(SCHEMA[k][0]))
+      except AssertionError, err:
+        print "%s: %s does not have the expected form %s" % (k,v,SCHEMA[k])
+        raise
+
 
 def solrUpdate(bibcodes,url='http://localhost:9001/solr/update/json?commit=true'):
   solrRecords = []
@@ -264,10 +280,13 @@ def solrUpdate(bibcodes,url='http://localhost:9001/solr/update/json?commit=true'
     logger.warning("solrUpdate did not recieve any bibcodes")
     return
 
-  for bibcode in bibcodes:
+  m = MongoConnection.PipelineMongoConnection(**MONGO)
+  records = m.getRecordsFromBibcodes(bibcodes)
+
+  for record in records:
     #todo: get records from mongo lookup by bibcode
-    r = SolrAdapter.adapt(bibcode)
-    #SolrAdapter.validate(r) #Raises AssertionError if not validated
+    r = SolrAdapter.adapt(record)
+    SolrAdapter.validate(r) #Raises AssertionError if not validated
     solrRecords.append(r)
   payload = json.dumps(solrRecords)
   logger.info(payload)
