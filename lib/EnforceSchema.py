@@ -277,11 +277,12 @@ class Enforcer:
 
     r['databases'] = []
     for i in eL(g('databases',[])):
-      r['databases'].append({
-        'origin': g('@origin'),
-        'content': i.get('database'),
-      })
-    
+      for j in eL(i.get('database',[])):
+        r['databases'].append({
+          'origin': g('@origin'),
+          'content': j,
+        })
+
     r['bibgroups'] = []
     for i in eL(g('bibgroups',[])):
       r['bibgroups'].append({
