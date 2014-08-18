@@ -42,8 +42,8 @@ class SolrAdapter(object):
     'citation_count': 0,
     'cite_read_boost': 0.0,
     'classic_factor': 0,
-    'comment': u'',
-    'copyright': u'',
+    'comment': [u'',],
+    'copyright': [u'',],
     'database': [u'',],
     'date': u'YYYY-MM[-DD]',
     'doi':[u'',], 
@@ -116,10 +116,10 @@ class SolrAdapter(object):
 
   @staticmethod
   def _alternate_title(ADS_record):
-    result = ''
+    result = []
     for r in ADS_record['metadata']['general'].get('titles',[]):
       if r['lang'] != "en":
-        result = r['text']
+        result.append( r['text'] )
     return {'alternate_title': result}
 
   @staticmethod 
@@ -224,7 +224,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _keyword(ADS_record):
-    result = [i['original'] for i in ADS_record['metadata']['general'].get('keywords',[])]
+    result = [i['original'] for i in ADS_record['metadata']['general'].get('keywords',[]) if i['original']]
     return {'keyword': result}
 
   @staticmethod
@@ -270,11 +270,11 @@ class SolrAdapter(object):
           assert len(set([type(i) for i in v])) == 1
           assert isinstance(v[0],type(SCHEMA[k][0]))
       except AssertionError, err:
-        print "%s: %s does not have the expected form %s" % (k,v,SCHEMA[k])
+        print "%s: %s does not have the expected form %s (%s)" % (k,v,SCHEMA[k],r['bibcode'])
         raise
 
 
-def solrUpdate(bibcodes,url='http://localhost:9001/solr/update/json?commit=true'):
+def solrUpdate(bibcodes,url='http://localhost:8983/solr/update/json?commit=true'):
   solrRecords = []
   if not bibcodes:
     logger.warning("solrUpdate did not recieve any bibcodes")

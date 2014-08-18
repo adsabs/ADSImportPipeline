@@ -24,14 +24,17 @@ class Enforcer:
   def ensureLanguageSchema(self,item):
     if isinstance(item,basestring):
       L = [{
-        'lang':'en',
+        'lang':u'en',
         'text': item
       }]
     else:
       L = self.ensureList(item)
       for i in L:
         if '@lang' not in i:
-          i['lang'] = 'en'
+          i['lang'] = u'en'
+        else:
+          i['lang'] = i['@lang']
+          del i['@lang']
         if '#text' in i:
           i['text'] = i['#text']
           del i['#text']
@@ -237,7 +240,8 @@ class Enforcer:
       'content': g('conf_metadata')
     }
 
-    keys = ['pubnote','comment','copyright','DOI']
+
+    keys = ['pubnote','copyright','DOI']
     for k in keys:
       r[k.lower()] = [{'origin': g('@origin'), 'content': i} for i in eL(g(k,[]))]
 
@@ -245,6 +249,10 @@ class Enforcer:
     for k in keys:
       r[k.lower()] = [{'origin': g('@origin'), 'content': i[k[:-1]]} for i in eL(g(k,[]))]
       
+    keys = ['comment']
+    for k in keys:
+      r[k.lower()] = [{'origin': g('@origin'), 'content': i['#text']} for i in eL(g(k,[]))]
+
     return r
 
   def _propertiesEnforcer(self,block):
@@ -285,10 +293,11 @@ class Enforcer:
 
     r['bibgroups'] = []
     for i in eL(g('bibgroups',[])):
-      r['bibgroups'].append({
-        'origin': g('@origin'),
-        'content': i.get('bibgroup'),
-      })
+      for j in eL(i.get('bibgroup',[])):
+        r['bibgroups'].append({
+          'origin': g('@origin'),
+          'content': j,
+        })
     
 
 
