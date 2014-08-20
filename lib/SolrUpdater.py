@@ -32,7 +32,7 @@ class SolrAdapter(object):
     'alternate_title': [u'',],
     'arxiv_class': [u'',],
     'author': [u'',],
-    'author_native': [u'',],
+    #'author_native': [u'',], Waiting for montysolr
     'author_facet_hier': [u'',], #???
     'author_norm': [u'',],
     'bibcode': u'',
@@ -134,12 +134,13 @@ class SolrAdapter(object):
     result = [i['name']['western'] for i in authors if i]
     return {'author': result}  
 
-  @staticmethod
-  def _author_native(ADS_record):
-    authors = ADS_record['metadata']['general'].get('authors',[])
-    authors = sorted(authors,key=lambda k: int(k['number']))
-    result = [i['name']['native'] if i['name']['native'] else u"-" for i in authors]
-    return {'author_native': result}  
+  # waiting for montysolr
+  # @staticmethod
+  # def _author_native(ADS_record):
+  #   authors = ADS_record['metadata']['general'].get('authors',[])
+  #   authors = sorted(authors,key=lambda k: int(k['number']))
+  #   result = [i['name']['native'] if i['name']['native'] else u"-" for i in authors]
+  #   return {'author_native': result}  
 
   @staticmethod
   def _bibcode(ADS_record):
@@ -168,6 +169,7 @@ class SolrAdapter(object):
   @staticmethod
   def _database(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('databases',[])]
+    result = list(set(result))
     return {'database': result}
 
   @staticmethod
@@ -274,7 +276,7 @@ class SolrAdapter(object):
         raise
 
 
-def solrUpdate(bibcodes,url='http://localhost:8983/solr/update/json?commit=true'):
+def solrUpdate(bibcodes,url='http://localhost:8983/solr/update?commit=true'):
   solrRecords = []
   if not bibcodes:
     logger.warning("solrUpdate did not recieve any bibcodes")
@@ -284,12 +286,11 @@ def solrUpdate(bibcodes,url='http://localhost:8983/solr/update/json?commit=true'
   records = m.getRecordsFromBibcodes(bibcodes)
 
   for record in records:
-    #todo: get records from mongo lookup by bibcode
     r = SolrAdapter.adapt(record)
     SolrAdapter.validate(r) #Raises AssertionError if not validated
     solrRecords.append(r)
   payload = json.dumps(solrRecords)
-  logger.info(payload)
+  #logger.debug(payload)
   headers = {'content-type': 'application/json'}
   r = requests.post(url,data=payload,headers=headers)
 
@@ -307,7 +308,7 @@ def main():
 
   parser.add_argument(
     '--solr_url',
-    default='http://localhost:9001/solr/update/json?commit=true',
+    default='http://localhost:8983/solr/update?commit=true',
     dest='url',
     help='solr update endpoint'
     )
