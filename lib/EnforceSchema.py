@@ -48,7 +48,11 @@ class Enforcer:
   def parseBool(self,item):
     if item is None:
       return item
-    return False if item in ['false','False',False,'FALSE','f',0,'0'] else True
+    if item in ['false','False',False,'FALSE','f',0,'0']:
+      return False
+    if item in ['true','True',True,'TRUE','t',1,'1']:
+      return True
+    raise ValueError('Unable to parse %s' % item)
 
   def parseDate(self,datestr):
     formats = [
@@ -70,10 +74,10 @@ class Enforcer:
         date = datetime.datetime.strptime(datestr,f)
         if fullDate:
           date += datetime.timedelta(**self.solrTimeoffset)
-        date = date.strftime(self.datefmt)
+        return date.strftime(self.datefmt)
       except ValueError:
         pass
-    return date
+    raise ValueError("Could not parse %s" % datestr)
 
   def finalPassEnforceSchema(self,record):
     '''
