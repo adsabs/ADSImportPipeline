@@ -5,7 +5,9 @@ import itertools
 import logging
 import collections
 
+
 from lib import EnforceSchema
+from lib import author_match
 
 class Merger:
   def __init__(self,blocks=None,logger=None):
@@ -89,6 +91,7 @@ class Merger:
         r[field] = self._dispatcher(field)
       except Exception, err:
         self.logger.error('Error with merger dispatcher on %s: %s' % (field,err))
+        raise
     self.block = r
     if self.blocktype == 'general':
       self.block['altpublications'] = self.altpublications
@@ -100,15 +103,17 @@ class Merger:
       f1 = data.pop()
       f2 = result if result else data.pop()
       result = self._getBestOrigin(f1,f2,'authors')
-      for author in result[0]:
-        if not author['affiliations']:
-          _all = f1[0]+f2[0]
-          matches = [i for i in _all if i['name']['normalized']==author['name']['normalized'] and i['affiliations']]
-          #TODO: levenstein word distance fallback if no matches
-          #In the case that a there are multiple authors with the same normalized name in the list, matches will have len>1.
-          #This will blindly pick the first one that matched, which isn't necessarily correct.
-          if matches:
-            author['affiliations'] = matches[0]['affiliations']
+
+      #Only do the matching if at least one of the the bestOrigin authors lacks an affiliation
+      if not all( [i['affiliations'] for i in result[0]] ):
+        best_matches = author_match.match_ads_author_fields(f1[0],f2[0])        
+    
+        for match in best_matches:
+          if not author_match.is_suitable_match(*match):
+            continue
+          if not match[0]['affiliations'] and match[1]['affiliations']:
+            match[0]['affiliations'] = match[1]['affiliations']
+        result = [[i[0] for i in best_matches],result[1]]
     return result[0]
 
   def booleanMerger(self,field):
@@ -179,13 +184,26 @@ class Merger:
 
 
   def takeAll(self,field):
+    def deDuplicated(L):
+      #This will still consider 'origin' in the comparison
+      result = []
+      for i in L:
+        if i not in result:
+          result.append(i)
+      return result
+
     r = []
     for i in [j for j in self.blocks if field in j]:
       if i[field] and i[field] not in r:
         r.extend(i[field])
-    return r
+
+    return deDuplicated(r)
 
   def _getBestOrigin(self,f1,f2,field):
+    #If one of the two fields has empty content, return the one with content
+    if not all([f1[0],f2[0]]) and any([f1[0],f2[0]]):
+      return f1 if f1[0] else f2
+
     if field not in PRIORITIES:
       p = PRIORITIES['default']
     else:

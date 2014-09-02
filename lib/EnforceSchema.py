@@ -134,15 +134,16 @@ class Enforcer:
       blocks = self.ensureList(t.get(f))
       for b in blocks:
         r['text'][f].append({
-          'content':b['#text'],
-          'provider': b['@origin'],
+          'content':b.get('#text'),
+          'provider': b.get('@origin'),
           'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(self.datefmt),
           'tempdata': {
-            'origin': b['@origin'],
+            'origin': b.get('@origin'),
             'primary': True,
             'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(self.datefmt),
             },
         })
+
 
     r['metadata'] = record['metadata']
     return r
@@ -331,7 +332,7 @@ class Enforcer:
         'doi':        i.get('@doi'),
         'score':      i.get('@score'),
         'extension':  i.get('@extension'),
-        'arxid':      i.get('@arxiv'),
+        'arxid':      i.get('@arxid'),
         'content':    i.get('#text'),
         })
     return r
