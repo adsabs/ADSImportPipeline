@@ -67,10 +67,11 @@ def publish(records,max_queue_size=30,url=psettings.RABBITMQ_URL,exchange='Merge
   w.connection.close()
 
 
-def readBibcodesFromFile(files,targets):
+def readBibcodesFromFile(files,targetBibcodes):
   start = time.time()
   with cd(PROJECT_HOME):
     records = OrderedDict()
+    targets = OrderedDict()
     for f in files:
       with open(f) as fp:
         logger.debug("...loading %s" % f)
@@ -90,6 +91,8 @@ def readBibcodesFromFile(files,targets):
             continue
           if r[0] not in records:
             records[r[0]] = r[1]
+          if r[0] not in targets and r[0] in targetBibcodes:
+            targets[r[0]] = r[1]
           line = m.readline()
         m.close()
   logger.info("Loaded data in %0.1f seconds" % (time.time()-start))
