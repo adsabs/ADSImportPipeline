@@ -1,15 +1,16 @@
 import sys, os
 PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
 sys.path.append(PROJECT_HOME)
-from settings import CLASSIC_BIBCODES
+from settings import BIBCODE_FILES
 
 import os
 import unittest
 
 class TestBibcodeFiles(unittest.TestCase):
+  @unittest.skipIf(any(['/proj/ads' in i for i in BIBCODE_FILES]),"Skipping reading of ADS bibcode files")
   def setUp(self):
     self.content = []
-    for filename in CLASSIC_BIBCODES.values()+[os.path.join(PROJECT_HOME,'tests/stubdata','merge_test_cases.txt')]:
+    for filename in BIBCODE_FILES+[os.path.join(PROJECT_HOME,'tests/stubdata','merge_test_cases.txt')]:
       with open(os.path.abspath(filename)) as fp:
         results = []
         for line in fp:

@@ -3,12 +3,13 @@ import sys
 
 PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
 
-CLASSIC_BIBCODES = {
-#   'AST': '/proj/ads/abstracts/ast/load/current/index.status',
-#   'PHY': '/proj/ads/abstracts/phy/load/current/index.status',
-#   'GEN': '/proj/ads/abstracts/gen/load/current/index.status',
-#   'PRE': '/proj/ads/abstracts/pre/load/current/index.status',
-}
+#Order matches their priority
+BIBCODE_FILES = [
+  '/proj/ads/abstracts/ast/load/current/index.status',
+  '/proj/ads/abstracts/phy/load/current/index.status',
+  '/proj/ads/abstracts/gen/load/current/index.status',
+  '/proj/ads/abstracts/pre/load/current/index.status',
+]
 
 BIBCODES_PER_JOB = 200
 

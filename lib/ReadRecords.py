@@ -15,10 +15,12 @@ except ImportError:
   import pickle
 try:
   from ads.ADSExports import ADSRecords
+  from ads import ArtUtils
 except ImportError:
   sys.path.append('/proj/ads/soft/python/lib/site-packages')
   try:
     from ads.ADSExports import ADSRecords
+    from ads import ArtUtils
   except ImportError:
     print "Unable to import ads.ADSExports.ADSRecords!"
     print "We will be unable to query ADS-classic for records!"
@@ -35,6 +37,38 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 logger.addHandler(rfh)
 logger.setLevel(logging.DEBUG)
+
+def canonicalize_records(records,targets=None):
+  '''
+  Takes a dict of {bibcode:fingerprint} and resolves each bibcode to its canonical.
+
+  Finds all alternates associated with that bibcode and constructs the full JSON_fingerprint
+  from all of these associated records
+
+  Note: Pops from the input dict with no attempt to copy/deepcopy it.
+  '''
+
+  start = time.time()
+  results = []
+
+  if not targets:
+    targets = records
+  while targets:
+    bibcode, fingerprint = targets.popitem(last=False) #Represents the raw line in the bibcode file
+    fingerprints = [fingerprint] #Start constructing the "full" fingerprint
+    #Check if there is a canonical
+    canonical=ArtUtils.Canonicalize([bibcode])[0]
+
+    #If we are operating on the canonical, aggregate all of its alternates to form the "full" fingerprint
+    if canonical == bibcode:
+      for b in ArtUtils.getAlternates(canonical):
+        if b in records:
+          fingerprints.append( records.pop(b) )
+      results.append( (canonical,';'.join(sorted(fingerprints))) )
+  
+  logger.info("Canonicalized/Resolved in %0.1f seconds" % (time.time()-start))
+  return results
+
 
 def readRecordsFromADSExports(records):
   '''
@@ -61,7 +95,7 @@ def readRecordsFromADSExports(records):
 
   adsrecords = adsrecords.export()
   if not adsrecords.content:
-    logger.error('Recieved %s records, but ADSExports didn\'t return anything!' % len(records))
+    logger.warning('Recieved %s records, but ADSExports didn\'t return anything!' % len(records))
     return []
   ttc = time.time()-s
   rate = len(targets)/ttc

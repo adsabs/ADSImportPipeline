@@ -3,9 +3,11 @@ import pymongo
 import pika
 import json
 import logging
-from settings import (CLASSIC_BIBCODES, MONGO, BIBCODES_PER_JOB)
+from settings import (BIBCODE_FILES, MONGO, BIBCODES_PER_JOB)
 
 import time
+import mmap
+from collections import OrderedDict
 from lib import xmltodict
 from lib import MongoConnection
 from lib import ReadRecords
@@ -33,6 +35,8 @@ LOGGER.addHandler(rfh)
 LOGGER.setLevel(logging.DEBUG)
 logger = LOGGER
 
+PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
+
 class cd:
     """Context manager for changing the current working directory"""
     def __init__(self, newPath):
@@ -59,12 +63,40 @@ def publish(records,max_queue_size=30,url=psettings.RABBITMQ_URL,exchange='Merge
     responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue']]
   
   payload = json.dumps(records)
-  w.channel.basic_publish('MergerPipelineExchange','FindNewRecordsRoute',payload)
+  w.channel.basic_publish(exchange,routing_key,payload)
   w.connection.close()
 
 
+def readBibcodesFromFile(files,targets):
+  start = time.time()
+  with cd(PROJECT_HOME):
+    records = OrderedDict()
+    for f in files:
+      with open(f) as fp:
+        logger.debug("...loading %s" % f)
+        # Size 0 will read the ENTIRE file into memory!
+        m = mmap.mmap(fp.fileno(), 0, prot=mmap.PROT_READ) #File is open read-only
+
+        # note the file is already in memory
+        line = m.readline()
+        while line:
+          if line.startswith('#'):
+            continue
+ 
+          r = tuple(line.strip().split('\t'))
+          if len(r) != 2:
+            msg = "A bibcode entry should be \"bibcode<tab>JSON_fingerprint\". Skipping: %s" % r
+            logger.warning(msg)
+            continue
+          if r[0] not in records:
+            records[r[0]] = r[1]
+          line = m.readline()
+        m.close()
+  logger.info("Loaded data in %0.1f seconds" % (time.time()-start))
+  return ReadRecords.canonicalize_records(records,targets)
+
+
 def main(MONGO=MONGO,*args):
-  PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
   if args:
     sys.argv.extend(*args)
 
@@ -73,7 +105,7 @@ def main(MONGO=MONGO,*args):
   parser.add_argument(
     '--bibcode-files',
     nargs='*',
-    default=CLASSIC_BIBCODES.values(),
+    default=BIBCODE_FILES,
     dest='updateTargets',
     help='full paths to bibcode files'
     )
@@ -81,7 +113,7 @@ def main(MONGO=MONGO,*args):
   parser.add_argument(
     '--target-bibcodes',
     nargs='*',
-    default=None,
+    default=[],
     dest='targetBibcodes',
     help='Only analyze the specified bibcodes'
     )
@@ -95,11 +127,11 @@ def main(MONGO=MONGO,*args):
     )
 
   parser.add_argument(
-    '--load-records-from-files',
+    '--load-records-from-pickle',
     nargs='*',
     default=None,
-    dest='load_from_files',
-    help='Load XML records from files via pickle instead of ADSExports',
+    dest='load_records_from_pickle',
+    help='Load XML records from a pickle instead of ADSExports',
     )
 
   parser.add_argument(
@@ -112,54 +144,36 @@ def main(MONGO=MONGO,*args):
     )
 
   args = parser.parse_args()
-  for target in args.updateTargets:
-    targetRecords = []
-    
-    with cd(PROJECT_HOME):
-      with open(target) as fp:
-        records = []
-        for line in fp:
-          if not line or line.startswith("#"):
-            continue
 
-          r = tuple(line.strip().split('\t'))
-          if len(r) != 2:
-            msg = "A bibcode entry should be \"bibcode<tab>JSON_fingerprint\". Skipping: %s" % r
-            logger.warning(msg)
-            continue
-          if args.targetBibcodes:
-            if r[0] in args.targetBibcodes:
-              records.append(r)
-          else:
-            records.append(r)
-          if args.async and len(records) >= BIBCODES_PER_JOB:
-            #We will miss the last batch of records unless it the total is evenly divisible by BIBCODES_PER_JOB
-            publish(records)
-            records = []
-            #TODO: Throttling?
+  records = readBibcodesFromFile(args.updateTargets, args.targetBibcodes)
 
-    #Publish any leftovers in case the total was not evenly divisibly
-    if args.async:
-      if records:
-        publish(records)
+  if not args.async:
+    mongo = MongoConnection.PipelineMongoConnection(**MONGO)
+    records = mongo.findNewRecords(records)
+    if args.load_records_from_pickle:
+      records = ReadRecords.readRecordsFromPickles(records,args.load_records_from_pickle)
     else:
-      mongo = MongoConnection.PipelineMongoConnection(**MONGO)
-      records = mongo.findNewRecords(records)
+      records = ReadRecords.readRecordsFromADSExports(records)
+    merged = UpdateRecords.mergeRecords(records)
+    if args.outfile:
+      with open(args.outfile[0],'w') as fp:
+        r = {'merged': merged, 'nonmerged': records}
+        json.dump(r,fp,indent=1)
+    else:
+      bibcodes = mongo.upsertRecords(merged)
+      #SolrUpdater.solrUpdate(bibcodes)
 
-      if args.load_from_files:
-        records = ReadRecords.readRecordsFromPickles(records,args.load_from_files)
-      else:
-        records = ReadRecords.readRecordsFromADSExports(records)
-        
-      merged = UpdateRecords.mergeRecords(records)
-      if args.outfile:
-        with open(args.outfile[0],'w') as fp:
-          r = {'merged': merged, 'nonmerged': records}
-          json.dump(r,fp,indent=1)
-      else:
-        bibcodes = mongo.upsertRecords(merged)
-        SolrUpdater.solrUpdate(bibcodes)
-      
+  elif args.async:
+    while records:
+      payload = []
+      while len(payload) < BIBCODES_PER_JOB:
+        try:
+          payload.append( records.pop(0) )
+        except IndexError:
+          break
+      publish(payload)
+
+    
 if __name__ == '__main__':
   try:
     main()
