@@ -101,7 +101,7 @@ def readRecordsFromADSExports(records):
   rate = len(targets)/ttc
 
   e = EnforceSchema.Enforcer()
-  adsrecords = e.ensureList(xmltodict.parse(adsrecords.__str__())['records']['record'])
+  adsrecords = e.ensureList(xmltodict.parse(adsrecords.serialize())['records']['record'])
   # print len(adsrecords),len(targets),len(failures)
   # with open('foo','w') as fp:
   #   fp.write('%s' %adsrecords)

@@ -94,6 +94,7 @@ class PipelineMongoConnection:
         inserts.append(r['bibcode'])
       except Exception, err:
         self.logger.error("Failure to INSERT record %s: %s" % (query,err))
+        raise
 
     mongo = self.db[self.collection]
 
