@@ -51,81 +51,90 @@ import sys
 import re
 
 
+class HungarianGraph(object):
 
-def improve_labels(val):
-    """ change the labels, and maintain min_slack. """
-    for u in S:
-        lu[u] -= val
-    for v in xrange(N):
-        if v in T:
-            lv[v] += val
-        else:
-            min_slack[v][0] -= val
+    def __init__(self, weights):
+        self.weights = weights
+        self.N  = len(self.weights)
 
+        self.lu = [max([self.weights[u][v] for v in xrange(self.N)]) for u in xrange(self.N)]  # start with trivial labels
+        self.lv = [0 for v in xrange(self.N)]
 
-def improve_matching(v):
-    """ apply the alternating path from v to the root in the tree. """
-    u = T[v]
-    if u in Mu:
-        improve_matching(Mu[u])
-    Mu[u] = v
-    Mv[v] = u
+        self.Mu = {}  # start with empty matching
+        self.Mv = {}
+        self.S = None
+        self.T = None
+        self.min_slack = None
 
 
-def slack(u,v):
-    return lu[u] + lv[v] - w[u][v]
+    def improve_labels(self,val):
+        """ change the labels, and maintain min_slack. """
+        for u in self.S:
+            self.lu[u] -= val
+        for v in xrange(self.N):
+            if v in self.T:
+                self.lv[v] += val
+            else:
+                self.min_slack[v][0] -= val
 
 
-def augment():
-    """ augment the matching, possibly improving the labels on the way. """
-    while True:
-        # select edge (u,v) with u in S, v not in T and min slack
-        ((val, u), v) = min([(min_slack[v], v) for v in xrange(N) if v not in T])
-        assert u in S
-        if val > 0:        
-            improve_labels(val)
-        # now we are sure that (u,v) is saturated
-        # XXX
-        # if slack(u,v):
-        #    print "U: ", u, " V: ", v, " slack: ", slack(u,v)
-        # XXX
-        # assert slack(u,v)==0
-        assert slack(u,v) < 1e-10
-        T[v] = u                            # add (u,v) to the tree
-        if v in Mv:
-            u1 = Mv[v]                      # matched edge, 
-            assert not u1 in S
-            S.add(u1)
-            for v in xrange(N): # maintain min_slack
-                if v not in T and min_slack[v][0] > slack(u1,v):
-                    min_slack[v] = [slack(u1,v), u1]
-        else:
-            improve_matching(v) # v is a free vertex
-            return
+    def improve_matching(self,v):
+        """ apply the alternating path from v to the root in the tree. """
+        u = self.T[v]
+        if u in self.Mu:
+            self.improve_matching(self.Mu[u])
+        self.Mu[u] = v
+        self.Mv[v] = u
 
 
-def assign(weights):
-    """
-    given w, the weight matrix of a complete bipartite graph,
-    returns the mappings Mu : U -> V, Mv : V -> U,
-    encoding the matching as well as the value of it.
-    """
-    global S,T,Mu,Mv,lu,lv,min_slack,w,N
-    w  = weights
-    N  = len(w)
-    lu = [max([w[u][v] for v in xrange(N)]) for u in xrange(N)]  # start with trivial labels
-    lv = [0 for v in xrange(N)]
-    Mu = {}                                       # start with empty matching
-    Mv = {}
-    while len(Mu) < N:
-        u0 = [u for u in xrange(N) if u not in Mu][0] # choose free vertex u0
-        S = set([u0])
-        T = {}
-        min_slack = [[slack(u0,v), u0] for v in xrange(N)]
-        augment()
-    # val. of matching is total edge weight
-    val = sum(lu) + sum(lv)
-    return (Mv, Mu, val)
+    def slack(self,u,v):
+        return self.lu[u] + self.lv[v] - self.weights[u][v]
+
+
+    def augment(self):
+        """ augment the matching, possibly improving the labels on the way. """
+        while True:
+            # select edge (u,v) with u in S, v not in T and min slack
+            ((val, u), v) = min([(self.min_slack[v], v) for v in xrange(self.N) if v not in self.T])
+            assert u in self.S
+            if val > 0:        
+                self.improve_labels(val)
+            # now we are sure that (u,v) is saturated
+            # XXX
+            # if slack(u,v):
+            #    print "U: ", u, " V: ", v, " slack: ", slack(u,v)
+            # XXX
+            # assert slack(u,v)==0
+            assert self.slack(u,v) < 1e-10
+            self.T[v] = u                            # add (u,v) to the tree
+            if v in self.Mv:
+                u1 = self.Mv[v]                      # matched edge, 
+                assert not u1 in self.S
+                self.S.add(u1)
+                for v in xrange(self.N): # maintain min_slack
+                    if v not in self.T and self.min_slack[v][0] > self.slack(u1,v):
+                        self.min_slack[v] = [self.slack(u1,v), u1]
+            else:
+                self.improve_matching(v) # v is a free vertex
+                return
+
+
+    def assign(self):
+        """
+        given w, the weight matrix of a complete bipartite graph,
+        returns the mappings Mu : U -> V, Mv : V -> U,
+        encoding the matching as well as the value of it.
+        """
+
+        while len(self.Mu) < self.N:
+            u0 = [u for u in xrange(self.N) if u not in self.Mu][0] # choose free vertex u0
+            self.S = set([u0])
+            self.T = {}
+            self.min_slack = [[self.slack(u0,v), u0] for v in xrange(self.N)]
+            self.augment()
+        # val. of matching is total edge weight
+        val = sum(self.lu) + sum(self.lv)
+        return self.Mv, self.Mu, val
 
 
 def parse_ads_authors (name):
@@ -203,7 +212,9 @@ def match_author_lists (al1, al2):
             m[i][j] = similarity
 
     # print m
-    map1, map2, score = assign(m)
+    #map1, map2, score = assign(m)
+    HGraph = HungarianGraph(m)
+    map1, map2, score = HGraph.assign()
     
     # normalize score so that it is a number between 0 and 1
     # (and is therefore independent on the number of authors)
