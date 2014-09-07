@@ -49,45 +49,49 @@ https://github.com/mlbright/Assignment-Problem/blob/master/kuhn_munkres.py
 import Levenshtein
 import sys
 import re
+import numpy as np
 
 
 class HungarianGraph(object):
 
     def __init__(self, weights):
-        self.weights = weights
-        self.N  = len(self.weights)
 
-        self.lu = [max([self.weights[u][v] for v in xrange(self.N)]) for u in xrange(self.N)]  # start with trivial labels
-        self.lv = [0 for v in xrange(self.N)]
+        self.weights = np.array(weights)
+        self.N  = self.weights.shape[0]
+        self.nrange = np.arange(self.N, dtype=int)
+
+        self.lu = self.weights.max(axis=1)
+        self.lv = np.zeros(self.N)
 
         self.Mu = {}  # start with empty matching
         self.Mv = {}
-        self.S = None
-        self.T = None
-        self.min_slack = None
 
 
-    def improve_labels(self,val):
+    def improve_labels(self, val):
         """ change the labels, and maintain min_slack. """
-        for u in self.S:
-            self.lu[u] -= val
-        for v in xrange(self.N):
-            if v in self.T:
-                self.lv[v] += val
-            else:
-                self.min_slack[v][0] -= val
+
+        self.lu[list(self.S)] -= val
+
+        ind = np.in1d(self.nrange, np.array(self.T.keys()))
+
+        self.lv[ind] += val
+
+        self.min_slack[~ind,0] -= val
 
 
-    def improve_matching(self,v):
+
+    def improve_matching(self, v):
         """ apply the alternating path from v to the root in the tree. """
+
         u = self.T[v]
+
         if u in self.Mu:
             self.improve_matching(self.Mu[u])
+        
         self.Mu[u] = v
         self.Mv[v] = u
 
-
-    def slack(self,u,v):
+    def slack(self, u, v):
         return self.lu[u] + self.lv[v] - self.weights[u][v]
 
 
@@ -95,7 +99,16 @@ class HungarianGraph(object):
         """ augment the matching, possibly improving the labels on the way. """
         while True:
             # select edge (u,v) with u in S, v not in T and min slack
-            ((val, u), v) = min([(self.min_slack[v], v) for v in xrange(self.N) if v not in self.T])
+            indx = np.in1d(self.nrange, np.array(self.T.keys()))
+            slack = np.concatenate((
+                self.min_slack[~indx],
+                self.nrange[~indx].reshape((~indx).sum(),1)
+                ), axis=1)
+
+            result = slack[slack[:,0].argmin()]
+            # casting needs to be done earlier
+            val, u, v = result[0], int(result[1]), int(result[2])
+            
             assert u in self.S
             if val > 0:        
                 self.improve_labels(val)
@@ -111,9 +124,26 @@ class HungarianGraph(object):
                 u1 = self.Mv[v]                      # matched edge, 
                 assert not u1 in self.S
                 self.S.add(u1)
-                for v in xrange(self.N): # maintain min_slack
-                    if v not in self.T and self.min_slack[v][0] > self.slack(u1,v):
-                        self.min_slack[v] = [self.slack(u1,v), u1]
+
+                # Index for keys in N range
+                indx1 = np.in1d(self.nrange, np.array(self.T.keys()))
+                
+                # Index for arrays that meet threshold
+                indx2 = self.min_slack[~indx1][:,0] > (self.lu[u1] + self.lv[~indx1] - self.weights[u1,:][~indx1])
+
+                # Array to replace selection
+                min_slack = np.concatenate((
+                                            (self.lu[u1] + self.lv[~indx1][indx2] - self.weights[u1,:][~indx1][indx2]).reshape((indx2).sum(),1), 
+                                            np.full(((indx2).sum(), 1), u1)
+                                            ), 
+                                        axis=1)                   
+
+                # Copy as cannot double-boolean copy, it seems
+                temp_slack = np.copy(self.min_slack[~indx1])
+                temp_slack[indx2] = min_slack
+                self.min_slack[~indx1] = temp_slack
+
+
             else:
                 self.improve_matching(v) # v is a free vertex
                 return
@@ -127,13 +157,23 @@ class HungarianGraph(object):
         """
 
         while len(self.Mu) < self.N:
-            u0 = [u for u in xrange(self.N) if u not in self.Mu][0] # choose free vertex u0
+
+            # u0 = [u for u in self.nrange if u not in self.Mu][0] # choose free vertex u0
+            u0 = self.nrange[~np.in1d(self.nrange,np.array(self.Mu.keys()))][0] # choose free vertex u0
+
             self.S = set([u0])
             self.T = {}
-            self.min_slack = [[self.slack(u0,v), u0] for v in xrange(self.N)]
+
+            self.min_slack = np.concatenate((
+                (self.lu[u0] + self.lv - self.weights[u0,:]).reshape(self.N,1), 
+                np.full((self.N, 1), u0)
+                ), axis=1)
+
             self.augment()
+        
         # val. of matching is total edge weight
-        val = sum(self.lu) + sum(self.lv)
+        val = self.lu.sum() + self.lv.sum()
+
         return self.Mv, self.Mu, val
 
 
