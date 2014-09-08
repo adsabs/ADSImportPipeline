@@ -310,11 +310,14 @@ def normalize_authors (a1, a2):
     return author1, author2
 
 
-def match_author_lists (al1, al2):
+def match_author_lists (al1, al2, class=None):
     """
     matches author names found in two lists of author names using
     an approximate distance measure (Levenshtein) and using the
-    Kuhn-Munkres algorithm
+    Kuhn-Munkres algorithm.  The actual class used can be selected
+    via the "class" parameter:
+        py - pure python implementation
+        np - numpy implementation (courtesy of Jonny Elliott)
     """
     # we work with a square matrix, so enforce same
     # dimension for both arrays
@@ -333,8 +336,14 @@ def match_author_lists (al1, al2):
             # print "Similarity: %f\t%s; %s" % (similarity, s1, s2)
             m[i][j] = similarity
 
-    # print m
-    HGraph = HungarianGraph(m)
+    # Numpy implementation is only efficient for large input arrays
+    if class != 'py' and class != 'np':
+        class = 'np' if n >= 500 else 'py'
+    if class == 'np':
+        HGraph = HungarianGraphNumpy(m)
+    else:
+        HGraph = HungarianGraph(m)
+
     map1, map2, score = HGraph.assign()
     
     # normalize score so that it is a number between 0 and 1
@@ -343,7 +352,8 @@ def match_author_lists (al1, al2):
     # we need to use the total number of actual mappings,
     # which is equal to the cardinality of the smaller array
     n = min(len(al1), len(al2))
-    score /= n
+    if n > 0:
+        score /= n
 
     return map2, score
 
