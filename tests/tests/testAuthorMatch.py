@@ -24,8 +24,8 @@ class TestAuthorMatch(unittest.TestCase):
             ([self.A1,self.C1,self.M1], [self.M2,self.A2,self.C2]),
             ([self.A1,self.C1,self.M1], [self.M2,self.C2,self.A2])):
             matches = author_match.match_ads_author_fields(f1, f2)
-#            print "test01: f1:", f1
-#            print "test01: f2:", f2
+            self.assertEqual(matches, [(self.A1,self.A2),(self.C1,self.C2),(self.M1,self.M2)])
+            matches = author_match.match_ads_author_fields(f1, f2, impl='np')
             self.assertEqual(matches, [(self.A1,self.A2),(self.C1,self.C2),(self.M1,self.M2)])
 
     def test_match_ads_author02(self):
@@ -35,28 +35,46 @@ class TestAuthorMatch(unittest.TestCase):
                       ([self.A2,self.C2,self.M2], [self.M1,self.C1,self.A1]),
                       ([self.A2,self.C2,self.M2], [self.C1,self.A1,self.M1])):
             matches = author_match.match_ads_author_fields(f1, f2)
-#            print "test02: f1:", f1
-#            print "test02: f2:", f2
+            self.assertEqual(matches, [(self.A2,self.A1),(self.C2,self.C1),(self.M2,self.M1)])
+            matches = author_match.match_ads_author_fields(f1, f2, impl='np')
             self.assertEqual(matches, [(self.A2,self.A1),(self.C2,self.C1),(self.M2,self.M1)])
 
     def test_match_ads_author03(self):
         matches = author_match.match_ads_author_fields([self.A1,self.C1],[self.M2,self.C2,self.A2])
         self.assertEqual(matches, [(self.A1,self.A2),(self.C1,self.C2)])
+        matches = author_match.match_ads_author_fields([self.A1,self.C1],[self.M2,self.C2,self.A2], impl='np')
+        self.assertEqual(matches, [(self.A1,self.A2),(self.C1,self.C2)])
         matches = author_match.match_ads_author_fields([self.M1,self.C1],[self.M2,self.C2,self.A2])
+        self.assertEqual(matches, [(self.M1,self.M2),(self.C1,self.C2)])
+        matches = author_match.match_ads_author_fields([self.M1,self.C1],[self.M2,self.C2,self.A2], impl='np')
         self.assertEqual(matches, [(self.M1,self.M2),(self.C1,self.C2)])
         matches = author_match.match_ads_author_fields([self.M1,self.A1],[self.M2,self.C2,self.A2])
         self.assertEqual(matches, [(self.M1,self.M2),(self.A1,self.A2)])
+        matches = author_match.match_ads_author_fields([self.M1,self.A1],[self.M2,self.C2,self.A2], impl='np')
+        self.assertEqual(matches, [(self.M1,self.M2),(self.A1,self.A2)])
         matches = author_match.match_ads_author_fields([self.A1],[self.M2,self.C2,self.A2])
+        self.assertEqual(matches, [(self.A1,self.A2)])
+        matches = author_match.match_ads_author_fields([self.A1],[self.M2,self.C2,self.A2], impl='np')
         self.assertEqual(matches, [(self.A1,self.A2)])
         matches = author_match.match_ads_author_fields([self.C1],[self.M2,self.C2,self.A2])
         self.assertEqual(matches, [(self.C1,self.C2)])
+        matches = author_match.match_ads_author_fields([self.C1],[self.M2,self.C2,self.A2], impl='np')
+        self.assertEqual(matches, [(self.C1,self.C2)])
         matches = author_match.match_ads_author_fields([self.M1],[self.M2,self.C2,self.A2])
+        self.assertEqual(matches, [(self.M1,self.M2)])
+        matches = author_match.match_ads_author_fields([self.M1],[self.M2,self.C2,self.A2], impl='np')
         self.assertEqual(matches, [(self.M1,self.M2)])
         matches = author_match.match_ads_author_fields([self.A1,self.C1,self.M1],[self.A2])
         self.assertEqual(matches, [(self.A1,self.A2),(self.C1,None),(self.M1,None)])
+        matches = author_match.match_ads_author_fields([self.A1,self.C1,self.M1],[self.A2], impl='np')
+        self.assertEqual(matches, [(self.A1,self.A2),(self.C1,None),(self.M1,None)])
         matches = author_match.match_ads_author_fields([self.A1,self.C1,self.M1],[self.C2])
         self.assertEqual(matches, [(self.A1,None),(self.C1,self.C2),(self.M1,None)])
+        matches = author_match.match_ads_author_fields([self.A1,self.C1,self.M1],[self.C2], impl='np')
+        self.assertEqual(matches, [(self.A1,None),(self.C1,self.C2),(self.M1,None)])
         matches = author_match.match_ads_author_fields([self.A1,self.C1,self.M1],[self.M2])
+        self.assertEqual(matches, [(self.A1,None),(self.C1,None),(self.M1,self.M2)])
+        matches = author_match.match_ads_author_fields([self.A1,self.C1,self.M1],[self.M2], impl='np')
         self.assertEqual(matches, [(self.A1,None),(self.C1,None),(self.M1,self.M2)])
 
 
@@ -77,7 +95,19 @@ class TestAuthorMatch(unittest.TestCase):
         res = [(c1,s1), (c2,s4), (c3,s5), (c4,s3), (c5,s2)]
         matches = author_match.match_ads_author_fields(crossref, sti)
         self.assertEqual(matches, res)
+        matches = author_match.match_ads_author_fields(crossref, sti, impl='np')
+        self.assertEqual(matches, res)
 
+    def test_match_ads_author05(self):
+        matches = author_match.match_ads_author_fields([self.A1,self.C1,self.M1],[])
+        self.assertEqual(matches, [(self.A1,None),(self.C1,None),(self.M1,None)])
+        matches = author_match.match_ads_author_fields([self.A1,self.C1,self.M1],[], impl='np')
+        self.assertEqual(matches, [(self.A1,None),(self.C1,None),(self.M1,None)])
+        matches = author_match.match_ads_author_fields([],[self.A1,self.C1,self.M1])
+        self.assertEqual(matches, [])
+        matches = author_match.match_ads_author_fields([],[self.A1,self.C1,self.M1], impl='np')
+        self.assertEqual(matches, [])
+        
 
     def test_is_suitable_match(self):
         self.assertTrue(author_match.is_suitable_match(self.A1,self.A1))
