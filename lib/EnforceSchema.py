@@ -55,6 +55,11 @@ class Enforcer:
     raise ValueError('Unable to parse %s' % item)
 
   def parseDate(self,datestr):
+    def strftime(date):
+      if date.year <= 1900:
+        return '%s.000000Z' % date.isoformat()
+      return date.strftime(self.datefmt)
+
     formats = [
       self.datefmt,
       '%Y-%m-%d',
@@ -74,10 +79,10 @@ class Enforcer:
         date = datetime.datetime.strptime(datestr,f)
         if fullDate:
           date += datetime.timedelta(**self.solrTimeoffset)
-        return date.strftime(self.datefmt)
+        return strftime(date)
       except ValueError:
         pass
-    raise ValueError("Could not parse %s" % datestr)
+    raise Exception("Could not parse %s" % datestr)
 
   def finalPassEnforceSchema(self,record):
     '''
