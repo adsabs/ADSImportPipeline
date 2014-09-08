@@ -31,7 +31,7 @@ class TestADSExports(unittest.TestCase):
       ('2013MNRAS.434.1889H','d'), #This is the canonical of 'g'
       ('2013arXiv1306.3186H','g'), #This is the alternate of 'd'
 
-      ('1978Nat...275..624M','c'), #No alternates, already canonical
+      ('1978Natur.275..624M','c'), #No alternates, already canonical
 
       ('1988ESASP.281b.287G','x1'), #Canonical, the following are alternates
       ('1988IUE88...2..287G','a1'),
