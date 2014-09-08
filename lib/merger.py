@@ -105,7 +105,9 @@ class Merger:
       result = self._getBestOrigin(f1,f2,'authors')
 
       #Only do the matching if at least one of the the bestOrigin authors lacks an affiliation
-      if not all( [i['affiliations'] for i in result[0]] ):
+      #AND the other author field has at least one
+      if not all( [i['affiliations'] for i in result[0]] ) and\
+            any( [i['affiliations'] for i in f2[0]] ):
         best_matches = author_match.match_ads_author_fields(f1[0],f2[0])        
     
         for match in best_matches:

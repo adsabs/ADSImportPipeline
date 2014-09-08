@@ -310,12 +310,12 @@ def normalize_authors (a1, a2):
     return author1, author2
 
 
-def match_author_lists (al1, al2, class=None):
+def match_author_lists (al1, al2, impl=None):
     """
     matches author names found in two lists of author names using
     an approximate distance measure (Levenshtein) and using the
     Kuhn-Munkres algorithm.  The actual class used can be selected
-    via the "class" parameter:
+    via the "impl" parameter:
         py - pure python implementation
         np - numpy implementation (courtesy of Jonny Elliott)
     """
@@ -337,9 +337,9 @@ def match_author_lists (al1, al2, class=None):
             m[i][j] = similarity
 
     # Numpy implementation is only efficient for large input arrays
-    if class != 'py' and class != 'np':
-        class = 'np' if n >= 500 else 'py'
-    if class == 'np':
+    if impl != 'py' and impl != 'np':
+        impl = 'np' if n >= 500 else 'py'
+    if impl == 'np':
         HGraph = HungarianGraphNumpy(m)
     else:
         HGraph = HungarianGraph(m)
@@ -358,7 +358,7 @@ def match_author_lists (al1, al2, class=None):
     return map2, score
 
 
-def match_ads_author_fields (f1, f2):
+def match_ads_author_fields (f1, f2, impl=None):
     """
     takes as input two lists of structured author names + affiliations, 
     and outputs a single list, where affiliation fields from the second list
@@ -369,12 +369,12 @@ def match_ads_author_fields (f1, f2):
     a2 = [f['name']['western'] for f in f2]
 
     # match two arrays based on name similarity
-    mapping, score = match_author_lists(a1, a2)
+    mapping, score = match_author_lists(a1, a2, impl=impl)
 
     # is score high enough?
     if score < 0.5:
         # print "author match score too low (%f), ignoring matches" % score
-        return []
+        return [ (f1[i],None) for i in range(len(f1)) ]
 
     # print "author match score:", score
     # make sure there are enough elements in f2
