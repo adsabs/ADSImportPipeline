@@ -368,13 +368,18 @@ def match_ads_author_fields (f1, f2, impl=None):
     a1 = [f['name']['western'] for f in f1]
     a2 = [f['name']['western'] for f in f2]
 
+    if not f1:
+        return []
+    elif not f2:
+        return [ (i,None) for i in f1 ]
+
     # match two arrays based on name similarity
     mapping, score = match_author_lists(a1, a2, impl=impl)
 
     # is score high enough?
     if score < 0.5:
         # print "author match score too low (%f), ignoring matches" % score
-        return [ (f1[i],None) for i in range(len(f1)) ]
+        return [ (f1[i],None) for i in f1 ]
 
     # print "author match score:", score
     # make sure there are enough elements in f2
