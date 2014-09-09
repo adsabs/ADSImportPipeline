@@ -2,3 +2,4 @@ python-Levenshtein
 pymongo
 pika
 requests
+numpy
