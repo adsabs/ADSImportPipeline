@@ -25,18 +25,18 @@ except ImportError:
     print "Unable to import ads.ADSExports.ADSRecords!"
     print "We will be unable to query ADS-classic for records!"
 
-# logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
-# datefmt= '%m/%d/%Y %H:%M:%S'
-# formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
-# logger = logging.getLogger(__file__)
-# fn = os.path.join(os.path.dirname(__file__),'..','logs','ReadRecords.log')
-# rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
-# rfh.setFormatter(formatter)
-# ch = logging.StreamHandler() #console handler
-# ch.setFormatter(formatter)
-# logger.addHandler(ch)
-# logger.addHandler(rfh)
-# logger.setLevel(logging.DEBUG)
+logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
+datefmt= '%m/%d/%Y %H:%M:%S'
+formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
+logger = logging.getLogger(__file__)
+fn = os.path.join(os.path.dirname(__file__),'..','logs','ReadRecords.log')
+rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+rfh.setFormatter(formatter)
+ch = logging.StreamHandler() #console handler
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+logger.addHandler(rfh)
+logger.setLevel(logging.DEBUG)
 
 def canonicalize_records(records,targets=None):
   '''
@@ -64,7 +64,7 @@ def canonicalize_records(records,targets=None):
           fingerprints.append( records.pop(b) )
       results.append( (canonical,';'.join(sorted(fingerprints))) )
   
-  #logger.info("Canonicalized/Resolved in %0.1f seconds" % (time.time()-start))
+  logger.info("Canonicalized/Resolved in %0.1f seconds" % (time.time()-start))
   return results
 
 
