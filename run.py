@@ -7,7 +7,7 @@ from settings import (BIBCODE_FILES, MONGO, BIBCODES_PER_JOB)
 
 import time
 import mmap
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from lib import xmltodict
 from lib import MongoConnection
 from lib import ReadRecords
@@ -49,22 +49,16 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def publish(records,max_queue_size=30,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
-  #Its ok that we create/tear down this connection many times within this script; it is not a bottleneck
-  #and likely slightly increases stability of the workflow
-
-  w = RabbitMQWorker()
-  w.connect(psettings.RABBITMQ_URL)
-
+def publish(w,records,sleep=5,max_queue_size=50,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
   #Hold onto the message if publishing it would cause the number of queued messages to exceed max_queue_size
-  responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue']]
+  responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue','FindNewRecordsQueue']]
   while any([r.method.message_count >= max_queue_size for r in responses]):
-    time.sleep(15)
-    responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue']]
+    time.sleep(sleep)
+    responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue','FindNewRecordsQueue']]
   
   payload = json.dumps(records)
   w.channel.basic_publish(exchange,routing_key,payload)
-  w.connection.close()
+  #w.connection.close()
 
 
 def readBibcodesFromFile(files,targetBibcodes):
@@ -95,7 +89,7 @@ def readBibcodesFromFile(files,targetBibcodes):
             targets[r[0]] = r[1]
         m.close()
   logger.info("Loaded data in %0.1f seconds" % (time.time()-start))
-  return ReadRecords.canonicalize_records(records,targets)
+  return deque(ReadRecords.canonicalize_records(records,targets))
 
 
 def main(MONGO=MONGO,*args):
@@ -166,14 +160,16 @@ def main(MONGO=MONGO,*args):
       #SolrUpdater.solrUpdate(bibcodes)
 
   elif args.async:
+    w = RabbitMQWorker()   
+    w.connect(psettings.RABBITMQ_URL)
     while records:
       payload = []
       while len(payload) < BIBCODES_PER_JOB:
         try:
-          payload.append( records.pop(0) )
+          payload.append( records.popleft() )
         except IndexError:
           break
-      publish(payload)
+      publish(w,payload)
 
     
 if __name__ == '__main__':
