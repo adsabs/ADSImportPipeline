@@ -38,15 +38,16 @@ class PipelineMongoConnection:
     datefmt= '%m/%d/%Y %H:%M:%S'
     formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
     LOGGER = logging.getLogger('PipelineMongoConnection')
-    default_fn = os.path.join(os.path.dirname(__file__),'..','logs','PipelineMongoConnection.log')   
-    fn = kwargs.get('logfile',default_fn)
-    rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
-    rfh.setFormatter(formatter)
-    ch = logging.StreamHandler() #console handler
-    ch.setFormatter(formatter)
-    LOGGER.addHandler(ch)
-    LOGGER.addHandler(rfh)
-    LOGGER.setLevel(logging.DEBUG)
+    if not LOGGER.handlers:
+      default_fn = os.path.join(os.path.dirname(__file__),'..','logs','PipelineMongoConnection.log')   
+      fn = kwargs.get('logfile',default_fn)
+      rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+      rfh.setFormatter(formatter)
+      ch = logging.StreamHandler() #console handler
+      ch.setFormatter(formatter)
+      LOGGER.addHandler(ch)
+      LOGGER.addHandler(rfh)
+      LOGGER.setLevel(logging.DEBUG)
     self.logger = LOGGER
 
   def close(self):

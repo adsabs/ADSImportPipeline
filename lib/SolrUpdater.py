@@ -13,13 +13,14 @@ logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
 datefmt= '%m/%d/%Y %H:%M:%S'
 formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
 LOGGER = logging.getLogger(__file__)
-fn = os.path.join(os.path.dirname(__file__),'..','logs','SolrUpdater.log')   
-rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
-rfh.setFormatter(formatter)
-ch = logging.StreamHandler() #console handler
-ch.setFormatter(formatter)
-LOGGER.addHandler(ch)
-LOGGER.addHandler(rfh)
+if not LOGGER.handlers:
+  fn = os.path.join(os.path.dirname(__file__),'..','logs','SolrUpdater.log')   
+  rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+  rfh.setFormatter(formatter)
+  ch = logging.StreamHandler() #console handler
+  ch.setFormatter(formatter)
+  LOGGER.addHandler(ch)
+  LOGGER.addHandler(rfh)
 LOGGER.setLevel(logging.DEBUG)
 logger = LOGGER
 

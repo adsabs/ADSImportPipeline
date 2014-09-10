@@ -15,12 +15,14 @@ except ImportError:
   import pickle
 try:
   from ads.ADSExports import ADSRecords
-  from ads import ArtUtils
+  #from ads import ArtUtils
+  from lib import conversions
 except ImportError:
   sys.path.append('/proj/ads/soft/python/lib/site-packages')
   try:
     from ads.ADSExports import ADSRecords
-    from ads import ArtUtils
+    #from ads import ArtUtils
+    from lib import conversions
   except ImportError:
     print "Unable to import ads.ADSExports.ADSRecords!"
     print "We will be unable to query ADS-classic for records!"
@@ -28,14 +30,15 @@ except ImportError:
 logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
 datefmt= '%m/%d/%Y %H:%M:%S'
 formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
-logger = logging.getLogger(__file__)
-fn = os.path.join(os.path.dirname(__file__),'..','logs','ReadRecords.log')
-rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
-rfh.setFormatter(formatter)
-ch = logging.StreamHandler() #console handler
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-logger.addHandler(rfh)
+logger = logging.getLogger('ReadRecords')
+if not logger.handlers:
+  fn = os.path.join(os.path.dirname(__file__),'..','logs','ReadRecords.log')
+  rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+  rfh.setFormatter(formatter)
+  ch = logging.StreamHandler() #console handler
+  ch.setFormatter(formatter)
+  logger.addHandler(ch)
+  logger.addHandler(rfh)
 logger.setLevel(logging.DEBUG)
 
 def canonicalize_records(records,targets=None):
@@ -53,13 +56,14 @@ def canonicalize_records(records,targets=None):
 
   if not targets:
     targets = records
+  Converter = conversions.ConvertBibcodes()
   for bibcode,fingerprint in targets.iteritems():
     fingerprints = [fingerprint] #Start constructing the "full" fingerprint
     #Check if there is a canonical
-    canonical=ArtUtils.Canonicalize([bibcode])[0]
+    canonical=Converter.Canonicalize([bibcode])[0]
     #If we are operating on the canonical, aggregate all of its alternates to form the "full" fingerprint
     if canonical == bibcode:
-      for b in ArtUtils.getAlternates(canonical):
+      for b in Converter.getAlternates(canonical):
         if b in records:
           fingerprints.append( records.pop(b) )
       results.append( (canonical,';'.join(sorted(fingerprints))) )

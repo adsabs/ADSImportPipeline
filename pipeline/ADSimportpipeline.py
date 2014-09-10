@@ -210,11 +210,13 @@ class TaskMaster(Singleton):
     for worker,params in self.workers.iteritems():
       params['active'] = params.get('active',[])
       params['RABBITMQ_URL'] = psettings.RABBITMQ_URL
+      params['ERROR_HANDLER'] = psettings.ERROR_HANDLER
 
       while len(params['active']) < params['concurrency']:
         #parent_conn, child_conn = multiprocessing.Pipe()
         w = eval('workers.%s' % worker)(params)
         proc = multiprocessing.Process(target=w.run)
+        proc.daemon=True
         proc.start()
         if verbose:
           print "Started %s-%s" % (worker,proc.name)
@@ -225,13 +227,14 @@ class TaskMaster(Singleton):
     self.running=True
 
   def stop_workers(self):
-    for worker,params in self.workers.iteritems():
-      params['active'] = params.get('active',[])
-      for active in params['active']:
+    pass #Closing the main process should gracefully clean up each daemon process.
+    #for worker,params in self.workers.iteritems():
+      #params['active'] = params.get('active',[])
+      #for active in params['active']:
         #This is equivalent to sending SIGTERM to the process;
         #Abrupt termination is fine, since we send ACK only after
         #processing is complete.
-        active['proc'].terminate()
+        #active['proc'].terminate()
 
 #----------------------------------------------------------
 

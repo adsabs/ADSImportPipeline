@@ -79,11 +79,11 @@ def readBibcodesFromFile(files,targetBibcodes):
         m = mmap.mmap(fp.fileno(), 0, prot=mmap.PROT_READ) #File is open read-only
 
         # note the file is already in memory
-        line = m.readline()
+        line = 'init'
         while line:
-          if line.startswith('#'):
+          line = m.readline()
+          if not line or line.startswith('#'):
             continue
- 
           r = tuple(line.strip().split('\t'))
           if len(r) != 2:
             msg = "A bibcode entry should be \"bibcode<tab>JSON_fingerprint\". Skipping: %s" % r
@@ -93,7 +93,6 @@ def readBibcodesFromFile(files,targetBibcodes):
             records[r[0]] = r[1]
           if r[0] not in targets and r[0] in targetBibcodes:
             targets[r[0]] = r[1]
-          line = m.readline()
         m.close()
   logger.info("Loaded data in %0.1f seconds" % (time.time()-start))
   return ReadRecords.canonicalize_records(records,targets)

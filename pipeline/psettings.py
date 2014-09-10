@@ -10,6 +10,10 @@ RABBITMQ_URL = 'amqp://admin:password@localhost:5672/%2F?socket_timeout=10&frame
 
 PIDFILE = '/tmp/ADSimportpipeline.lock'
 POLL_INTERVAL = 15 #per-worker poll interval (to check health) in seconds.
+ERROR_HANDLER = {
+  'exchange': 'MergerPipelineExchange',
+  'routing_key': 'ErrorHandlersRoute',
+}
 
 RABBITMQ_ROUTES = {
   'EXCHANGES':[
@@ -21,6 +25,10 @@ RABBITMQ_ROUTES = {
     },
   ],
   'QUEUES':[
+    {
+      'queue': 'ErrorHandlerQueue',
+      'durable': True,
+    },
     {
       'queue': 'FindNewRecordsQueue',
       'durable': True,
@@ -43,6 +51,11 @@ RABBITMQ_ROUTES = {
     }, 
   ],
   'BINDINGS':[
+    {
+      'queue':        'ErrorHandlerQueue',
+      'exchange':     'MergerPipelineExchange',
+      'routing_key':  'ErrorHandlersRoute',
+    },
     {
       'queue':        'FindNewRecordsQueue',
       'exchange':     'MergerPipelineExchange',
@@ -72,6 +85,16 @@ RABBITMQ_ROUTES = {
 }
 
 WORKERS = {
+  'ErrorHandlerWorker': { 
+    'concurrency': 1,
+    'publish': [
+    ],
+    'subscribe': [
+      {'queue': 'ErrorHandlerQueue',},
+    ],
+  },
+
+
   'FindNewRecordsWorker': { 
     'concurrency': 1,
     'publish': [
@@ -105,7 +128,7 @@ WORKERS = {
   'MongoWriteWorker': {
     'concurrency': 1,
     'publish': [
-      {'exchange': 'MergerPipelineExchange','routing_key': 'SolrUpdateRoute',},
+#      {'exchange': 'MergerPipelineExchange','routing_key': 'SolrUpdateRoute',},
     ],
     'subscribe': [
       {'queue':'MongoWriteQueue',},

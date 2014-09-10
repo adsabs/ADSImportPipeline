@@ -27,16 +27,18 @@ class Merger:
     logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
     datefmt= '%m/%d/%Y %H:%M:%S'
     formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
-    LOGGER = logging.getLogger(__file__)
-    default_fn = os.path.join(os.path.dirname(__file__),'..','logs','%s.log' % self.__class__.__name__)   
-    fn = kwargs.get('filename',default_fn)
-    rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
-    rfh.setFormatter(formatter)
-    ch = logging.StreamHandler() #console handler
-    ch.setFormatter(formatter)
-    LOGGER.addHandler(ch)
-    LOGGER.addHandler(rfh)
-    LOGGER.setLevel(logging.DEBUG)
+    LOGGER = logging.getLogger("Merger")
+    if not LOGGER.handlers:
+      default_fn = os.path.join(os.path.dirname(__file__),'..','logs','%s.log' % self.__class__.__name__)   
+      fn = kwargs.get('filename',default_fn)
+      rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+      rfh.setFormatter(formatter)
+      ch = logging.StreamHandler() #console handler
+      ch.setFormatter(formatter)
+      LOGGER.handlers = []
+      LOGGER.addHandler(ch)
+      LOGGER.addHandler(rfh)
+      LOGGER.setLevel(logging.DEBUG)
     self.logger = LOGGER
 
   def _dispatcher(self,field):
