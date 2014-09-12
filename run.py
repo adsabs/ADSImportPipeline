@@ -50,11 +50,19 @@ class cd:
         os.chdir(self.savedPath)
 
 def publish(w,records,sleep=5,max_queue_size=50,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
+
+  #Treat FindNewRecordsQueue a bit differently, since it can consume messages at a much higher rate
+  response = w.channel.queue_declare(queue='FindNewRecordsQueue', passive=True)
+  while response.method.message_count >= max_queue_size*10:
+    time.sleep(sleep)
+    response = w.channel.queue_declare(queue='FindNewRecordsQueue', passive=True)
+
+
   #Hold onto the message if publishing it would cause the number of queued messages to exceed max_queue_size
-  responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue','FindNewRecordsQueue']]
+  responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue']]
   while any([r.method.message_count >= max_queue_size for r in responses]):
     time.sleep(sleep)
-    responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue','FindNewRecordsQueue']]
+    responses = [w.channel.queue_declare(queue=i,passive=True) for i in ['UpdateRecordsQueue','ReadRecordsQueue']]
   
   payload = json.dumps(records)
   w.channel.basic_publish(exchange,routing_key,payload)
