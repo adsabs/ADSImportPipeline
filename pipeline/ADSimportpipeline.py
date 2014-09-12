@@ -190,18 +190,19 @@ class TaskMaster(Singleton):
     while self.running:
       time.sleep(poll_interval)
       for worker,params in self.workers.iteritems():
-        current = params['active']
-        for active in current:
+        for active in params['active']:
           if not active['proc'].is_alive():
+            #<Process(Process-484, stopped[SIGBUS] daemon)> is not alive, restarting: ReadRecordsWorker
             print active['proc'],"is not alive, restarting:",worker
-            #This is seemingly required by multiprocessing to remove from the OS process list
             active['proc'].terminate()
+            active['proc'].join()
             active['proc'].is_alive()
             params['active'].remove(active)
             continue
           if ttl:
             if time.time()-active['start']>ttl:
               active['proc'].terminate()
+              active['proc'].join()
               active['proc'].is_alive()
               params['active'].remove(active)
       self.start_workers(verbose=False)
