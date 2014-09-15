@@ -14,13 +14,13 @@ try:
 except ImportError:
   import pickle
 try:
-  from ads.ADSExports import ADSRecords
+  from ads.ADSExports2 import ADSRecords
   #from ads import ArtUtils
   from lib import conversions
 except ImportError:
   sys.path.append('/proj/ads/soft/python/lib/site-packages')
   try:
-    from ads.ADSExports import ADSRecords
+    from ads.ADSExports2 import ADSRecords
     #from ads import ArtUtils
     from lib import conversions
   except ImportError:
@@ -83,8 +83,8 @@ def readRecordsFromADSExports(records):
   targets = dict(records)
 
   s = time.time()
-  adsrecords = ADSRecords('full','XML')
   failures = []
+  adsrecords = ADSRecords('full','XML',cacheLooker=True)
   for bibcode in targets.keys():
     try:
       adsrecords.addCompleteRecord(bibcode,fulltext=True)
