@@ -163,6 +163,30 @@ class SolrAdapter(object):
     return {'copyright': result}
 
   @staticmethod
+  def _citation(ADS_record):
+    result = [i for i in ADS_record.get('adsdata',{}).get('citations',[])]
+    return {'citation': result}
+
+  @staticmethod
+  def _citation_count(ADS_record):
+    result = ADS_record.get('adsdata',{}).get('citation_count')
+    return {'citation_count': result}
+
+  @staticmethod
+  def _cite_read_boost(ADS_record):
+    result = ADS_record.get('adsdata',{}).get('cite_read_boost')
+    if result:
+      result = float(result)
+    return {'citation_count': result}    
+
+  @staticmethod
+  def _classic_factor(ADS_record):
+    result = ADS_record.get('adsdata',{}).get('classic_factor')
+    if result:
+      result = int(result)
+    return {'classic_factor': result}    
+
+  @staticmethod
   def _comment(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('comment',[])]
     return {'comment': result}
@@ -190,6 +214,11 @@ class SolrAdapter(object):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))   
     return {'first_author': authors[0]['name']['western']}
+
+  @staticmethod
+  def _grant(ADS_record):
+    result = ['%s/%s' % (i['agency'],i['grant']) for i in ADS_record.get('adsdata',{}).get('grants',[])]
+    return {'grant': result}
 
   @staticmethod
   def _id(ADS_record):
@@ -222,18 +251,35 @@ class SolrAdapter(object):
     return {'page': ADS_record['metadata']['general'].get('publication',{}).get('page')}
 
   @staticmethod
-  def _volume(ADS_record):
-    return {'volume': ADS_record['metadata']['general'].get('publication',{}).get('volume')}
-
-  @staticmethod
   def _keyword(ADS_record):
     result = [i['original'] for i in ADS_record['metadata']['general'].get('keywords',[]) if i['original']]
     return {'keyword': result}
 
   @staticmethod
+  def _read_count(ADS_record):
+    result = ADS_record.get('adsdata',{}).get('read_count')
+    if result:
+      result = int(result)
+    return {'read_count': result}  
+
+  @staticmethod
+  def _reader(ADS_record):
+    result = [i for i in ADS_record.get('adsdata',{}).get('readers',[])]
+    return {'reader': result}
+
+  @staticmethod
   def _reference(ADS_record):
     result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i]
     return {'reference': result}
+
+  @staticmethod
+  def _simbid(ADS_record):
+    result = [i for i in ADS_record.get('adsdata',{}).get('simbad_object_ids',[])]
+    return {'simbid': result}
+
+  @staticmethod
+  def _volume(ADS_record):
+    return {'volume': ADS_record['metadata']['general'].get('publication',{}).get('volume')}
 
 
   #------------------------------------------------
@@ -276,7 +322,6 @@ class SolrAdapter(object):
         print "%s: %s does not have the expected form %s (%s)" % (k,v,SCHEMA[k],r['bibcode'])
         raise
 
-
 def solrUpdate(bibcodes,url='http://localhost:8983/solr/update?commit=true'):
   solrRecords = []
   if not bibcodes:
@@ -284,7 +329,20 @@ def solrUpdate(bibcodes,url='http://localhost:8983/solr/update?commit=true'):
     return
 
   m = MongoConnection.PipelineMongoConnection(**MONGO)
-  records = m.getRecordsFromBibcodes(bibcodes)
+  metadata = m.getRecordsFromBibcodes(bibcodes)
+  m.close()
+
+  #Until we have a proper union of mongos, we need to compile a full record from several DBs
+  #This in-line configuration will be dumped when that happens.
+  MONGO['DATABASE'] = 'adsdata'
+  MONGO['COLLECTION'] = 'docs'
+  MONGO['PORT'] = '27017'
+  MONGO['USER'] = 'adsdata'
+  MONGO['PASSWORD'] = 'fake'
+  m = MongoConnection.PipelineMongoConnection(**MONGO)
+  adsdata = m.getRecordsFromBibcode(bibcodes,key="_id")
+  m.close()
+  records = [r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])}) for r in metadata]
 
   for record in records:
     r = SolrAdapter.adapt(record)

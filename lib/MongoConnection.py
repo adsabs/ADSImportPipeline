@@ -20,7 +20,7 @@ class PipelineMongoConnection:
     auth = ''
     if self.user and self.password:
       auth =  '%s@' % (':'.join([self.user,self.password]))
-    self.uri = 'mongodb://%s%s:%s' % (auth,self.host,self.port)
+    self.uri = 'mongodb://%s%s:%s/%s' % (auth,self.host,self.port,self.database)
 
     self.conn = pymongo.MongoClient(host=self.uri)
     self.db = self.conn[self.database]
@@ -29,8 +29,8 @@ class PipelineMongoConnection:
       self.initializeCollection()
 
 
-  def getRecordsFromBibcodes(self,bibcodes):
-    results = self.db[self.collection].find({"bibcode": {"$in": bibcodes}})
+  def getRecordsFromBibcodes(self,bibcodes,key="bibcode"):
+    results = self.db[self.collection].find({key: {"$in": bibcodes}})
     return list(results)
 
   def initializeLogging(self,**kwargs):
