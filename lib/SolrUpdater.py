@@ -152,6 +152,7 @@ class SolrAdapter(object):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('bibgroups',[])]
     return {'bibgroup': result}
 
+
   @staticmethod
   def _body(ADS_record):
     result = ADS_record['text'].get('body')
@@ -161,6 +162,11 @@ class SolrAdapter(object):
   def _copyright(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('copyright',[])]
     return {'copyright': result}
+
+  @staticmethod
+  def _citation(ADS_record):
+    result = [i['citations'] for i in ADS_record['adsdata']]
+    return {'citation': result}
 
   @staticmethod
   def _comment(ADS_record):
@@ -276,7 +282,6 @@ class SolrAdapter(object):
         print "%s: %s does not have the expected form %s (%s)" % (k,v,SCHEMA[k],r['bibcode'])
         raise
 
-
 def solrUpdate(bibcodes,url='http://localhost:8983/solr/update?commit=true'):
   solrRecords = []
   if not bibcodes:
@@ -284,7 +289,19 @@ def solrUpdate(bibcodes,url='http://localhost:8983/solr/update?commit=true'):
     return
 
   m = MongoConnection.PipelineMongoConnection(**MONGO)
-  records = m.getRecordsFromBibcodes(bibcodes)
+  metadata = m.getRecordsFromBibcodes(bibcodes)
+  m.close()
+
+  #Until we have a proper union of mongos, we need to compile a full record from several DBs
+  MONGO['DATABASE'] = 'adsdata'
+  MONGO['COLLECTION'] = 'docs'
+  MONGO['PORT'] = '27017'
+  MONGO['USER'] = 'adsdata'
+  MONGO['PASSWORD'] = 'fake'
+  m = MongoConnection.PipelineMongoConnection(**MONGO)
+  adsdata = m.getRecordsFromBibcode(bibcodes,key="_id")
+  m.close()
+  records = [r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])}) for r in metadata]
 
   for record in records:
     r = SolrAdapter.adapt(record)
