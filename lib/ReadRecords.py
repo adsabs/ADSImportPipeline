@@ -14,18 +14,18 @@ try:
 except ImportError:
   import pickle
 try:
-  from ads.ADSExports2 import ADSRecords
-  #from ads import ArtUtils
+  from ads.ADSExports2 import ADSRecords, init_lookers_cache
   from lib import conversions
 except ImportError:
   sys.path.append('/proj/ads/soft/python/lib/site-packages')
   try:
-    from ads.ADSExports2 import ADSRecords
-    #from ads import ArtUtils
+    from ads.ADSExports2 import ADSRecords, init_lookers_cache
     from lib import conversions
   except ImportError:
     print "Unable to import ads.ADSExports.ADSRecords!"
     print "We will be unable to query ADS-classic for records!"
+
+INIT_LOOKERS_CACHE = init_lookers_cache
 
 logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
 datefmt= '%m/%d/%Y %H:%M:%S'
