@@ -14,18 +14,18 @@ try:
 except ImportError:
   import pickle
 try:
-  from ads.ADSExports import ADSRecords
-  #from ads import ArtUtils
+  from ads.ADSExports2 import ADSRecords, init_lookers_cache
   from lib import conversions
 except ImportError:
   sys.path.append('/proj/ads/soft/python/lib/site-packages')
   try:
-    from ads.ADSExports import ADSRecords
-    #from ads import ArtUtils
+    from ads.ADSExports2 import ADSRecords, init_lookers_cache
     from lib import conversions
   except ImportError:
     print "Unable to import ads.ADSExports.ADSRecords!"
     print "We will be unable to query ADS-classic for records!"
+
+INIT_LOOKERS_CACHE = init_lookers_cache
 
 logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
 datefmt= '%m/%d/%Y %H:%M:%S'
@@ -83,10 +83,13 @@ def readRecordsFromADSExports(records):
   targets = dict(records)
 
   s = time.time()
-  adsrecords = ADSRecords('full','XML')
   failures = []
+  logger.debug("Creating instance of ADSRecords")
+  adsrecords = ADSRecords('full','XML')
+  logger.debug('...Created instance of ADSRecords')
   for bibcode in targets.keys():
     try:
+      logger.debug('addCompleteRecord: %s (%s/%s)' % (bibcode,targets.keys().index(bibcode)+1,len(targets.keys())))
       adsrecords.addCompleteRecord(bibcode,fulltext=True)
       #adsrecords.addCompleteRecord(bibcode)
     except KeyboardInterrupt:
@@ -94,8 +97,9 @@ def readRecordsFromADSExports(records):
     except Exception, err:
       failures.append(bibcode)
       logger.warning('ADSExports failed: %s (%s)' % (bibcode,err))
-
+  logger.debug("Calling ADSRecords.export()")
   adsrecords = adsrecords.export()
+  logger.debug("...ADSRecords.export() returned.")
   if not adsrecords.content:
     logger.warning('Recieved %s records, but ADSExports didn\'t return anything!' % len(records))
     return []
