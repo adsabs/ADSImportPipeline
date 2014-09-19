@@ -49,7 +49,7 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def publish(w,records,sleep=5,max_queue_size=500,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
+def publish(w,records,sleep=5,max_queue_size=5000,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
 
   #Treat FindNewRecordsQueue a bit differently, since it can consume messages at a much higher rate
   response = w.channel.queue_declare(queue='FindNewRecordsQueue', passive=True)
@@ -164,6 +164,7 @@ def main(MONGO=MONGO,*args):
     logger.info("init_lookers_cache() returned in %0.1f sec" % (time.time()-start))
 
   records = readBibcodesFromFile(args.updateTargets, args.targetBibcodes)
+  total = float(len(records)) #Save to print later
 
   if not args.async:
     mongo = MongoConnection.PipelineMongoConnection(**MONGO)
@@ -180,7 +181,6 @@ def main(MONGO=MONGO,*args):
     else:
       bibcodes = mongo.upsertRecords(merged)
       #SolrUpdater.solrUpdate(bibcodes)
-
   elif args.async:
     w = RabbitMQWorker()   
     w.connect(psettings.RABBITMQ_URL)
@@ -191,6 +191,7 @@ def main(MONGO=MONGO,*args):
           payload.append( records.popleft() )
         except IndexError:
           break
+      logger.info("There are %s records left (%0.1f%% completed)" % (len(records),(1-len(records)/total)*100.0))
       publish(w,payload)
 
     

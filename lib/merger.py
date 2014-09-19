@@ -36,7 +36,7 @@ class Merger:
       ch = logging.StreamHandler() #console handler
       ch.setFormatter(formatter)
       LOGGER.handlers = []
-      LOGGER.addHandler(ch)
+#      LOGGER.addHandler(ch)
       LOGGER.addHandler(rfh)
       LOGGER.setLevel(logging.DEBUG)
     self.logger = LOGGER

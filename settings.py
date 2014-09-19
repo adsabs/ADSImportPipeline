@@ -3,6 +3,8 @@ import sys
 
 PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
 
+SOLR_URL='http://localhost:8900/solr/update'
+
 #Order matches their priority
 BIBCODE_FILES = [
   '/proj/ads/abstracts/ast/load/current/index.status',
@@ -11,16 +13,23 @@ BIBCODE_FILES = [
   '/proj/ads/abstracts/pre/load/current/index.status',
 ]
 
-BIBCODES_PER_JOB = 200
+BIBCODES_PER_JOB = 100
 
 MONGO = {
   'HOST': os.environ.get('MONGO_HOST','localhost'),
-  'PORT': os.environ.get('MONGO_PORT',27017),
+  'PORT': os.environ.get('MONGO_PORT',27018),
   'DATABASE': os.environ.get('MONGO_DATABASE','ads'),
   'USER': None,    #May be set to None
   'PASSWD': None,  #May be set to None
   'COLLECTION': 'classic',
 }
+
+MONGO_ADSDATA = MONGO.copy()
+MONGO_ADSDATA['DATABASE'] = 'adsdata'
+MONGO_ADSDATA['COLLECTION'] = 'docs'
+MONGO_ADSDATA['PORT'] = '27017'
+MONGO_ADSDATA['USER'] = 'adsdata'
+MONGO_ADSDATA['PASSWD'] = 'fake'
 
 MERGER_RULES = {
   #<metadata type="general">

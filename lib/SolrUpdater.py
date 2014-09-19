@@ -4,10 +4,11 @@ import json
 import requests
 import logging
 import logging.handlers
-import os
+import os, sys
 
+sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from lib import MongoConnection
-from settings import MONGO
+from settings import MONGO, MONGO_ADSDATA, SOLR_URL
 
 logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
 datefmt= '%m/%d/%Y %H:%M:%S'
@@ -19,7 +20,7 @@ if not LOGGER.handlers:
   rfh.setFormatter(formatter)
   ch = logging.StreamHandler() #console handler
   ch.setFormatter(formatter)
-  LOGGER.addHandler(ch)
+#  LOGGER.addHandler(ch)
   LOGGER.addHandler(rfh)
 LOGGER.setLevel(logging.DEBUG)
 logger = LOGGER
@@ -72,7 +73,7 @@ class SolrAdapter(object):
     'pub_raw': u'',
     'pubdate': u'',
     'read_count': 0,
-    'reader':u'',
+    'reader':[u'',],
     'recid': 0,
     'reference': [u'',],
     'simbid': [0,],
@@ -296,7 +297,7 @@ class SolrAdapter(object):
           D = {}
         result.update(D)
       except AttributeError, e:
-        print "NotImplementedWarning:", e
+        logger.debug("NotImplementedWarning: %s" % e)
         if "type object 'SolrAdapter'" not in e.message:
           raise
         #raise NotImplementedError
@@ -322,35 +323,40 @@ class SolrAdapter(object):
         print "%s: %s does not have the expected form %s (%s)" % (k,v,SCHEMA[k],r['bibcode'])
         raise
 
-def solrUpdate(bibcodes,url='http://localhost:8983/solr/update?commit=true'):
+def solrUpdate(bibcodes,url=SOLR_URL):
   solrRecords = []
+  logger.info("Recieved a payload of %s bibcodes" % len(bibcodes))
   if not bibcodes:
     logger.warning("solrUpdate did not recieve any bibcodes")
     return
 
+  logger.debug("Attempt to collect metadata")
   m = MongoConnection.PipelineMongoConnection(**MONGO)
   metadata = m.getRecordsFromBibcodes(bibcodes)
   m.close()
+  logger.debug("Collect metadata")
 
+  logger.debug("Attempting to collect adsdata")
   #Until we have a proper union of mongos, we need to compile a full record from several DBs
   #This in-line configuration will be dumped when that happens.
-  MONGO['DATABASE'] = 'adsdata'
-  MONGO['COLLECTION'] = 'docs'
-  MONGO['PORT'] = '27017'
-  MONGO['USER'] = 'adsdata'
-  MONGO['PASSWORD'] = 'fake'
-  m = MongoConnection.PipelineMongoConnection(**MONGO)
-  adsdata = m.getRecordsFromBibcode(bibcodes,key="_id")
+  m = MongoConnection.PipelineMongoConnection(**MONGO_ADSDATA)
+  adsdata = m.getRecordsFromBibcodes(bibcodes,key="_id")
   m.close()
-  records = [r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])}) for r in metadata]
+  logger.debug("Collected adsdata")
 
-  for record in records:
+  #TODO: What if we get StopIteration
+  [r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])}) for r in metadata]
+  logger.debug("Combined payload has %s records" % len(metadata))
+
+  for record in metadata:
+    logger.debug("Adapting %s" % record['bibcode'])
     r = SolrAdapter.adapt(record)
     SolrAdapter.validate(r) #Raises AssertionError if not validated
     solrRecords.append(r)
   payload = json.dumps(solrRecords)
   #logger.debug(payload)
   headers = {'content-type': 'application/json'}
+  logger.debug("Posting payload to %s" % url)
   r = requests.post(url,data=payload,headers=headers)
 
 def main():
@@ -367,7 +373,7 @@ def main():
 
   parser.add_argument(
     '--solr_url',
-    default='http://localhost:8983/solr/update?commit=true',
+    default=SOLR_URL,
     dest='url',
     help='solr update endpoint'
     )

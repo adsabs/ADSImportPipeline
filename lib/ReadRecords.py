@@ -33,13 +33,13 @@ formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
 logger = logging.getLogger('ReadRecords')
 if not logger.handlers:
   fn = os.path.join(os.path.dirname(__file__),'..','logs','ReadRecords.log')
-  rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+  rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=10,mode='a') #2MB file
   rfh.setFormatter(formatter)
   ch = logging.StreamHandler() #console handler
   ch.setFormatter(formatter)
-  logger.addHandler(ch)
+#  logger.addHandler(ch)
   logger.addHandler(rfh)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 def canonicalize_records(records,targets=None):
   '''
