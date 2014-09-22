@@ -275,7 +275,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _simbid(ADS_record):
-    result = [i for i in ADS_record.get('adsdata',{}).get('simbad_object_ids',[])]
+    result = [int(i) for i in ADS_record.get('adsdata',{}).get('simbad_object_ids',[])]
     return {'simbid': result}
 
   @staticmethod
