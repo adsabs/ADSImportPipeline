@@ -14,12 +14,12 @@ try:
 except ImportError:
   import pickle
 try:
-  from ads.ADSExports2 import ADSRecords, init_lookers_cache
+  from ads.ADSCachedExports import ADSRecords, init_lookers_cache
   from lib import conversions
 except ImportError:
   sys.path.append('/proj/ads/soft/python/lib/site-packages')
   try:
-    from ads.ADSExports2 import ADSRecords, init_lookers_cache
+    from ads.ADSCachedExports import ADSRecords, init_lookers_cache
     from lib import conversions
   except ImportError:
     print "Unable to import ads.ADSExports.ADSRecords!"
