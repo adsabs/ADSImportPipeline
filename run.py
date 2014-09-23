@@ -184,6 +184,7 @@ def main(MONGO=MONGO,*args):
   elif args.async:
     w = RabbitMQWorker()   
     w.connect(psettings.RABBITMQ_URL)
+    lastLogged = None
     while records:
       payload = []
       while len(payload) < BIBCODES_PER_JOB:
@@ -191,9 +192,10 @@ def main(MONGO=MONGO,*args):
           payload.append( records.popleft() )
         except IndexError:
           break
-      percent = (1-len(records)/total)*100.0
-      if int(percent) == percent:
-        logger.info("There are %s records left (%0.1f%% completed)" % (len(records),precent))
+      percent = round((1-len(records)/total)*100.0)
+      if not percent % 5 and percent!=lastLogged:
+        lastLogged=percent
+        logger.info("There are %s records left (%0.1f%% completed)" % (len(records),percent))
       publish(w,payload)
 
     
