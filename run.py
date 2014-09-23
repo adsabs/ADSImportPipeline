@@ -191,7 +191,9 @@ def main(MONGO=MONGO,*args):
           payload.append( records.popleft() )
         except IndexError:
           break
-      logger.info("There are %s records left (%0.1f%% completed)" % (len(records),(1-len(records)/total)*100.0))
+      percent = (1-len(records)/total)*100.0
+      if int(percent) == percent:
+        logger.info("There are %s records left (%0.1f%% completed)" % (len(records),precent))
       publish(w,payload)
 
     
