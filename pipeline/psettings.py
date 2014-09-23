@@ -6,7 +6,7 @@
 #Push expected in 0.9.14 release
 #see https://github.com/pika/pika/issues/347
 #RABBITMQ_URL = 'amqp://guest:guest@localhost:5672/%2F?backpressure_detection=t'
-RABBITMQ_URL = 'amqp://admin:password@localhost:5672/%2F?socket_timeout=10&frame_m' #Max message size = 500kb
+RABBITMQ_URL = 'amqp://admin:password@localhost:5672/%2F?socket_timeout=10&backpressure_detection=t' #Max message size = 500kb
 
 PIDFILE = '/tmp/ADSimportpipeline.lock'
 POLL_INTERVAL = 15 #per-worker poll interval (to check health) in seconds.
@@ -86,7 +86,7 @@ RABBITMQ_ROUTES = {
 
 WORKERS = {
   'ErrorHandlerWorker': { 
-    'concurrency': 1,
+    'concurrency': 2,
     'publish': [
     ],
     'subscribe': [
@@ -94,9 +94,8 @@ WORKERS = {
     ],
   },
 
-
   'FindNewRecordsWorker': { 
-    'concurrency': 1,
+    'concurrency': 5,
     'publish': [
       {'exchange': 'MergerPipelineExchange', 'routing_key': 'ReadRecordsRoute',},
     ],
@@ -106,7 +105,7 @@ WORKERS = {
   },
 
   'ReadRecordsWorker': { 
-    'concurrency': 1,
+    'concurrency': 2,
     'publish': [
       {'exchange': 'MergerPipelineExchange', 'routing_key': 'UpdateRecordsRoute',},
     ],
@@ -116,7 +115,7 @@ WORKERS = {
   },
 
   'UpdateRecordsWorker': {
-    'concurrency': 1,
+    'concurrency': 2,
     'publish': [
       {'exchange': 'MergerPipelineExchange','routing_key': 'MongoWriteRoute',},
     ],
@@ -128,7 +127,7 @@ WORKERS = {
   'MongoWriteWorker': {
     'concurrency': 1,
     'publish': [
-#      {'exchange': 'MergerPipelineExchange','routing_key': 'SolrUpdateRoute',},
+      {'exchange': 'MergerPipelineExchange','routing_key': 'SolrUpdateRoute',},
     ],
     'subscribe': [
       {'queue':'MongoWriteQueue',},

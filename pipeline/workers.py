@@ -83,6 +83,8 @@ class ErrorHandlerWorker(RabbitMQWorker):
     }
 
   def on_message(self, channel, method_frame, header_frame, body):
+    self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+    return
     message = json.loads(body)
     producer = message.keys()[0]
     #Iterate over each element of the batch, log and discard the failure(s)
@@ -203,9 +205,9 @@ class SolrUpdateWorker(RabbitMQWorker):
     try:
       self.f(message)
     except Exception, e:
-      self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e.message)
+      self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)
       self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}))
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
   def run(self):
     self.connect(self.params['RABBITMQ_URL'])
-    self.subscribe(self.on_message)   
+    self.subscribe(self.on_message)

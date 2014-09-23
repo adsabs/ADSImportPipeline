@@ -44,18 +44,17 @@ def main():
     )
 
   args = parser.parse_args()
-  
   if args.bibcode_file:
     with open(args.bibcode_file) as fp:
       bibcodes = [L.strip() for L in fp.readlines() if L and not L.startswith('#')]
   else:
     if not args.bibcodes:
       raise Exception("Not enough arguments given")
-    bibcodes = args.bibcodes
-  
+    bibcodes = [i for i in args.bibcodes]
+
   while bibcodes:
     payload = []
-    while payload < args.bibcodes_per_message:
+    while len(payload) < args.bibcodes_per_message:
       try:
         payload.append( bibcodes.pop(0) )
       except IndexError:

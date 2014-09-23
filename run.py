@@ -49,7 +49,7 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def publish(w,records,sleep=5,max_queue_size=50,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
+def publish(w,records,sleep=5,max_queue_size=5000,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
 
   #Treat FindNewRecordsQueue a bit differently, since it can consume messages at a much higher rate
   response = w.channel.queue_declare(queue='FindNewRecordsQueue', passive=True)
@@ -131,6 +131,14 @@ def main(MONGO=MONGO,*args):
     )
 
   parser.add_argument(
+    '--dont-init-lookers-cache',
+    default=False,
+    action='store_true',
+    dest='dont_init_lookers_cache',
+    help='dont call ADSExports2.init_lookers_cache()'
+    )
+
+  parser.add_argument(
     '--load-records-from-pickle',
     nargs='*',
     default=None,
@@ -149,7 +157,14 @@ def main(MONGO=MONGO,*args):
 
   args = parser.parse_args()
 
+  if not args.dont_init_lookers_cache:
+    start = time.time()
+    logger.info("Calling init_lookers_cache()")
+    ReadRecords.INIT_LOOKERS_CACHE()
+    logger.info("init_lookers_cache() returned in %0.1f sec" % (time.time()-start))
+
   records = readBibcodesFromFile(args.updateTargets, args.targetBibcodes)
+  total = float(len(records)) #Save to print later
 
   if not args.async:
     mongo = MongoConnection.PipelineMongoConnection(**MONGO)
@@ -166,10 +181,10 @@ def main(MONGO=MONGO,*args):
     else:
       bibcodes = mongo.upsertRecords(merged)
       #SolrUpdater.solrUpdate(bibcodes)
-
   elif args.async:
     w = RabbitMQWorker()   
     w.connect(psettings.RABBITMQ_URL)
+    lastLogged = None
     while records:
       payload = []
       while len(payload) < BIBCODES_PER_JOB:
@@ -177,6 +192,10 @@ def main(MONGO=MONGO,*args):
           payload.append( records.popleft() )
         except IndexError:
           break
+      percent = round((1-len(records)/total)*100.0)
+      if not percent % 5 and percent!=lastLogged:
+        lastLogged=percent
+        logger.info("There are %s records left (%0.1f%% completed)" % (len(records),percent))
       publish(w,payload)
 
     
