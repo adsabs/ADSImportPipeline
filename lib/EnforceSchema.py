@@ -31,7 +31,7 @@ class Enforcer:
       L = self.ensureList(item)
       for i in L:
         if '@lang' not in i:
-          i['lang'] = u'en'
+          i['lang'] = u''
         else:
           i['lang'] = i['@lang']
           del i['@lang']
@@ -236,12 +236,12 @@ class Enforcer:
     for i in eL(g('dates',[])):
       r['publication']['dates'].append({
         'type':     i['date'].get('@type'),
-        'content':  self.parseDate(i['date'].get('#text')),
+        'content':  i['date'].get('#text'),
       })
     if 'publication_year' in block:
       r['publication']['dates'].append({
         'type': 'publication_year',
-        'content':  self.parseDate(g('publication_year')),
+        'content':  g('publication_year'),
       })
 
 
