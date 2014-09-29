@@ -101,7 +101,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _ack(ADS_record):
-    result = ADS_record['text'].get('acknowledgements')
+    result = ADS_record['text'].get('acknowledgements',{}).get('content')
     return {'ack': result}
 
   @staticmethod
@@ -120,7 +120,7 @@ class SolrAdapter(object):
   def _alternate_title(ADS_record):
     result = []
     for r in ADS_record['metadata']['general'].get('titles',[]):
-      if r['lang'] != "en":
+      if not r['lang'] or r['lang'] != "en":
         result.append( r['text'] )
     return {'alternate_title': result}
 
@@ -135,6 +135,14 @@ class SolrAdapter(object):
     authors = sorted(authors,key=lambda k: int(k['number']))
     result = [i['name']['western'] for i in authors if i]
     return {'author': result}  
+
+  @staticmethod
+  def _author_norm(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))
+    result = [i['name']['normalized'] for i in authors if i]
+    return {'author': result}
+
 
   # waiting for montysolr
   # @staticmethod
@@ -155,7 +163,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _body(ADS_record):
-    result = ADS_record['text'].get('body')
+    result = ADS_record['text'].get('body',{}).get('content')
     return {'body': result}
 
   @staticmethod
@@ -178,7 +186,7 @@ class SolrAdapter(object):
     result = ADS_record.get('adsdata',{}).get('cite_read_boost')
     if result:
       result = float(result)
-    return {'citation_count': result}    
+    return {'citation_read_boost': result}    
 
   @staticmethod
   def _classic_factor(ADS_record):
@@ -199,6 +207,12 @@ class SolrAdapter(object):
     return {'database': result}
 
   @staticmethod
+  def _year(ADS_record):
+    dates = ADS_records['metadata']['general']['publication']['dates']
+    result = next(i for i in dates if i['type']=='publication_year') #TODO: Catch StopIteration
+    return {'year':result}
+
+  @staticmethod
   def _doi(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('doi',[])]
     return {'doi': result}
@@ -217,6 +231,16 @@ class SolrAdapter(object):
     return {'first_author': authors[0]['name']['western']}
 
   @staticmethod
+  def _first_author_norm(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))   
+    return {'first_author': authors[0]['name']['normalized']}
+
+  @staticmethod
+  def _lang(ADS_record):
+    return {'lang': ADS_record['text']['body'].get('language','')}
+
+  @staticmethod
   def _grant(ADS_record):
     result = ['%s/%s' % (i['agency'],i['grant']) for i in ADS_record.get('adsdata',{}).get('grants',[])]
     return {'grant': result}
@@ -231,7 +255,7 @@ class SolrAdapter(object):
     result.extend( [i['content'] for i in ADS_record['metadata']['relations'].get('preprints',[])] )
     result.extend( [i['content'] for i in ADS_record['metadata']['general'].get('doi',[])] )
     result.extend( [i['content'] for i in ADS_record['metadata']['relations'].get('alternates',[])] )
-    return {'identifier': result}
+    return {'identifier': list(set(result))}
 
   @staticmethod
   def _issn(ADS_record):
@@ -252,9 +276,40 @@ class SolrAdapter(object):
     return {'page': ADS_record['metadata']['general'].get('publication',{}).get('page')}
 
   @staticmethod
+  def _property(ADS_record):
+    fields = ['openaccess','ocrabstract','private','refereed']
+    result = []
+    for f in fields:
+      if ADS_record['metadata']['properties'][f]:
+        result.append(f.upper())
+    if ADS_record['metadata']['properties']['doctype']['content'] in ["catalog",]:
+      result.append("NONARTICLE")
+    else:
+      result.append("ARTICLE")
+    return {'property':result}
+
+  @staticmethod
+  def _pub(ADS_record):
+    return {'pub': ADS_record['metadata']['general'],get('publication',{}).get('name',{}).get('canonical')}
+
+  @staticmethod
+  def _pub_raw(ADS_record):
+    return {'pub_raw': ADS_record['metadata']['general'],get('publication',{}).get('name',{}).get('raw')}
+
+  @staticmethod
   def _keyword(ADS_record):
-    result = [i['original'] for i in ADS_record['metadata']['general'].get('keywords',[]) if i['original']]
+    result = [i['original'] if i['original'] else '-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword': result}
+
+  @staticmethod
+  def _keyword_norm(ADS_record):
+    result = [i['normalized'] if i['original'] else '-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    return {'keyword': result}  
+
+  @staticmethod
+  def _keyword_schema(ADS_record):
+    result = [i['type'] if i['original'] else '-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    return {'keyword': result}    
 
   @staticmethod
   def _read_count(ADS_record):
@@ -277,6 +332,11 @@ class SolrAdapter(object):
   def _simbid(ADS_record):
     result = [int(i) for i in ADS_record.get('adsdata',{}).get('simbad_object_ids',[])]
     return {'simbid': result}
+
+  @staticmethod
+  def _title(ADS_record):
+    result = [i['text'] for i in ADS_record['metadata']['general'].get('titles',[])]
+    return {'title':result}
 
   @staticmethod
   def _volume(ADS_record):
