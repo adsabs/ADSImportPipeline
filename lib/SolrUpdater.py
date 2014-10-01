@@ -34,12 +34,15 @@ class SolrAdapter(object):
     'alternate_title': [u'',],
     'arxiv_class': [u'',],
     'author': [u'',],
+    'author_facet': [u'',],
     #'author_native': [u'',], Waiting for montysolr
     'author_facet_hier': [u'',], #???
     'author_norm': [u'',],
     'bibcode': u'',
     'bibgroup': [u'',],
+    'bibgroup_facet': [u'',],
     'bibstem': [u'',],
+    'bibstem_facet': u'',
     'citation': [u'',],
     'citation_count': 0,
     'cite_read_boost': 0.0,
@@ -52,8 +55,8 @@ class SolrAdapter(object):
     'email': [u'',],
     'facility': [u'',],
     'first_author': u'',
-    'first_author_facet_hier': [u'',], #???
-    'full': u'',
+    'first_author_facet_hier': [u'',], 
+    #'full': u'', #non-populated field 
     'grant': [u'',],
     'grant_facet_hier': [u'',],
     'id': 0,
@@ -143,7 +146,24 @@ class SolrAdapter(object):
     result = [i['name']['normalized'] for i in authors if i]
     return {'author': result}
 
+  @staticmethod
+  def _author_facet(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))
+    result = [i['name']['normalized'] for i in authors if i]
+    return {'author_facet': result}    
 
+  @staticmethod
+  def _author_facet_hier(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))
+    result = []
+    for author in authors:
+      r = "0/%s" % (author['name']['normalized'],)
+      result.append(r)
+      r = "1/%s/%s" % (author['name']['normalized'],author['name']['western'])
+      result.append(r)
+    return {'author_facet_hier': result}
   # waiting for montysolr
   # @staticmethod
   # def _author_native(ADS_record):
@@ -160,6 +180,26 @@ class SolrAdapter(object):
   def _bibgroup(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('bibgroups',[])]
     return {'bibgroup': result}
+
+  @staticmethod
+  def _bibgroup_facet(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['properties'].get('bibgroups',[])]
+    return {'bibgroup_facet': result}   
+
+  @staticmethod
+  def _bibstem(ADS_record):
+    b = ADS_record['bibcode']
+    result = map(unicode,[b[4:9].replace('.',''),b[4:13]])
+    return {'bibstem':result}
+
+  @staticmethod
+  def _bibstem_facet(ADS_record):
+    b = ADS_record['bibcode']
+    if re.match("^[\\.\\d]+$",b[9:13]):
+      result = b[4:9].replace('.','')
+    else:
+      result = b[4:13]
+    return {'bibstem_facet':unicode(result)}
 
   @staticmethod
   def _body(ADS_record):
@@ -209,7 +249,10 @@ class SolrAdapter(object):
   @staticmethod
   def _year(ADS_record):
     dates = ADS_records['metadata']['general']['publication']['dates']
-    result = next(i for i in dates if i['type']=='publication_year') #TODO: Catch StopIteration
+    try:
+      result = next(i['content'] for i in dates if i['type']=='publication_year') #TODO: Catch StopIteration
+    except StopIteration:
+      result = None
     return {'year':result}
 
   @staticmethod
@@ -231,6 +274,17 @@ class SolrAdapter(object):
     return {'first_author': authors[0]['name']['western']}
 
   @staticmethod
+  def _first_author_facet_hier(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))
+    result = []
+    r = "0/%s" % (authors[0]['name']['normalized'],)
+    result.append(r)
+    r = "1/%s/%s" % (authors[0]['name']['normalized'],authors[0]['name']['western'])
+    result.append(r)
+    return {'first_author_facet_hier':result}
+
+  @staticmethod
   def _first_author_norm(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))   
@@ -242,8 +296,21 @@ class SolrAdapter(object):
 
   @staticmethod
   def _grant(ADS_record):
-    result = ['%s/%s' % (i['agency'],i['grant']) for i in ADS_record.get('adsdata',{}).get('grants',[])]
+    result = []
+    for grant in ADS_record.get('adsdata',{}).get('grants',[]):
+      result.append(grant['agency'])
+      result.append(grant['grant'])
     return {'grant': result}
+
+  @staticmethod
+  def _grant_facet_hier(ADS_record):
+    result = []
+    for grant in ADS_record.get('adsdata',{}).get('grants',[]):
+      r = "0/%s" % (grant['agency'],)
+      result.append(r)
+      r = "1/%s/%s" % (grant['agency'],grant['grant'])
+      result.append(r)
+    return {'grant_facet_hier': result}
 
   @staticmethod
   def _id(ADS_record):
@@ -265,6 +332,9 @@ class SolrAdapter(object):
   @staticmethod
   def _isbn(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('isbns',[])]
+    #Ugly hack, we should fix this in Enforcer properly.
+    if result and isinstance(result[0],list):
+      result = [i for i in result[0]]
     return {'isbn': result}
 
   @staticmethod
@@ -282,34 +352,40 @@ class SolrAdapter(object):
     for f in fields:
       if ADS_record['metadata']['properties'][f]:
         result.append(f.upper())
-    if ADS_record['metadata']['properties']['doctype']['content'] in ["catalog",]:
-      result.append("NONARTICLE")
+    if ADS_record['metadata']['properties']['doctype']['content'] in ['eprint', 'article', 'inproceedings', 'inbook']:
+      result.append(u"ARTICLE")
     else:
-      result.append("ARTICLE")
+      result.append(u"NONARTICLE")
     return {'property':result}
 
   @staticmethod
   def _pub(ADS_record):
-    return {'pub': ADS_record['metadata']['general'],get('publication',{}).get('name',{}).get('canonical')}
+    return {'pub': ADS_record['metadata']['general'].get('publication',{}).get('name',{}).get('canonical')}
 
   @staticmethod
   def _pub_raw(ADS_record):
-    return {'pub_raw': ADS_record['metadata']['general'],get('publication',{}).get('name',{}).get('raw')}
+    return {'pub_raw': ADS_record['metadata']['general'].get('publication',{}).get('name',{}).get('raw')}
 
   @staticmethod
   def _keyword(ADS_record):
-    result = [i['original'] if i['original'] else '-' for i in ADS_record['metadata']['general'].get('keywords',[])]
-    return {'keyword': result}
+    result = [i['original'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    result.extend( [[i['normalized'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]] )
+    return {'keyword': list(set(result))}
 
   @staticmethod
   def _keyword_norm(ADS_record):
-    result = [i['normalized'] if i['original'] else '-' for i in ADS_record['metadata']['general'].get('keywords',[])]
-    return {'keyword': result}  
+    result = [i['normalized'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    return {'keyword': list(set(result))}  
 
   @staticmethod
   def _keyword_schema(ADS_record):
-    result = [i['type'] if i['original'] else '-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    result = [i['type'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword': result}    
+
+  @staticmethod
+  def _keyword_facet(ADS_record):
+    result = [i['normalized'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    return {'keyword_facet':list(set(result))}
 
   @staticmethod
   def _read_count(ADS_record):
