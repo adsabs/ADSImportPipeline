@@ -165,6 +165,8 @@ class SolrAdapter(object):
       r = "1/%s/%s" % (author['name']['normalized'],author['name']['western'])
       result.append(r)
     return {'author_facet_hier': result}
+
+
   # waiting for montysolr
   # @staticmethod
   # def _author_native(ADS_record):
@@ -271,25 +273,34 @@ class SolrAdapter(object):
   @staticmethod
   def _first_author(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
-    authors = sorted(authors,key=lambda k: int(k['number']))   
-    return {'first_author': authors[0]['name']['western']}
+    authors = sorted(authors,key=lambda k: int(k['number']))
+    if not authors:
+      result = None
+    else:
+      result = authors[0]['name']['western']
+    return {'first_author': result}
 
   @staticmethod
   def _first_author_facet_hier(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))
     result = []
-    r = "0/%s" % (authors[0]['name']['normalized'],)
-    result.append(r)
-    r = "1/%s/%s" % (authors[0]['name']['normalized'],authors[0]['name']['western'])
-    result.append(r)
+    if authors:
+      r = "0/%s" % (authors[0]['name']['normalized'],)
+      result.append(r)
+      r = "1/%s/%s" % (authors[0]['name']['normalized'],authors[0]['name']['western'])
+      result.append(r)
     return {'first_author_facet_hier':result}
 
   @staticmethod
   def _first_author_norm(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))   
-    return {'first_author': authors[0]['name']['normalized']}
+    if authors:
+      result = authors[0]['name']['normalized']
+    else:
+      result = None
+    return {'first_author': result}
 
   @staticmethod
   def _lang(ADS_record):
