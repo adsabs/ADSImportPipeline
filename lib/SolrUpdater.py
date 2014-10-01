@@ -249,7 +249,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _year(ADS_record):
-    dates = ADS_records['metadata']['general']['publication']['dates']
+    dates = ADS_record['metadata']['general']['publication']['dates']
     try:
       result = next(i['content'] for i in dates if i['type']=='publication_year') #TODO: Catch StopIteration
     except StopIteration:
@@ -352,7 +352,7 @@ class SolrAdapter(object):
     result = []
     for f in fields:
       if ADS_record['metadata']['properties'][f]:
-        result.append(f.upper())
+        result.append(unicode(f.upper()))
     if ADS_record['metadata']['properties']['doctype']['content'] in ['eprint', 'article', 'inproceedings', 'inbook']:
       result.append(u"ARTICLE")
     else:
@@ -370,22 +370,24 @@ class SolrAdapter(object):
   @staticmethod
   def _keyword(ADS_record):
     result = [i['original'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
-    result.extend( [[i['normalized'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]] )
+    result.extend( [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])] )
+    if result == [[]]:
+      result = []
     return {'keyword': result}
 
   @staticmethod
   def _keyword_norm(ADS_record):
-    result = [i['normalized'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    result = [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword': result}  
 
   @staticmethod
   def _keyword_schema(ADS_record):
-    result = [i['type'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    result = [i['type'] if i['type'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword': result}    
 
   @staticmethod
   def _keyword_facet(ADS_record):
-    result = [i['normalized'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    result = [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword_facet':result}
 
   @staticmethod
