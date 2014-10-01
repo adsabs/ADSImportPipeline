@@ -5,6 +5,7 @@ import requests
 import logging
 import logging.handlers
 import os, sys
+import re
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from lib import MongoConnection
