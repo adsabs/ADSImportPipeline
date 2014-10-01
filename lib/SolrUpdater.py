@@ -371,12 +371,12 @@ class SolrAdapter(object):
   def _keyword(ADS_record):
     result = [i['original'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     result.extend( [[i['normalized'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]] )
-    return {'keyword': list(set(result))}
+    return {'keyword': result}
 
   @staticmethod
   def _keyword_norm(ADS_record):
     result = [i['normalized'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
-    return {'keyword': list(set(result))}  
+    return {'keyword': result}  
 
   @staticmethod
   def _keyword_schema(ADS_record):
@@ -386,7 +386,7 @@ class SolrAdapter(object):
   @staticmethod
   def _keyword_facet(ADS_record):
     result = [i['normalized'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
-    return {'keyword_facet':list(set(result))}
+    return {'keyword_facet':result}
 
   @staticmethod
   def _read_count(ADS_record):
@@ -467,26 +467,21 @@ def solrUpdate(bibcodes,url=SOLR_URL):
     logger.warning("solrUpdate did not recieve any bibcodes")
     return
 
-  logger.debug("Attempt to collect metadata")
   m = MongoConnection.PipelineMongoConnection(**MONGO)
   metadata = m.getRecordsFromBibcodes(bibcodes)
   m.close()
-  logger.debug("Collect metadata")
 
-  logger.debug("Attempting to collect adsdata")
   #Until we have a proper union of mongos, we need to compile a full record from several DBs
   #This in-line configuration will be dumped when that happens.
   m = MongoConnection.PipelineMongoConnection(**MONGO_ADSDATA)
   adsdata = m.getRecordsFromBibcodes(bibcodes,key="_id")
   m.close()
-  logger.debug("Collected adsdata")
 
   #TODO: What if we get StopIteration
   [r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])}) for r in metadata]
   logger.debug("Combined payload has %s records" % len(metadata))
 
   for record in metadata:
-    logger.debug("Adapting %s" % record['bibcode'])
     r = SolrAdapter.adapt(record)
     SolrAdapter.validate(r) #Raises AssertionError if not validated
     solrRecords.append(r)
