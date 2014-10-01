@@ -137,21 +137,21 @@ class SolrAdapter(object):
   def _author(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))
-    result = [i['name']['western'] for i in authors if i]
+    result = [i['name']['western'] for i in authors if i['name']['western']]
     return {'author': result}  
 
   @staticmethod
   def _author_norm(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i]
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized']]
     return {'author': result}
 
   @staticmethod
   def _author_facet(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i]
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized']]
     return {'author_facet': result}    
 
   @staticmethod
@@ -404,7 +404,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _reference(ADS_record):
-    result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i]
+    result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i['bibcode']]
     return {'reference': result}
 
   @staticmethod
