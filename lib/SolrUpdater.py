@@ -45,6 +45,7 @@ class SolrAdapter(object):
     'bibgroup_facet': [u'',],
     'bibstem': [u'',],
     'bibstem_facet': u'',
+    'body': u'',
     'citation': [u'',],
     'citation_count': 0,
     'cite_read_boost': 0.0,
