@@ -68,3 +68,14 @@
 2013MNRAS.428..212D	2013MNRAS.428..212C=alternate
 1978Natur.275..624M	1978Nat...275..624M=alternate
 2014MNRAS.439.1884T	2014arXiv1401.2993T=alternate
+1882LAstr...1..303X	(author initials only)
+1985JMoSt.131..183B	(author initials only (inverted))
+2014ApJ...790..152B	(single-name author)
+2014ApJ...781...55W	(single letter last name)
+1882LAstr...1...59T	(single initial name)
+2014apsp.conf.....1	(et al.)
+2002IAUS..206..340D	(weird name)
+2014ApJ...782..114E	(suffix)
+1916MNRAS..77...56E	(reverand)
+1917MNRAS..77..212D	(sir)
+1917MNRAS..77..621M	(Mrs) 
