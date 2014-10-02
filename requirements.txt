@@ -3,3 +3,4 @@ pymongo
 pika
 requests
 numpy
+ConcurrentLogHandler

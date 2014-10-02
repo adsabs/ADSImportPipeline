@@ -3,6 +3,7 @@ import argparse
 import json
 import requests
 import logging
+from cloghandler import ConcurrentRotatingFileHandler
 import logging.handlers
 import os, sys
 import re
@@ -17,7 +18,7 @@ formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
 LOGGER = logging.getLogger(__file__)
 if not LOGGER.handlers:
   fn = os.path.join(os.path.dirname(__file__),'..','logs','SolrUpdater.log')   
-  rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+  rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
   rfh.setFormatter(formatter)
   ch = logging.StreamHandler() #console handler
   ch.setFormatter(formatter)
