@@ -4,6 +4,7 @@ import pika
 import json
 import logging
 from logging import handlers
+from cloghandler import ConcurrentRotatingFileHandler
 import traceback
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
@@ -24,7 +25,7 @@ class RabbitMQWorker:
     self.formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
     LOGGER = logging.getLogger(self.__class__.__name__)
     fn = os.path.join(os.path.dirname(__file__),'..','logs','%s.log' % self.__class__.__name__)   
-    rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+    rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=5,mode='a') #2MB file
     rfh.setFormatter(self.formatter)
     LOGGER.handlers = []
     LOGGER.addHandler(rfh)
@@ -205,8 +206,9 @@ class SolrUpdateWorker(RabbitMQWorker):
     try:
       self.f(message)
     except Exception, e:
-      self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)
-      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}))
+      self.logger.error('%s: %s' % (e,traceback.format_exc()))
+      #self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)
+      #self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}))
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
   def run(self):
     self.connect(self.params['RABBITMQ_URL'])

@@ -2,6 +2,7 @@ import os,sys
 import pymongo
 import logging
 import logging.handlers
+from cloghandler import ConcurrentRotatingFileHandler
 
 class PipelineMongoConnection:
 
@@ -41,7 +42,7 @@ class PipelineMongoConnection:
     if not LOGGER.handlers:
       default_fn = os.path.join(os.path.dirname(__file__),'..','logs','PipelineMongoConnection.log')   
       fn = kwargs.get('logfile',default_fn)
-      rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+      rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=10,mode='a') #2MB file
       rfh.setFormatter(formatter)
       ch = logging.StreamHandler() #console handler
       ch.setFormatter(formatter)

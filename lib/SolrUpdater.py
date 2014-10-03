@@ -18,7 +18,7 @@ formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
 LOGGER = logging.getLogger(__file__)
 if not LOGGER.handlers:
   fn = os.path.join(os.path.dirname(__file__),'..','logs','SolrUpdater.log')   
-  rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+  rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=10,mode='a') #2MB file
   rfh.setFormatter(formatter)
   ch = logging.StreamHandler() #console handler
   ch.setFormatter(formatter)
@@ -45,6 +45,7 @@ class SolrAdapter(object):
     'bibgroup_facet': [u'',],
     'bibstem': [u'',],
     'bibstem_facet': u'',
+    'body': u'',
     'citation': [u'',],
     'citation_count': 0,
     'cite_read_boost': 0.0,
@@ -161,9 +162,9 @@ class SolrAdapter(object):
     authors = sorted(authors,key=lambda k: int(k['number']))
     result = []
     for author in authors:
-      r = "0/%s" % (author['name']['normalized'],)
+      r = u"0/%s" % (author['name']['normalized'],)
       result.append(r)
-      r = "1/%s/%s" % (author['name']['normalized'],author['name']['western'])
+      r = u"1/%s/%s" % (author['name']['normalized'],author['name']['western'])
       result.append(r)
     return {'author_facet_hier': result}
 
@@ -287,9 +288,9 @@ class SolrAdapter(object):
     authors = sorted(authors,key=lambda k: int(k['number']))
     result = []
     if authors:
-      r = "0/%s" % (authors[0]['name']['normalized'],)
+      r = u"0/%s" % (authors[0]['name']['normalized'],)
       result.append(r)
-      r = "1/%s/%s" % (authors[0]['name']['normalized'],authors[0]['name']['western'])
+      r = u"1/%s/%s" % (authors[0]['name']['normalized'],authors[0]['name']['western'])
       result.append(r)
     return {'first_author_facet_hier':result}
 
@@ -319,9 +320,9 @@ class SolrAdapter(object):
   def _grant_facet_hier(ADS_record):
     result = []
     for grant in ADS_record.get('adsdata',{}).get('grants',[]):
-      r = "0/%s" % (grant['agency'],)
+      r = u"0/%s" % (grant['agency'],)
       result.append(r)
-      r = "1/%s/%s" % (grant['agency'],grant['grant'])
+      r = u"1/%s/%s" % (grant['agency'],grant['grant'])
       result.append(r)
     return {'grant_facet_hier': result}
 

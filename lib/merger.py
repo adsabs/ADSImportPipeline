@@ -4,6 +4,7 @@ import types
 import itertools
 import logging
 import logging.handlers
+from cloghandler import ConcurrentRotatingFileHandler
 import collections
 
 from lib import EnforceSchema
@@ -31,7 +32,7 @@ class Merger:
     if not LOGGER.handlers:
       default_fn = os.path.join(os.path.dirname(__file__),'..','logs','%s.log' % self.__class__.__name__)   
       fn = kwargs.get('filename',default_fn)
-      rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
+      rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
       rfh.setFormatter(formatter)
       ch = logging.StreamHandler() #console handler
       ch.setFormatter(formatter)

@@ -4,6 +4,7 @@ import time
 import logging
 import logging.handlers
 #import hashlib
+from cloghandler import ConcurrentRotatingFileHandler
 
 from lib import xmltodict
 from lib import collections
@@ -33,7 +34,7 @@ formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
 logger = logging.getLogger('ReadRecords')
 if not logger.handlers:
   fn = os.path.join(os.path.dirname(__file__),'..','logs','ReadRecords.log')
-  rfh = logging.handlers.RotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=10,mode='a') #2MB file
+  rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=10,mode='a') #2MB file
   rfh.setFormatter(formatter)
   ch = logging.StreamHandler() #console handler
   ch.setFormatter(formatter)
