@@ -42,10 +42,10 @@ class RabbitMQWorker:
       exchange = self.params['ERROR_HANDLER']['exchange']
     if not routing_key:
       routing_key = self.params['ERROR_HANDLER']['routing_key']
-    self.channel.basic_publish(exchange,routing_key,message,**kwargs)
+    self.channel.basic_publish(exchange,routing_key,message,properties=kwargs['header_frame'])
   def publish(self,message,**kwargs):
     for e in self.params['publish']:
-      self.channel.basic_publish(e['exchange'],e['routing_key'],message,**kwargs)
+      self.channel.basic_publish(e['exchange'],e['routing_key'],message)
   def subscribe(self,callback,**kwargs):
     #Note that the same callback will be called for every entry in subscribe.
     for e in self.params['subscribe']:
@@ -59,20 +59,21 @@ class RabbitMQWorker:
     [self.channel.queue_declare(**q) for q in queues]
     [self.channel.queue_bind(**b) for b in bindings]
 
-
 class ErrorHandlerWorker(RabbitMQWorker):
   def __init__(self,params):
     self.params=params
-    from lib.MongoConnection import PipelineMongoConnection
-    self.mongo = PipelineMongoConnection(**settings.MONGO)
     self.logger = self.setup_logging()
     self.logger.debug("Initialized")
+
+    from lib.MongoConnection import PipelineMongoConnection
+    self.mongo = PipelineMongoConnection(**settings.MONGO)
     from lib.MongoConnection import PipelineMongoConnection
     from lib import ReadRecords #Hack to avoid loading ADSRecords until it is necessary
     from lib import UpdateRecords #Hack to avoid loading ADSRecords until it is necessary
     from lib.MongoConnection import PipelineMongoConnection
     from lib import SolrUpdater
-
+    from pipeline import psettings
+    self.params['WORKERS'] = psettings.WORKERS
     self.mongo=PipelineMongoConnection(**settings.MONGO)
 
     self.strategies = {
@@ -84,24 +85,28 @@ class ErrorHandlerWorker(RabbitMQWorker):
     }
 
   def on_message(self, channel, method_frame, header_frame, body):
-    self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-    return
     message = json.loads(body)
     producer = message.keys()[0]
+    print header_frame.headers
+    if header_frame.headers and 'redelivered' in header_frame.headers and header_frame.headers['redelivered']:
+      print "REDELIVERED"
+      self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+      self.logger.info("Fail: %s" % message)
+      return
+    P = pika.spec.BasicProperties(headers={'redelivered':True})
     #Iterate over each element of the batch, log and discard the failure(s)
     for content in message[producer]:
       try:
-        result = json.dumps(self.strategies[producer](content))
+        result = json.dumps(self.strategies[producer]([content]))
       except Exception, e:
         if producer in ['UpdateRecordsWorker','MongoWriteWorker']:
           content = content['bibcode']
         self.logger.error('%s: %s' % (content,traceback.format_exc()))
         continue
       #Re-publish the single record
-      for e in self.params['WORKERS']['publish']:
-        self.channel.basic_publish(e['exchange'],e['routing_key'],result)
+      for e in self.params['WORKERS'][producer]['publish']:
+        self.channel.basic_publish(e['exchange'],e['routing_key'],result,properties=P)
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-
 
   def run(self):
     self.connect(self.params['RABBITMQ_URL'])
@@ -123,7 +128,7 @@ class FindNewRecordsWorker(RabbitMQWorker):
         self.publish(json.dumps(results,default=date_handler))
     except Exception, e:
       self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e.message)
-      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}))
+      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}),header_frame=header_frame)
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
   def run(self):
     self.connect(self.params['RABBITMQ_URL'])
@@ -144,7 +149,7 @@ class ReadRecordsWorker(RabbitMQWorker):
       self.publish(json.dumps(results,default=date_handler))
     except Exception, e:
       self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e.message)
-      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}))
+      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}),header_frame=header_frame)
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
   def run(self):
     self.connect(self.params['RABBITMQ_URL'])
@@ -164,8 +169,9 @@ class UpdateRecordsWorker(RabbitMQWorker):
       results = self.f(message)
       self.publish(json.dumps(results,default=date_handler))
     except Exception, e:
+      print "Offloading to ErrorWorker due to exception: %s" % e.message
       self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e.message)
-      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}))
+      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}),header_frame=header_frame)
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
   def run(self):
     self.connect(self.params['RABBITMQ_URL'])
@@ -187,7 +193,7 @@ class MongoWriteWorker(RabbitMQWorker):
       self.publish(json.dumps(results,default=date_handler))
     except Exception, e:
       self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e.message)
-      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}))
+      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}),header_frame=header_frame)
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
   def run(self):
     self.connect(self.params['RABBITMQ_URL'])
@@ -207,9 +213,10 @@ class SolrUpdateWorker(RabbitMQWorker):
       self.f(message)
     except Exception, e:
       self.logger.error('%s: %s' % (e,traceback.format_exc()))
-      #self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)
-      #self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}))
+      self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)
+      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}),header_frame=header_frame)
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
   def run(self):
     self.connect(self.params['RABBITMQ_URL'])
     self.subscribe(self.on_message)
+
