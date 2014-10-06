@@ -96,7 +96,7 @@ class Enforcer:
       if i in record:
         del record[i]
 
-    record['text']['body']['language'] = record['metadata']['general']['tempdata']['language'][0].get('#text','')
+    record['text']['body']['language'] = record['metadata']['general']['language']
 
     for blocks in [record['metadata'],record['text']]:
       for key,block in blocks.iteritems():
@@ -177,8 +177,9 @@ class Enforcer:
       'type':               g('@type'),
       'origin':             g('@origin'),
       'modtime':            g('modification_time'),
-      'language':           eL(g('language',{}))
     }
+
+    r['language'] = g('language',{}).get('#text','')
 
     r['arxivcategories'] = [i['#text'] if isinstance(i,dict) else i for i in eL(g('arxivcategories',{}).get('arxivcategory',[]))]
 
