@@ -87,9 +87,7 @@ class ErrorHandlerWorker(RabbitMQWorker):
   def on_message(self, channel, method_frame, header_frame, body):
     message = json.loads(body)
     producer = message.keys()[0]
-    print header_frame.headers
     if header_frame.headers and 'redelivered' in header_frame.headers and header_frame.headers['redelivered']:
-      print "REDELIVERED"
       self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
       self.logger.info("Fail: %s" % message)
       return
@@ -169,7 +167,6 @@ class UpdateRecordsWorker(RabbitMQWorker):
       results = self.f(message)
       self.publish(json.dumps(results,default=date_handler))
     except Exception, e:
-      print "Offloading to ErrorWorker due to exception: %s" % e.message
       self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e.message)
       self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}),header_frame=header_frame)
     self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
