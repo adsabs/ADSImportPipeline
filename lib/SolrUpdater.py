@@ -107,7 +107,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _ack(ADS_record):
-    result = ADS_record['text'].get('acknowledgements',{}).get('content')
+    result = ADS_record['text'].get('acknowledgement',{}).get('content')
     return {'ack': result}
 
   @staticmethod
@@ -147,7 +147,7 @@ class SolrAdapter(object):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))
     result = [i['name']['normalized'] for i in authors if i['name']['normalized']]
-    return {'author': result}
+    return {'author_norm': result}
 
   @staticmethod
   def _author_facet(ADS_record):
@@ -231,7 +231,7 @@ class SolrAdapter(object):
     result = ADS_record.get('adsdata',{}).get('cite_read_boost')
     if result:
       result = float(result)
-    return {'citation_read_boost': result}    
+    return {'cite_read_boost': result}    
 
   @staticmethod
   def _classic_factor(ADS_record):
@@ -302,7 +302,7 @@ class SolrAdapter(object):
       result = authors[0]['name']['normalized']
     else:
       result = None
-    return {'first_author': result}
+    return {'first_author_norm': result}
 
   @staticmethod
   def _lang(ADS_record):
@@ -391,12 +391,12 @@ class SolrAdapter(object):
   @staticmethod
   def _keyword_norm(ADS_record):
     result = [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
-    return {'keyword': result}  
+    return {'keyword_norm': result}  
 
   @staticmethod
   def _keyword_schema(ADS_record):
     result = [i['type'] if i['type'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
-    return {'keyword': result}    
+    return {'keyword_schema': result}    
 
   @staticmethod
   def _keyword_facet(ADS_record):
