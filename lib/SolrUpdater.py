@@ -83,6 +83,8 @@ class SolrAdapter(object):
     'recid': 0,
     'reference': [u'',],
     'simbid': [0,],
+    'simbtype': [u'',],
+    'simbad_object_facet_hier': [u'',],
     'thesis': u'',
     'title': [u'',],
     'vizier': [u'',],
@@ -420,10 +422,37 @@ class SolrAdapter(object):
     result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i['bibcode']]
     return {'reference': result}
 
+# obsolete
+#  @staticmethod
+#  def _simbid(ADS_record):
+#    result = [int(i) for i in ADS_record.get('adsdata',{}).get('simbad_object_ids',[])]
+#    return {'simbid': result}
+
   @staticmethod
   def _simbid(ADS_record):
-    result = [int(i) for i in ADS_record.get('adsdata',{}).get('simbad_object_ids',[])]
+    result = []
+    for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
+      result.append(object['id'])
     return {'simbid': result}
+
+  @staticmethod
+  def _simbtype(ADS_record):
+    result = []
+    for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
+      type = simbad_type_mapper(object['type'])
+      result.append(type)
+    return {'simbtype': result}
+
+  @staticmethod
+  def _simbad_object_facet_hier(ADS_record):
+    result = []
+    for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
+      type = simbad_type_mapper(object['type'])
+      r = u"0/%s" % (type,)
+      result.append(r)
+      r = u"1/%s/%s" % (type,object['id'])
+      result.append(r)
+    return {'simbad_object_facet_hier': result}
 
   @staticmethod
   def _title(ADS_record):
@@ -474,6 +503,32 @@ class SolrAdapter(object):
       except AssertionError, err:
         logger.error( "%s: %s does not have the expected form %s (%s)" % (k,v,SCHEMA[k],r['bibcode']) )
         raise
+
+def simbad_type_mapper(otype):
+  """
+  Maps a native SIMBAD object type to a subset of basic classes
+  used for searching and faceting.  Based on Thomas Boch's mappings
+  used in AladinLite
+  """
+  if otype.startswith('G') or otype.endswith('G'):
+    return 'Galaxy'
+  elif otype=='Star' or otype.find('*') >= 0:
+    return 'Star'
+  elif otype=='Neb' or otype.startswith('PN') or otype.startswith('SNR'):
+    return 'Nebula'
+  elif otype=='HII':
+    return 'HII Region'
+  elif otype=='X':
+    return 'X-ray'
+  elif otype.startswith('Radio') or otype=='Maser' or otype=='HI':
+    return 'Radio'
+  elif otype=='IR' or otype.startswith('Red'):
+    return 'Infrared'
+  elif otype=='UV':
+    return 'UV'
+  else:
+    return 'Other'
+
 
 def solrUpdate(bibcodes,url=SOLR_URL):
   solrRecords = []
