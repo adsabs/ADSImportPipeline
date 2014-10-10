@@ -432,25 +432,25 @@ class SolrAdapter(object):
   def _simbid(ADS_record):
     result = []
     for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
-      result.append(object['id'])
+      result.append(int(object['id']))
     return {'simbid': result}
 
   @staticmethod
   def _simbtype(ADS_record):
     result = []
     for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
-      type = simbad_type_mapper(object['type'])
-      result.append(type)
+      otype = simbad_type_mapper(object['type'])
+      result.append(otype)
     return {'simbtype': result}
 
   @staticmethod
   def _simbad_object_facet_hier(ADS_record):
     result = []
     for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
-      type = simbad_type_mapper(object['type'])
-      r = u"0/%s" % (type,)
+      otype = simbad_type_mapper(object['type'])
+      r = u"0/%s" % (otype,)
       result.append(r)
-      r = u"1/%s/%s" % (type,object['id'])
+      r = u"1/%s/%s" % (otype,object['id'])
       result.append(r)
     return {'simbad_object_facet_hier': result}
 
