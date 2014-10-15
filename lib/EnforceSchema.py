@@ -6,7 +6,7 @@ class Enforcer:
   '''
   translates schema from ADSRecords to alternative schema
   '''
-  def __init__(self,datefmt='%Y-%m-%dT%H:%M:%S.%fZ',solrTimeoffset={'minutes':30}):
+  def __init__(self):
     '''
     datefmt and solrTimeoffset should be synchronized with what solr expects.
     If they are not, solr will return incorrect dates in some cases.
@@ -18,9 +18,7 @@ class Enforcer:
       'references':self._referencesEnforcer,
       'relations':self._relationsEnforcer,
     }
-    self.datefmt=datefmt
-    self.solrTimeoffset=solrTimeoffset
-
+    
   def ensureLanguageSchema(self,item):
     if isinstance(item,basestring):
       L = [{
@@ -54,14 +52,15 @@ class Enforcer:
       return True
     raise ValueError('Unable to parse %s' % item)
 
-  def parseDate(self,datestr):
+  @staticmethod
+  def parseDate(datestr,datefmt='%Y-%m-%dT%H:%M:%S.%fZ',solrTimeoffset={'minutes':30}):
     def strftime(date):
       if date.year <= 1900:
-        return '%s.000000Z' % date.isoformat()
-      return date.strftime(self.datefmt)
+        return u'%s.000000Z' % date.isoformat()
+      return unicode(date.strftime(datefmt))
 
     formats = [
-      self.datefmt,
+      datefmt,
       '%Y-%m-%d',
       '%Y-%m',
       '%Y',
@@ -78,11 +77,11 @@ class Enforcer:
       try:
         date = datetime.datetime.strptime(datestr,f)
         if fullDate:
-          date += datetime.timedelta(**self.solrTimeoffset)
+          date += datetime.timedelta(**solrTimeoffset)
         return strftime(date)
       except ValueError:
         pass
-    raise Exception("Could not parse %s" % datestr)
+    raise ValueError("Could not parse %s" % datestr)
 
   def finalPassEnforceSchema(self,record):
     '''
@@ -212,7 +211,7 @@ class Enforcer:
         'number':         i.get('@nr'),
         'type':           i.get('type'),
         'affiliations':   [j.get('affiliation') for j in eL(i.get('affiliations',[]))],
-        'emails':         [j['email'] for j in eL(i.get('emails',[]))],
+        'emails':         [k for k in eL(j.get('email',[])) for j in eL(i.get('emails',[]))],
         'orcid':          orcid,
         'name': {
           'native':     i['name'].get('native'),

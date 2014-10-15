@@ -10,6 +10,7 @@ import re
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from lib import MongoConnection
+from lib import EnforceSchema
 from settings import MONGO, MONGO_ADSDATA, SOLR_URL
 
 logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
@@ -255,10 +256,19 @@ class SolrAdapter(object):
   def _year(ADS_record):
     dates = ADS_record['metadata']['general']['publication']['dates']
     try:
-      result = next(i['content'] for i in dates if i['type']=='publication_year') #TODO: Catch StopIteration
+      result = next(i['content'] for i in dates if i['type'].lower()=='publication_year') #TODO: Catch StopIteration
     except StopIteration:
       result = None
     return {'year':result}
+
+  @staticmethod
+  def _date(ADS_record):
+    dates = ADS_record['metadata']['general']['publication']['dates']
+    try:
+      result = EnforceSchema.Enforcer.parseDate(next(i['content'] for i in dates if i['type'].lower()=='date-published'))
+    except StopIteration, ValueError:
+      result = None
+    return {'date':result}
 
   @staticmethod
   def _doi(ADS_record):
@@ -311,7 +321,7 @@ class SolrAdapter(object):
   @staticmethod
   def _grant(ADS_record):
     result = []
-    for grant in ADS_record.get('adsdata',{}).get('grants',[]):
+    for grant in ADS_record.get('adsdata',{}).get('grants',{}):
       result.append(grant['agency'])
       result.append(grant['grant'])
     return {'grant': result}
@@ -353,7 +363,8 @@ class SolrAdapter(object):
 
   @staticmethod
   def _issue(ADS_record):
-    return {'issue': ADS_record['metadata']['general'].get('publication',{}).get('issue')}
+    result = ADS_record['metadata']['general'].get('publication',{}).get('issue')
+    return {'issue': result}
       
   @staticmethod
   def _page(ADS_record):
@@ -379,6 +390,15 @@ class SolrAdapter(object):
   @staticmethod
   def _pub_raw(ADS_record):
     return {'pub_raw': ADS_record['metadata']['general'].get('publication',{}).get('name',{}).get('raw')}
+
+  @staticmethod
+  def _pubdate(ADS_record):
+    dates = ADS_record['metadata']['general']['publication']['dates']
+    try:
+      result = next(i['content'] for i in dates if i['type'].lower()=='date-published')
+    except StopIteration:
+      result = None
+    return {'pubdate': result}
 
   @staticmethod
   def _keyword(ADS_record):
@@ -494,7 +514,7 @@ def solrUpdate(bibcodes,url=SOLR_URL):
 
   #TODO: What if we get StopIteration
   [r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])}) for r in metadata]
-  logger.info("Combined payload has %s records" % len(metadata))
+  logger.debug("Combined payload has %s records" % len(metadata))
 
   for record in metadata:
     r = SolrAdapter.adapt(record)
@@ -503,6 +523,7 @@ def solrUpdate(bibcodes,url=SOLR_URL):
   payload = json.dumps(solrRecords)
   headers = {'content-type': 'application/json'}
   logger.info("Posting payload of length %s to %s" % (len(solrRecords),url))
+  logger.debug("Payload: %s" % payload)
   r = requests.post(url,data=payload,headers=headers)
 
 def main():

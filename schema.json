@@ -60,7 +60,7 @@ general = {
 // ...Or, should we keep the current implementation of 1 author-> 1 affiliation, where affiliation is a long string?
   'authors': [
     {
-      'nr': '',
+      'number': '',
       'type': '',
       'affiliations': ['',],
       'emails': ['',]
