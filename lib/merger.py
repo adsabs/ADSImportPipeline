@@ -45,7 +45,7 @@ class Merger:
   def _dispatcher(self,field):
     if field not in MERGER_RULES:
       self.logger.error("%s not in MERGER_RULES" % field)
-      raise
+      raise Exception("%s not in MERGER_RULES" % field)
     return eval('self. '+ MERGER_RULES[field])(field)
 
 

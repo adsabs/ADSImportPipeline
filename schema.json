@@ -10,14 +10,18 @@
       'relations':  {},
     },
     text: {
-      'provider':'',
-      'body':'',
-      'acknowledgments':'',
-      'modtime':'',
+      'body': {
+        'content':  '',
+        'provider': '',
+        'language': '',
+        'modtime':  '',
+      },
+      'acknowledgments': {
+        'content':  '',
+        'provider': '',
+        'modtime':  '',
+      },
     }
-
-    'modtime': '',
-
   },
 ]
 
@@ -29,8 +33,8 @@ general = {
 
   'keywords': [
     {
-    '@origin': '',
-    '@type': '',
+    'origin': '',
+    'type': '',
     'channel': '',
     'original': '',
     'normalized': '',
@@ -39,16 +43,16 @@ general = {
 
   'titles': [
     {
-      '@lang': '',
-      '#text': '',
+      'lang': '',
+      'text': '',
     },
   ],
 
   'abstracts: [
     {
-      '@origin' : '',
-      '@lang': '',
-      '#text': '',
+      'origin' : '',
+      'lang': '',
+      'text': '',
     },
   ],
 
@@ -56,7 +60,7 @@ general = {
 // ...Or, should we keep the current implementation of 1 author-> 1 affiliation, where affiliation is a long string?
   'authors': [
     {
-      'nr': '',
+      'number': '',
       'type': '',
       'affiliations': ['',],
       'emails': ['',]
