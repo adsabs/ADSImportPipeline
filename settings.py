@@ -46,6 +46,7 @@ MERGER_RULES = {
   'copyright':            'originTrustMerger',
   'comment':              'originTrustMerger',
   'pubnote':              'takeAll',
+  'language':             'originTrustMerger',
 
   #<metadata type="properties">
   'databases':            'takeAll',
