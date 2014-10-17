@@ -126,11 +126,11 @@ class Enforcer:
     r['acknowledgments'] = g('acknowledgments')
     r['creation'] = g('creation')
 
-  def enforceTopLevelSchema(self,record,JSON_fingerprint):
+  def enforceTopLevelSchema(self,record,JSON_fingerprint,datefmt='%Y-%m-%dT%H:%M:%S.%fZ'):
     r = {}
     r['JSON_fingerprint'] = JSON_fingerprint
     r['bibcode'] = record['@bibcode']
-    r['modtime'] = datetime.datetime.now().strftime(self.datefmt)
+    r['modtime'] = datetime.datetime.now().strftime(datefmt)
     r['text'] = {}
     r['text']['body'] = []
     r['text']['acknowledgement'] = []
@@ -142,11 +142,11 @@ class Enforcer:
         r['text'][f].append({
           'content':b.get('#text'),
           'provider': b.get('@origin'),
-          'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(self.datefmt),
+          'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(datefmt),
           'tempdata': {
             'origin': b.get('@origin'),
             'primary': True,
-            'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(self.datefmt),
+            'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(datefmt),
             },
         })
 
@@ -211,7 +211,7 @@ class Enforcer:
         'number':         i.get('@nr'),
         'type':           i.get('type'),
         'affiliations':   [j.get('affiliation') for j in eL(i.get('affiliations',[]))],
-        'emails':         [k for k in eL(j.get('email',[])) for j in eL(i.get('emails',[]))],
+        'emails':         [k for k in eL(i.get('emails',{}).get('email',[]))],
         'orcid':          orcid,
         'name': {
           'native':     i['name'].get('native'),
