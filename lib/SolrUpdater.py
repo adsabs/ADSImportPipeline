@@ -249,9 +249,9 @@ class SolrAdapter(object):
   @staticmethod
   def _database(ADS_record):
     translation = {
-      'phy': u'physics',
-      'ast': u'astronomy',
-      'gen': u'general',
+      'PHY': u'physics',
+      'AST': u'astronomy',
+      'GEN': u'general',
     }
     result = [translation[i['content']] for i in ADS_record['metadata']['properties'].get('databases',[])]
     result = list(set(result))
