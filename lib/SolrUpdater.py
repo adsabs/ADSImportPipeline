@@ -239,7 +239,7 @@ class SolrAdapter(object):
     result = ADS_record.get('adsdata',{}).get('classic_factor')
     if result:
       result = int(result)
-    return {'classic_factor': result}    
+    return {'classic_factor': result}
 
   @staticmethod
   def _comment(ADS_record):
@@ -322,6 +322,12 @@ class SolrAdapter(object):
   @staticmethod
   def _lang(ADS_record):
     return {'lang': ADS_record['text']['body'].get('language','')}
+
+  @staticmethod
+  def _links_data(ADS_record):
+    result = ['''{"title":"%s", "type":"%s", "instances":"%s"}''' % (i['title'],i['type'],i['count']) for i in ADS_record['metadata']['relations']['links']]
+    result = [unicode(json.dumps(r.replace('None',''))) for r in result]
+    return {'links_data':result}
 
   @staticmethod
   def _grant(ADS_record):
