@@ -535,8 +535,11 @@ def solrUpdate(bibcodes,url=SOLR_URL):
   adsdata = m.getRecordsFromBibcodes(bibcodes,key="_id")
   m.close()
 
-  #TODO: What if we get StopIteration
-  [r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])}) for r in metadata]
+  for r in metadata:
+    try:
+      r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])})
+    except StopIteration:
+      r['adsdata'] = {}
   logger.debug("Combined payload has %s records" % len(metadata))
 
   for record in metadata:
