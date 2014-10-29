@@ -59,7 +59,8 @@ class SolrAdapter(object):
     'email': [u'',],
     'facility': [u'',],
     'first_author': u'',
-    'first_author_facet_hier': [u'',], 
+    'first_author_facet_hier': [u'',],
+    'first_author_norm':u'', 
     #'full': u'', #non-populated field 
     'grant': [u'',],
     'grant_facet_hier': [u'',],
@@ -79,6 +80,7 @@ class SolrAdapter(object):
     'pub': u'',
     'pub_raw': u'',
     'pubdate': u'',
+    'pubdate_sort': 0,
     'read_count': 0,
     'reader':[u'',],
     'recid': 0,
@@ -229,14 +231,14 @@ class SolrAdapter(object):
 
   @staticmethod
   def _cite_read_boost(ADS_record):
-    result = ADS_record.get('adsdata',{}).get('cite_read_boost')
+    result = ADS_record.get('adsdata',{}).get('boost')
     if result:
       result = float(result)
     return {'cite_read_boost': result}    
 
   @staticmethod
   def _classic_factor(ADS_record):
-    result = ADS_record.get('adsdata',{}).get('classic_factor')
+    result = ADS_record.get('adsdata',{}).get('norm_cites')
     if result:
       result = int(result)
     return {'classic_factor': result}
@@ -412,6 +414,16 @@ class SolrAdapter(object):
     return {'pubdate': result}
 
   @staticmethod
+  def _pubdate_sort(ADS_record):
+    dates = ADS_record['metadata']['general']['publication']['dates']
+    try:
+      result = next(i['content'] for i in dates if i['type'].lower()=='date-published')
+      result = int(result.replace('-',''))
+    except:
+      result = None
+    return {'pubdate_sort': result}
+
+  @staticmethod
   def _keyword(ADS_record):
     result = [i['original'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     result.extend( [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])] )
@@ -453,7 +465,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _simbid(ADS_record):
-    result = [int(i) for i in ADS_record.get('adsdata',{}).get('simbad_object_ids',[])]
+    result = [int(i['id']) for i in ADS_record.get('adsdata',{}).get('simbad_objects',[])]
     return {'simbid': result}
 
   @staticmethod
