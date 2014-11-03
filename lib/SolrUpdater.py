@@ -234,7 +234,7 @@ class SolrAdapter(object):
     result = ADS_record.get('adsdata',{}).get('boost')
     if result:
       result = float(result)
-    return {'cite_read_boost': result}    
+    return {'cite_read_boost': result}
 
   @staticmethod
   def _classic_factor(ADS_record):
@@ -255,7 +255,7 @@ class SolrAdapter(object):
       'AST': u'astronomy',
       'GEN': u'general',
     }
-    result = [translation[i['content']] for i in ADS_record['metadata']['properties'].get('databases',[])]
+    result = [translation[i['content'].upper()] for i in ADS_record['metadata']['properties'].get('databases',[])]
     result = list(set(result))
     return {'database': result}
 
@@ -328,7 +328,7 @@ class SolrAdapter(object):
   @staticmethod
   def _links_data(ADS_record):
     result = ['''{"title":"%s", "type":"%s", "instances":"%s"}''' % (i['title'],i['type'],i['count']) for i in ADS_record['metadata']['relations']['links']]
-    result = [unicode(json.dumps(r.replace('None',''))) for r in result]
+    result = [unicode(r.replace('None','')) for r in result]
     return {'links_data':result}
 
   @staticmethod
