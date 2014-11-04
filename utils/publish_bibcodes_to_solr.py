@@ -62,6 +62,7 @@ def main():
   args = parser.parse_args()
   if args.whole_database:
     bibcodes = getAllBibcodesFromMongo()
+    bibcodes.batch_size(100)
     print "the cursor has returned",type(bibcodes)
     bibcodes.pop = bibcodes.next
 
@@ -75,7 +76,6 @@ def main():
       bibcodes = [i for i in args.bibcodes]
 
   while bibcodes:
-    print time.time(),bibcodes.count()
     payload = []
     while len(payload) < args.bibcodes_per_message:
       try:
@@ -83,7 +83,7 @@ def main():
         if isinstance(b,dict):
           b = b['bibcode']
         payload.append(b)
-      except IndexError, StopIteration:
+      except (IndexError, StopIteration):
         break
     publish(payload)
 
