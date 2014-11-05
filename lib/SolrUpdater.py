@@ -59,7 +59,8 @@ class SolrAdapter(object):
     'email': [u'',],
     'facility': [u'',],
     'first_author': u'',
-    'first_author_facet_hier': [u'',], 
+    'first_author_facet_hier': [u'',],
+    'first_author_norm':u'', 
     #'full': u'', #non-populated field 
     'grant': [u'',],
     'grant_facet_hier': [u'',],
@@ -79,6 +80,7 @@ class SolrAdapter(object):
     'pub': u'',
     'pub_raw': u'',
     'pubdate': u'',
+    'pubdate_sort': 0,
     'read_count': 0,
     'reader':[u'',],
     'recid': 0,
@@ -231,17 +233,17 @@ class SolrAdapter(object):
 
   @staticmethod
   def _cite_read_boost(ADS_record):
-    result = ADS_record.get('adsdata',{}).get('cite_read_boost')
+    result = ADS_record.get('adsdata',{}).get('boost')
     if result:
       result = float(result)
-    return {'cite_read_boost': result}    
+    return {'cite_read_boost': result}
 
   @staticmethod
   def _classic_factor(ADS_record):
-    result = ADS_record.get('adsdata',{}).get('classic_factor')
+    result = ADS_record.get('adsdata',{}).get('norm_cites')
     if result:
       result = int(result)
-    return {'classic_factor': result}    
+    return {'classic_factor': result}
 
   @staticmethod
   def _comment(ADS_record):
@@ -250,7 +252,12 @@ class SolrAdapter(object):
 
   @staticmethod
   def _database(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['properties'].get('databases',[])]
+    translation = {
+      'PHY': u'physics',
+      'AST': u'astronomy',
+      'GEN': u'general',
+    }
+    result = [translation[i['content'].upper()] for i in ADS_record['metadata']['properties'].get('databases',[])]
     result = list(set(result))
     return {'database': result}
 
@@ -319,6 +326,12 @@ class SolrAdapter(object):
   @staticmethod
   def _lang(ADS_record):
     return {'lang': ADS_record['text']['body'].get('language','')}
+
+  @staticmethod
+  def _links_data(ADS_record):
+    result = ['''{"title":"%s", "type":"%s", "instances":"%s"}''' % (i['title'],i['type'],i['count']) for i in ADS_record['metadata']['relations']['links']]
+    result = [unicode(r.replace('None','')) for r in result]
+    return {'links_data':result}
 
   @staticmethod
   def _grant(ADS_record):
@@ -403,6 +416,16 @@ class SolrAdapter(object):
     return {'pubdate': result}
 
   @staticmethod
+  def _pubdate_sort(ADS_record):
+    dates = ADS_record['metadata']['general']['publication']['dates']
+    try:
+      result = next(i['content'] for i in dates if i['type'].lower()=='date-published')
+      result = int(result.replace('-',''))
+    except:
+      result = None
+    return {'pubdate_sort': result}
+
+  @staticmethod
   def _keyword(ADS_record):
     result = [i['original'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     result.extend( [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])] )
@@ -442,17 +465,9 @@ class SolrAdapter(object):
     result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i['bibcode']]
     return {'reference': result}
 
-# obsolete
-#  @staticmethod
-#  def _simbid(ADS_record):
-#    result = [int(i) for i in ADS_record.get('adsdata',{}).get('simbad_object_ids',[])]
-#    return {'simbid': result}
-
   @staticmethod
   def _simbid(ADS_record):
-    result = []
-    for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
-      result.append(int(object['id']))
+    result = [int(i['id']) for i in ADS_record.get('adsdata',{}).get('simbad_objects',[])]
     return {'simbid': result}
 
   @staticmethod
@@ -567,8 +582,11 @@ def solrUpdate(bibcodes,url=SOLR_URL):
   adsdata = m.getRecordsFromBibcodes(bibcodes,key="_id")
   m.close()
 
-  #TODO: What if we get StopIteration
-  [r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])}) for r in metadata]
+  for r in metadata:
+    try:
+      r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])})
+    except StopIteration:
+      r['adsdata'] = {}
   logger.debug("Combined payload has %s records" % len(metadata))
 
   for record in metadata:

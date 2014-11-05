@@ -253,10 +253,8 @@ _PRIORITIES_ABSTRACTS = {
 }
 
 _PRIORITIES_REFERENCES = {
-  10: ['AUTHOR',],
-  9.5: ['ISI',],
+  0: ['AUTHOR','ISI','OTHER'],
   9.1: ['SPRINGER',],
-  9.05:['OTHER',],
   9: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
       'ACASN', 'ACHA', 'ACTA', 'ADASS', 'ADIL', 'ADS', 'AFRSK', 'AG',
       'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANRFM', 'ANRMS',

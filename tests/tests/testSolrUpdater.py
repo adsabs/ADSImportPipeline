@@ -18,9 +18,8 @@ class TestSolrAdapter(unittest.TestCase):
 
   def test_SolrAdapter(self):
     r = SolrUpdater.SolrAdapter.adapt(self.INPUT)
-    self.assertEquals(r,self.OUTPUT)
     SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
-
+    self.assertEquals(r,self.OUTPUT)
 
   def tearDown(self):
     pass
