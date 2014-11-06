@@ -508,15 +508,11 @@ class SolrAdapter(object):
     SCHEMA = cls.SCHEMA
     assert isinstance(r,dict)
     for k,v in r.iteritems():
-      try:
-        assert k in SCHEMA
-        assert isinstance(v,type(SCHEMA[k]))
-        if isinstance(v,list) and v: #No expectation of nested lists
-          assert len(set([type(i) for i in v])) == 1
-          assert isinstance(v[0],type(SCHEMA[k][0]))
-      except AssertionError, err:
-        logger.error( "%s: %s does not have the expected form %s (%s)" % (k,v,SCHEMA[k],r['bibcode']) )
-        raise
+      assert k in SCHEMA, '%s: not in schema' % k
+      assert isinstance(v,type(SCHEMA[k])), '%s: has an unexpected type (%s!=%s)' % (k,type(v),SCHEMA[k])
+      if isinstance(v,list) and v: #No expectation of nested lists
+        assert len(set([type(i) for i in v])) == 1, "%s: multiple data-types in a list" % k
+        assert isinstance(v[0],type(SCHEMA[k][0])), "%s: inner list element has unexpected type (%s!=%s)" % (k,type(v[0]),SCHEMA[k][0])
 
 def solrUpdate(bibcodes,url=SOLR_URL):
   solrRecords = []

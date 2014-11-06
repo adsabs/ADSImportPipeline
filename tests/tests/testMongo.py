@@ -14,6 +14,7 @@ class TestMongo(unittest.TestCase):
   def setUp(self):
     MONGO['DATABASE'] = 'unittests_tmp'
     MONGO['COLLECTION'] = 'unittests_tmp'
+    MONGO['PORT'] = '27017'
     self.mongo = MongoConnection.PipelineMongoConnection(**MONGO)
     #self.mongo.conn.drop_database(self.mongo.database)
     self.records = [
