@@ -462,7 +462,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _reference(ADS_record):
-    result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i['bibcode']]
+    result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i['bibcode'] and i['score'] and i['score'] < 5]
     return {'reference': result}
 
   @staticmethod
