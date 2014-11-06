@@ -107,7 +107,16 @@ class TestAuthorMatch(unittest.TestCase):
         self.assertEqual(matches, [])
         matches = author_match.match_ads_author_fields([],[self.A1,self.C1,self.M1], impl='np')
         self.assertEqual(matches, [])
-        
+
+    def test_match_ads_author06(self):
+        # case where 1987Ap&SS.138...61H was incorrectly matched to 1986tnra.book.....D
+        # (no match should be take place here)
+        a1 = {"name": {"western": "Hadrava, P."}, "affiliations": ["Astronomical Institute of the Czechoslovak Academy of Sciences"]}
+        a2 = {"name": {'western': 'de Waard, Gerrit Jan'}, "affiliations": []}
+        matches = author_match.match_ads_author_fields([a1],[a2])
+        self.assertEqual(matches,[(a1,None)])
+        self.assertFalse(author_match.is_suitable_match(a1,a2))
+
 
     def test_is_suitable_match(self):
         self.assertTrue(author_match.is_suitable_match(self.A1,self.A1))
