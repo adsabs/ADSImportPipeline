@@ -119,7 +119,7 @@ def main(MONGO=MONGO,*args):
     nargs='*',
     default=[],
     dest='targetBibcodes',
-    help='Only analyze the specified bibcodes'
+    help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Only works when --async=False'
     )
 
   parser.add_argument(
@@ -168,7 +168,9 @@ def main(MONGO=MONGO,*args):
 
   if not args.async:
     mongo = MongoConnection.PipelineMongoConnection(**MONGO)
-    records = mongo.findNewRecords(records)
+    if args.targetBibcodes:
+      ignoreUnchangedRecords=False
+    records = mongo.findNewRecords(records,ignoreUnchangedRecords=ignoreUnchangedRecords)
     if args.load_records_from_pickle:
       records = ReadRecords.readRecordsFromPickles(records,args.load_records_from_pickle)
     else:

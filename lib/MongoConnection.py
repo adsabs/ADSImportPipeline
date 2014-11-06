@@ -126,7 +126,7 @@ class PipelineMongoConnection:
     self.logger.info("Performed %s updates and %s inserts to mongo" % (len(updates),len(inserts)))
     return updates+inserts
 
-  def findNewRecords(self,records):
+  def findNewRecords(self,records,ignoreUnchangedRecords=True):
     '''
     Finds records in mongodb that need updating.
     Update criteria: JSON_fingerprint field different from the input records
@@ -138,6 +138,8 @@ class PipelineMongoConnection:
       return []
 
     currentRecords = [(r['bibcode'],r['JSON_fingerprint']) for r in self.db[self.collection].find({"bibcode": {"$in": [rec[0] for rec in records]}})]
+    if not ignoreUnchangedRecords:
+      return currentRecords
     results = list(set([(r[0],r[1]) for r in records]).difference(currentRecords))
     self.logger.info('findChangedRecords: %s results' % len(results))
     return results
