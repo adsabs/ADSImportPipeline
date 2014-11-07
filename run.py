@@ -71,7 +71,7 @@ def publish(w,records,sleep=5,max_queue_size=5000,url=psettings.RABBITMQ_URL,exc
 
 def readBibcodesFromFile(files,targetBibcodes):
   start = time.time()
-  if targetBibcodes[0].startswith('@'):
+  if targetBibcodes and targetBibcodes[0].startswith('@'):
     with open(targetBibcodes[0].replace('@','')) as fp:
       targetBibcodes = [L.strip() for L in fp.readlines() if L and not L.startswith('#')]
   with cd(PROJECT_HOME):
