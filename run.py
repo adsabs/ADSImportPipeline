@@ -71,6 +71,9 @@ def publish(w,records,sleep=5,max_queue_size=5000,url=psettings.RABBITMQ_URL,exc
 
 def readBibcodesFromFile(files,targetBibcodes):
   start = time.time()
+  if targetBibcodes[0].startswith('@'):
+    with open(targetBibcodes[0].replace('@','')) as fp:
+      targetBibcodes = [L.strip() for L in fp.readlines() if L and not L.startswith('#')]
   with cd(PROJECT_HOME):
     records = OrderedDict()
     targets = OrderedDict()
@@ -119,7 +122,7 @@ def main(MONGO=MONGO,*args):
     nargs='*',
     default=[],
     dest='targetBibcodes',
-    help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Only works when --async=False'
+    help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Only works when --async=False. Use the syntax @filename.txt to read these from file (1 bibcode per file)'
     )
 
   parser.add_argument(
