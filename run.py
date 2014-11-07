@@ -110,14 +110,6 @@ def main(MONGO=MONGO,*args):
   parser = argparse.ArgumentParser()
 
   parser.add_argument(
-    '--bibcode-files',
-    nargs='*',
-    default=BIBCODE_FILES,
-    dest='updateTargets',
-    help='full paths to bibcode files'
-    )
-
-  parser.add_argument(
     '--target-bibcodes',
     nargs='*',
     default=[],
@@ -166,7 +158,7 @@ def main(MONGO=MONGO,*args):
     ReadRecords.INIT_LOOKERS_CACHE()
     logger.info("init_lookers_cache() returned in %0.1f sec" % (time.time()-start))
 
-  records = readBibcodesFromFile(args.updateTargets, args.targetBibcodes)
+  records = readBibcodesFromFile(BIBCODE_FILES, args.targetBibcodes)
   total = float(len(records)) #Save to print later
 
   if not args.async:
