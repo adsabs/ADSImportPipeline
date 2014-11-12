@@ -14,4 +14,303 @@ RELATIONS_ENFORCED={'tempdata': {'modtime': None, 'origin': u'ADS metadata', 'ty
 RECORDS=[]
 
 INPUT_MONGO_DOC={'bibcode': u'testbibcode', 'text': {'body': {'content': u'Some fulltext hashimoto', 'modtime': '', 'language': '', 'provider': u'some provider'}, 'acknowledgments': {'content': '', 'modtime': '', 'provider': ''}}, 'JSON_fingerprint': u'fake_fingerprint', 'adsdata': {'simbad_objects': [{'type': 'type1', 'id': '5'}, {'type': 'type2', 'id': '3000001'}], 'read_count': u'50', 'citations': [u'2014JNuM..455...10C', u'2014JNuM..455...10D'], 'readers': [u'abaesrwersdlfkjsd', u'asfasdflkjsdfsldj'], 'grants': [{'agency': u'NASA', 'grant': u'123456-78'}, {'agency': u'NSF-AST', 'grant': u'0618398'}], 'norm_cites': u'5002', 'boost': u'0.52', 'citation_count': 12}, '_id': 99999999, 'metadata': {'references': [{'origin': '', 'bibcode': u'2014JNuM..455...10R', 'extension': '', 'content': '', 'score': '1', 'doi': ''}, {'origin': '', 'bibcode': u'2014JNuM..455...10T', 'extension': '', 'content': '', 'score': '5', 'doi': ''}], 'properties': {'refereed': True, 'openaccess': True, 'doctype': {'content': u'Catalog', 'origin': ''}, 'private': False, 'ocrabstract': True, 'databases': [{'content': u'phy', 'origin': ''}, {'content': u'ast', 'origin': ''}], 'bibgroups': [{'content': u'Cfa', 'origin': ''}]}, 'relations': {'preprints': [{'content': u'arxiv:1234.5678', 'origin': '', 'ecode': ''}, {'content': u'ARXIV:hep-ph/1234', 'origin': '', 'ecode': ''}], 'links': [{'origin': None, 'url': 'http://$NED$/cgi-bin/nph-objsearch?search_type=Search&refcode=2013A%26A...552A.143S', 'type': 'ned', 'count': '78', 'title': None}, {'origin': None, 'url': 'http://www.aanda.org/10.1051/0004-6361/201321247/postscript', 'type': 'postscript', 'count': None, 'title': None}, {'origin': None, 'url': 'http://dx.doi.org/10.1051%2F0004-6361%2F201321247', 'type': 'electr', 'count': None, 'title': None}, {'origin': None, 'url': 'http://$SIMBAD$/simbo.pl?bibcode=2013A%26A...552A.143S', 'type': 'simbad', 'count': '74', 'title': None}, {'origin': None, 'url': 'http://www.aanda.org/10.1051/0004-6361/201321247/pdf', 'type': 'pdf', 'count': None, 'title': None}]}, 'general': {'doi': [{'content': u'doi:\xc5\xbd\xc5\xa0\xc4\x8c\xc5\x98\xc4\x8e\xc5\xa4\xc5\x87:123456789', 'origin': ''}], 'publication': {'origin': '', 'volume': u'l24', 'dates': [{'content': u'2013-08-05', 'type': u'date-published'}], 'issue': u'24i', 'page': u'2056-2078'}, 'titles': [{'lang': u'en', 'text': u'This is of the title'}, {'lang': '', 'text': u'This is of the alternate'}], 'authors': [{'name': {'normalized': u'T Hooft, V', 'western': u"t'Hooft, van X", 'native': ''}, 'number': u'1', 'affiliations': [], 'orcid': '', 'type': '', 'emails': []}, {'name': {'normalized': u'Anders, J M', 'western': u'Anders, John Michael', 'native': ''}, 'number': u'2', 'affiliations': [u'NASA Kavli space center, Cambridge, MA 02138, USA'], 'orcid': '', 'type': '', 'emails': [u'anders@email.com']}, {'name': {'normalized': u'Einstein, A', 'western': u'Einstein, A', 'native': ''}, 'number': u'3', 'affiliations': [u'Einsteininstitute, Zurych, Switzerland'], 'orcid': '', 'type': '', 'emails': []}], 'keywords': [{'origin': '', 'type': u'PACS Codes', 'normalized': u'stat mech', 'channel': '', 'original': u'Classical Statistical mechanics'}], 'abstracts': [{'lang': '', 'origin': u'some origin', 'text': u"all no-skysurvey q'i quotient"}]}}}
-EXPECTED_SOLR_DOC={'author': [u"t'Hooft, van X", u'Anders, John Michael', u'Einstein, A'], 'pubdate_sort': 20130805, 'keyword_norm': [u'stat mech'], 'bibgroup': [u'Cfa'], 'pubdate': u'2013-08-05', 'title': [u'This is of the title', u'This is of the alternate'], 'keyword_schema': [u'PACS Codes'], 'bibgroup_facet': [u'Cfa'], 'bibstem_facet': u'bibcode', 'volume': u'l24', 'doi': [u'doi:\xc5\xbd\xc5\xa0\xc4\x8c\xc5\x98\xc4\x8e\xc5\xa4\xc5\x87:123456789'], 'author_norm': [u'T Hooft, V', u'Anders, J M', u'Einstein, A'], 'alternate_title': [u'This is of the alternate'], 'first_author_norm': u'T Hooft, V', 'keyword': [u'Classical Statistical mechanics', u'stat mech'], 'grant_facet_hier': [u'0/NASA', u'1/NASA/123456-78', u'0/NSF-AST', u'1/NSF-AST/0618398'], 'citation_count': 12, 'cite_read_boost': 0.52, 'property': [u'OPENACCESS', u'OCRABSTRACT', u'REFEREED', u'NONARTICLE'], 'page': u'2056-2078', 'keyword_facet': [u'stat mech'], 'read_count': 50, 'reference': [u'2014JNuM..455...10R',], 'first_author': u"t'Hooft, van X", 'abstract': u"all no-skysurvey q'i quotient", 'citation': [u'2014JNuM..455...10C', u'2014JNuM..455...10D'], 'links_data': [u'{"title":"", "type":"ned", "instances":"78"}', u'{"title":"", "type":"postscript", "instances":""}', u'{"title":"", "type":"electr", "instances":""}', u'{"title":"", "type":"simbad", "instances":"74"}', u'{"title":"", "type":"pdf", "instances":""}'], 'id': 99999999, 'simbid': [5, 3000001], 'bibcode': u'testbibcode', 'author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X", u'0/Anders, J M', u'1/Anders, J M/Anders, John Michael', u'0/Einstein, A', u'1/Einstein, A/Einstein, A'], 'grant': [u'NASA', u'123456-78', u'NSF-AST', u'0618398'], 'aff': [u'-', u'NASA Kavli space center, Cambridge, MA 02138, USA', u'Einsteininstitute, Zurych, Switzerland'], 'reader': [u'abaesrwersdlfkjsd', u'asfasdflkjsdfsldj'], 'issue': u'24i', 'email': [u'-', u'anders@email.com', u'-'], 'body': u'Some fulltext hashimoto', 'date': u'2013-08-05T00:30:00.000000Z', 'classic_factor': 5002, 'identifier': [u'arxiv:1234.5678', u'doi:\xc5\xbd\xc5\xa0\xc4\x8c\xc5\x98\xc4\x8e\xc5\xa4\xc5\x87:123456789', u'ARXIV:hep-ph/1234'], 'database': [u'astronomy', u'physics'], 'bibstem': [u'bibco', u'bibcode'], 'first_author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X"], 'author_facet': [u'T Hooft, V', u'Anders, J M', u'Einstein, A']}
+EXPECTED_SOLR_DOC={'author': [u"t'Hooft, van X", u'Anders, John Michael', u'Einstein, A'], 'pubdate_sort': 20130805, 'keyword_norm': [u'stat mech'], 'bibgroup': [u'Cfa'], 'pubdate': u'2013-08-05', 'title': [u'This is of the title', u'This is of the alternate'], 'keyword_schema': [u'PACS Codes'], 'bibgroup_facet': [u'Cfa'], 'bibstem_facet': u'bibcode', 'volume': u'l24', 'doi': [u'doi:\xc5\xbd\xc5\xa0\xc4\x8c\xc5\x98\xc4\x8e\xc5\xa4\xc5\x87:123456789'], 'author_norm': [u'T Hooft, V', u'Anders, J M', u'Einstein, A'], 'alternate_title': [u'This is of the alternate'], 'first_author_norm': u'T Hooft, V', 'keyword': [u'Classical Statistical mechanics'], 'grant_facet_hier': [u'0/NASA', u'1/NASA/123456-78', u'0/NSF-AST', u'1/NSF-AST/0618398'], 'citation_count': 12, 'cite_read_boost': 0.52, 'property': [u'OPENACCESS', u'OCRABSTRACT', u'REFEREED', u'NONARTICLE'], 'page': u'2056-2078', 'keyword_facet': [u'stat mech'], 'read_count': 50, 'reference': [u'2014JNuM..455...10R',], 'first_author': u"t'Hooft, van X", 'abstract': u"all no-skysurvey q'i quotient", 'citation': [u'2014JNuM..455...10C', u'2014JNuM..455...10D'], 'links_data': [u'{"title":"", "type":"ned", "instances":"78"}', u'{"title":"", "type":"postscript", "instances":""}', u'{"title":"", "type":"electr", "instances":""}', u'{"title":"", "type":"simbad", "instances":"74"}', u'{"title":"", "type":"pdf", "instances":""}'], 'id': 99999999, 'simbid': [5, 3000001], 'bibcode': u'testbibcode', 'author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X", u'0/Anders, J M', u'1/Anders, J M/Anders, John Michael', u'0/Einstein, A', u'1/Einstein, A/Einstein, A'], 'grant': [u'NASA', u'123456-78', u'NSF-AST', u'0618398'], 'aff': [u'-', u'NASA Kavli space center, Cambridge, MA 02138, USA', u'Einsteininstitute, Zurych, Switzerland'], 'reader': [u'abaesrwersdlfkjsd', u'asfasdflkjsdfsldj'], 'issue': u'24i', 'email': [u'-', u'anders@email.com', u'-'], 'body': u'Some fulltext hashimoto', 'date': u'2013-08-05T00:30:00.000000Z', 'classic_factor': 5002, 'identifier': [u'arxiv:1234.5678', u'doi:\xc5\xbd\xc5\xa0\xc4\x8c\xc5\x98\xc4\x8e\xc5\xa4\xc5\x87:123456789', u'ARXIV:hep-ph/1234'], 'database': [u'astronomy', u'physics'], 'bibstem': [u'bibco', u'bibcode'], 'first_author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X"], 'author_facet': [u'T Hooft, V', u'Anders, J M', u'Einstein, A']}
+
+INPUT_MONGO_DOC1={
+    "_id" : 99999998,
+    "modtime" : "2014-11-06T14:11:18.697474Z",
+    "bibcode" : u"2000A&AS..143...41K_test",
+#    "JSON_fingerprint" : "{\"abs\":[{\"p\":\"/proj/ads/abstracts/ast/text/J20/J20-02694.abs\",\"primary\":1,\"t\":\"1317932566\"},{\"p\":\"/proj/ads/abstracts/ast/text/S20/S20-02694.abs\",\"t\":\"1347312274\"}],\"full\":[{\"p\":\"/proj/ads/fulltext/extracted/20/00/A&/AS/,,/14/3,/,,/41/K//meta.json\",\"t\":1395500064},{\"p\":\"/proj/ads/fulltext/extracted/20/00/A&/AS/,,/14/3,/,,/41/K//fulltext.txt\",\"t\":1363680233}],\"links\":{\"electr\":[{\"u\":\"http://dx.doi.org/10.1051%2Faas%3A2000170\"}],\"preprint\":[{\"u\":\"astro-ph/0002104\"}],\"spires\":[{\"u\":\"http://inspirehep.net/search?p=find+j+AAESB,143,41\"}]},\"prop\":[\"bibgroup: CfA\",\"refereed\"],\"refs\":[{\"p\":\"/proj/ads/references/resolved/A+AS/0143/iss1.raw.result\",\"t\":1374540245},{\"p\":\"/proj/ads/references/resolved/AUTHOR/Markus/MarkusMagic.pairs.result\",\"t\":1412026020},{\"p\":\"/proj/ads/references/resolved/ISI/A&AS/A&AS0143.isi.pairs.result\",\"t\":1414726893}]};{\"abs\":[{\"p\":\"/proj/ads/abstracts/pre/text/X00/X00-03262.abs\",\"primary\":1,\"t\":\"1257155059\"}],\"links\":{\"electr\":[{\"u\":\"http://dx.doi.org/10.1051%2Faas%3A2000170\"}],\"preprint\":[{\"u\":\"astro-ph/0002104\"}],\"spires\":[{\"u\":\"http://inspirehep.net/search?p=find+eprint+astro-ph/0002104\"}]},\"prop\":[\"bibgroup: CfA\"],\"refs\":[{\"p\":\"/proj/ads/references/resolved/astro-ph/2000/0002104.raw.result\",\"t\":1360840132}]}",
+
+    "text": {},
+    "metadata" : {
+    "references": [],
+    'properties': {'refereed': True, 'openaccess': False, 
+                   'doctype': {'content': u'article', 'origin': u'ADS metadata'}, 
+                   'private': False, 'ocrabstract': False, 
+                   'databases': [{'content': u'ast', 'origin': ''}], 
+                   'bibgroups': [{'content': u'CfA', 'origin': ''}]
+                   },
+    "relations": {},
+    "general" : {
+        "comment" : [ ],
+        "doi" : [
+            {
+                "origin" : u"A&AS",
+                "content" : u"10.1051/aas:2000170"
+                }
+            ],
+        "titles" : [
+                {
+                "lang" : u"en",
+                "text" : u"The NASA Astrophysics Data System: Overview"
+                }
+            ],
+        "publication" : {
+            "origin" : u"A&AS",
+            "dates" : [
+                {
+                    "content" : u"2000-04-00",
+                    "type" : u"date-published"
+                    },
+                {
+                    "content" : u"2000",
+                    "type" : u"publication_year"
+                    }
+                ],
+            "name" : {
+                "raw" : u"Astronomy and Astrophysics Supplement, v.143, p.41-59",
+                "canonical" : u"Astronomy and Astrophysics Supplement Series"
+                },
+            "page_count" : u"19",
+            "page" : u"41",
+            "volume" : u"143",
+            "page_range" : u"41-59",
+            "electronic_id" : None,
+            "issue" : None,
+            "page_last" : u"59"
+            },
+        "language" : u"",
+        "issns" : [ ],
+        "conf_metadata" : {
+            "origin" : u"A&AS",
+            "content" : None
+            },
+        "copyright" : [ ],
+        "isbns" : [ ],
+        "authors" : [
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Kurtz, Michael J.",
+                    "normalized" : u"Kurtz, M"
+                    },
+                "number" : u"1",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Eichhorn, Guenther",
+                    "normalized" : u"Eichhorn, G"
+                    },
+                "number" : u"2",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Accomazzi, Alberto",
+                    "normalized" : u"Accomazzi, A"
+                    },
+                "number" : u"3",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Grant, Carolyn S.",
+                    "normalized" : u"Grant, C"
+                    },
+                "number" : u"4",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Murray, Stephen S.",
+                    "normalized" : u"Murray, S"
+                    },
+                "number" : u"5",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Watson, Joyce M.",
+                    "normalized" : u"Watson, J"
+                    },
+                "number" : u"6",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                }
+            ],
+        "keywords" : [
+            {
+                "origin" : u"A&AS",
+                "type" : u"Astronomy",
+                "original" : u"METHODS: DATA ANALYSIS",
+                "channel" : u"",
+                "normalized" : u"methods data analysis"
+                },
+            {
+                "origin" : u"A&AS",
+                "type" : u"Astronomy",
+                "original" : u"ASTRONOMICAL DATABASES: MISCELLANEOUS",
+                "channel" : u"",
+                "normalized" : None
+                },
+            {
+                "origin" : u"A&AS",
+                "type" : u"Astronomy",
+                "original" : u"PUBLICATIONS: BIBLIOGRAPHY",
+                "channel" : u"",
+                "normalized" : None
+                },
+            {
+                "origin" : u"A&AS",
+                "type" : u"Astronomy",
+                "original" : u"SOCIOLOGY OF ASTRONOMY",
+                "channel" : u"",
+                "normalized" : None
+                },
+            {
+                "origin" : u"ARXIV",
+                "type" : u"arXiv",
+                "original" : u"Astrophysics",
+                "channel" : u"astro-ph",
+                "normalized" : u"astrophysics"
+                }
+            ],
+        "arxivcategories" : [
+            u"Astrophysics"
+            ],
+        "pubnote" : [
+            {
+                "origin" : u"ARXIV",
+                "content" : {
+                    "@origin" : u"ARXIV",
+                    "#text" : u"19 pages, 22 figures; Astron.Astrophys.Suppl.Ser. 143 (2000) 41-59; doi:10.1051/aas:2000170"
+                    }
+                }
+            ],
+        "altpublications" : [
+            {
+                "origin" : u"ARXIV",
+                "dates" : [
+                    {
+                        "content" : u"2000-02-00",
+                        "type" : u"date-preprint"
+                        },
+                    {
+                        "content" : u"2000",
+                        "type" : u"publication_year"
+                        }
+                    ],
+                "name" : {
+                    "raw" : u"eprint arXiv:astro-ph/0002104",
+                    "canonical" : u"ArXiv e-prints"
+                    },
+                "page_count" : None,
+                "page" : None,
+                "volume" : None,
+                "page_range" : None,
+                "electronic_id" : u"astro-ph/0002104",
+                "altbibcode" : u"2000astro.ph..2104K",
+                "issue" : None,
+                "page_last" : None
+                }
+            ],
+        }
+    }
+}
+
+EXPECTED_SOLR_DOC1={
+    "first_author": u"Kurtz, Michael J.", 
+#    "links_data": [u"{\"title\":\"\",\"type\":\"spires\",\"instances\":\"\"}", "{\"title\":\"\",\"type\":\"electr\",\"instances\":\"\"}", "{\"title\":\"\",\"type\":\"spires\",\"instances\":\"\"}"], 
+    "first_author_norm": u"Kurtz, M", 
+    "year": u"2000", 
+    "id":99999998, 
+    "bibcode": u"2000A&AS..143...41K_test", 
+    "author_facet_hier": [
+        u"0/Kurtz, M", u"1/Kurtz, M/Kurtz, Michael J.",
+        u"0/Eichhorn, G", u"1/Eichhorn, G/Eichhorn, Guenther", 
+        u"0/Accomazzi, A", u"1/Accomazzi, A/Accomazzi, Alberto", 
+        u"0/Grant, C", u"1/Grant, C/Grant, Carolyn S.", 
+        u"0/Murray, S", u"1/Murray, S/Murray, Stephen S.",
+        u"0/Watson, J", u"1/Watson, J/Watson, Joyce M."], 
+    "bibstem": [u"A&AS", u"A&AS..143"], 
+    "aff": [
+        u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA", 
+        u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA", 
+        u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA", 
+        u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA",
+        u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA", 
+        u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"], 
+    "keyword": [u"METHODS: DATA ANALYSIS", 
+                u"ASTRONOMICAL DATABASES: MISCELLANEOUS", 
+                u"PUBLICATIONS: BIBLIOGRAPHY", 
+                u"SOCIOLOGY OF ASTRONOMY", 
+                u"Astrophysics"], 
+    "keyword_norm": [u"methods data analysis", u"-", u"-", u"-",
+                     u"astrophysics"], 
+    "keyword_schema": [u"Astronomy", u"Astronomy",
+                       u"Astronomy", u"Astronomy", u"arXiv"], 
+    "keyword_facet": [u"methods data analysis",
+                      u"astrophysics"], 
+    "email": [u"-", u"-", u"-", u"-", u"-", u"-"],
+    "arxiv_class": [u"Astrophysics"], 
+    "bibgroup": [u"CfA"],
+    "bibgroup_facet": [u"CfA"],
+    "pubdate_sort": 20000400, 
+    "author_facet": [u"Kurtz, M", u"Eichhorn, G",
+                     u"Accomazzi, A", u"Grant, C", u"Murray, S", u"Watson, J"],
+    "bibstem_facet": u"A&AS", 
+    "pub": u"Astronomy and Astrophysics Supplement Series", 
+    "volume": u"143", 
+    "doi": [u"10.1051/aas:2000170"],
+    "author_norm": [u"Kurtz, M", u"Eichhorn, G", u"Accomazzi, A", u"Grant, C",
+                    u"Murray, S", u"Watson, J"], 
+    "date": u"2000-04-01T00:00:00.000000Z",
+    "pubdate": u"2000-04-00", 
+    "identifier": [u"10.1051/aas:2000170"],
+    "database": [u"astronomy"], 
+    "author":
+        [u"Kurtz, Michael J.", u"Eichhorn, Guenther", u"Accomazzi, Alberto",
+         u"Grant, Carolyn S.", u"Murray, Stephen S.", u"Watson, Joyce M."],
+#    "citation_count": 60, 
+    "pub_raw": u"Astronomy and Astrophysics Supplement, v.143, p.41-59", 
+#    "cite_read_boost": 0.45,
+    "first_author_facet_hier": [u"0/Kurtz, M", u"1/Kurtz, M/Kurtz, Michael J."], 
+    "title": [u"The NASA Astrophysics Data System: Overview"],
+    "property": [u"REFEREED", u"ARTICLE"], 
+    "page": u"41"
+}
+
+SOLR_TESTS = [ 
+    { 'INPUT':  INPUT_MONGO_DOC,
+      'OUTPUT': EXPECTED_SOLR_DOC },
+    { 'INPUT':  INPUT_MONGO_DOC1,
+      'OUTPUT': EXPECTED_SOLR_DOC1 }
+    ]
+
+    
