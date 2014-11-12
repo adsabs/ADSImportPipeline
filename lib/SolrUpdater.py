@@ -23,9 +23,9 @@ if not LOGGER.handlers:
   rfh.setFormatter(formatter)
   ch = logging.StreamHandler() #console handler
   ch.setFormatter(formatter)
-#  LOGGER.addHandler(ch)
+  LOGGER.addHandler(ch)
   LOGGER.addHandler(rfh)
-LOGGER.setLevel(logging.INFO)
+LOGGER.setLevel(logging.DEBUG)
 logger = LOGGER
 
 class SolrAdapter(object):
@@ -187,26 +187,31 @@ class SolrAdapter(object):
   @staticmethod
   def _bibgroup(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('bibgroups',[])]
+    result = list(set(result))
     return {'bibgroup': result}
 
   @staticmethod
   def _bibgroup_facet(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('bibgroups',[])]
+    result = list(set(result))
     return {'bibgroup_facet': result}   
 
   @staticmethod
   def _bibstem(ADS_record):
     b = ADS_record['bibcode']
-    result = map(unicode,[b[4:9].replace('.',''),b[4:13]])
+    # index both long and short bibstems
+    result = map(unicode,[re.sub(r'\.+$','',b[4:9]),b[4:13]])
     return {'bibstem':result}
 
   @staticmethod
   def _bibstem_facet(ADS_record):
     b = ADS_record['bibcode']
     if re.match("^[\\.\\d]+$",b[9:13]):
+      # is a serial publication, user short bibstem
       result = b[4:9].replace('.','')
     else:
-      result = b[4:13]
+      # is book/conference/arxiv, use long bibstem
+      result = re.sub(r'\.+$','',b[4:13])
     return {'bibstem_facet':unicode(result)}
 
   @staticmethod
@@ -323,11 +328,11 @@ class SolrAdapter(object):
 
   @staticmethod
   def _lang(ADS_record):
-    return {'lang': ADS_record['text']['body'].get('language','')}
+    return {'lang': ADS_record['text'].get('body',{}).get('language','')}
 
   @staticmethod
   def _links_data(ADS_record):
-    result = ['''{"title":"%s", "type":"%s", "instances":"%s"}''' % (i['title'],i['type'],i['count']) for i in ADS_record['metadata']['relations']['links']]
+    result = ['''{"title":"%s", "type":"%s", "instances":"%s"}''' % (i['title'],i['type'],i['count']) for i in ADS_record['metadata']['relations'].get('links',[])]
     result = [unicode(r.replace('None','')) for r in result]
     return {'links_data':result}
 
@@ -425,25 +430,26 @@ class SolrAdapter(object):
 
   @staticmethod
   def _keyword(ADS_record):
+    """original keywords; must match one-to-one with _keyword_schema and _keyword_norm"""
     result = [i['original'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
-    result.extend( [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])] )
-    if result == [[]]:
-      result = []
     return {'keyword': result}
 
   @staticmethod
   def _keyword_norm(ADS_record):
+    """normalized keywords; must match one-to-one with _keyword and _keyword_schema"""
     result = [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword_norm': result}  
 
   @staticmethod
   def _keyword_schema(ADS_record):
+    """keyword system; must match one-to-one with _keyword and _keyword_norm"""
     result = [i['type'] if i['type'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword_schema': result}    
 
   @staticmethod
   def _keyword_facet(ADS_record):
-    result = [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    # keep only non-empty normalized keywords
+    result = filter(None, [i['normalized'] for i in ADS_record['metadata']['general'].get('keywords',[])])
     return {'keyword_facet':result}
 
   @staticmethod
