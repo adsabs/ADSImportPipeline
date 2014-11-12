@@ -23,9 +23,9 @@ if not LOGGER.handlers:
   rfh.setFormatter(formatter)
   ch = logging.StreamHandler() #console handler
   ch.setFormatter(formatter)
-  LOGGER.addHandler(ch)
+#  LOGGER.addHandler(ch)
   LOGGER.addHandler(rfh)
-LOGGER.setLevel(logging.DEBUG)
+LOGGER.setLevel(logging.INFO)
 logger = LOGGER
 
 class SolrAdapter(object):
