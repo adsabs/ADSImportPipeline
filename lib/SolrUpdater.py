@@ -399,6 +399,8 @@ class SolrAdapter(object):
       result.append(u"ARTICLE")
     else:
       result.append(u"NONARTICLE")
+    if u'REFEREED' not in result:
+      result.append(u"NOTREFEREED")
     return {'property':result}
 
   @staticmethod
