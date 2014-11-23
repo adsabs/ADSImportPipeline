@@ -28,6 +28,20 @@ if not LOGGER.handlers:
 LOGGER.setLevel(logging.INFO)
 logger = LOGGER
 
+
+def get_date_by_datetype(ADS_record):
+  
+  """computes the standard pubdate by selecting the appropriate value
+  from the ADS_record and formatting it as YYYY-MM-DD"""
+
+  dates = ADS_record['metadata']['general']['publication']['dates']
+  for datetype in [ 'date-published', 'date-thesis', 'date-preprint' ]:
+    try:
+      return next(i['content'] for i in dates if i['type'].lower()==datetype)
+    except StopIteration:
+      pass
+  return None
+
 class SolrAdapter(object):
   SCHEMA = {
     'abstract': u'',
@@ -93,26 +107,6 @@ class SolrAdapter(object):
     'volume': u'',
     'year': u'',
   }
-
-  #------------------------------------------------
-  #Utility functions used by the static methods below
-
-  @staticmethod
-  def _get_pubdate(ADS_record):
-    """computes the standard pubdate by selecting the appropriate value
-    from the ADS_record and formatting it as YYYY-MM-DD"""
-    dates = ADS_record['metadata']['general']['publication']['dates']
-    result = None
-    for datetype in [ 'date-published', 'date-thesis', 'date-preprint' ]:
-      try:
-        result = next(i['content'] for i in dates if i['type'].lower()==datetype)
-      except StopIteration:
-        result = None
-      if result:
-        break
-    # if result is None should we throw an exception?
-    return result
-
 
   #------------------------------------------------
   #Private methods; responsible for translating schema: ADS->Solr
@@ -295,7 +289,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _date(ADS_record):
-    result = SolrAdapter._get_pubdate(ADS_record)
+    result = get_date_by_datetype(ADS_record)
     if result:
       try:
         result = EnforceSchema.Enforcer.parseDate(result)
@@ -435,12 +429,12 @@ class SolrAdapter(object):
 
   @staticmethod
   def _pubdate(ADS_record):
-    result = SolrAdapter._get_pubdate(ADS_record)
+    result = get_date_by_datetype(ADS_record)
     return {'pubdate':result}
 
   @staticmethod
   def _pubdate_sort(ADS_record):
-    result = SolrAdapter._get_pubdate(ADS_record)
+    result = get_date_by_datetype(ADS_record)
     if result:
       try:
         result = int(result.replace('-',''))
