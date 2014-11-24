@@ -141,10 +141,10 @@ class Enforcer:
       for b in blocks:
         r['text'][f].append({
           'content':b.get('#text'),
-          'provider': b.get('@origin'),
+          'provider': b.get('@origin',u'ADS'),
           'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(datefmt),
           'tempdata': {
-            'origin': b.get('@origin'),
+            'origin': b.get('@origin',u'ADS'),
             'primary': True,
             'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(datefmt),
             },
