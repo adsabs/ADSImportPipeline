@@ -95,7 +95,6 @@ class SolrAdapter(object):
     'pub': u'',
     'pub_raw': u'',
     'pubdate': u'',
-    'pubdate_sort': 0,
     'read_count': 0,
     'reader':[u'',],
     'recid': 0,
@@ -438,16 +437,6 @@ class SolrAdapter(object):
   def _pubdate(ADS_record):
     result = get_date_by_datetype(ADS_record)
     return {'pubdate':result}
-
-  @staticmethod
-  def _pubdate_sort(ADS_record):
-    result = get_date_by_datetype(ADS_record)
-    if result:
-      try:
-        result = int(result.replace('-',''))
-      except:
-        result = None
-    return {'pubdate_sort': result}
 
   @staticmethod
   def _keyword(ADS_record):
