@@ -4,6 +4,8 @@ import datetime
 import sys, os
 PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
 sys.path.append(PROJECT_HOME)
+sys.path.append(os.path.join(PROJECT_HOME,'tests'))
+
 from lib import EnforceSchema
 from stubdata import stubdata
 
@@ -51,3 +53,6 @@ class TestEnforceSchema(unittest.TestCase):
     }
     for _input, _output in testCases.iteritems():
       self.assertEqual(self.e.parseDate(_input),_output)
+
+if __name__ == '__main__':
+    unittest.main()

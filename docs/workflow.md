@@ -20,3 +20,16 @@ In [7]: adsrecords = ADSRecords('full','XML',cacheLooker=True);adsrecords.addCom
 In [8]: import json
 
 In [9]: print json.dumps(metadata, indent=2)
+
+
+# How to get example data from ADSimportpipeline
+
+The most straightforward way to do this is the following:
+
+/proj.adsx/python/bin/python /proj.adsx/ADSimportpipeline/run.py --target-bibcodes "my_bibcode" --dump-output-to-file foo.txt --dont-init-lookers-cache
+
+This process goes through all steps of the pipeline except, instead of writing to mongo, it dumps ascii to disk.
+
+The ascii will contain both the non-merged (which is coming from ADSexports after the schema has been enforced) and merged document.
+
+The process will block on bibcode file reading and canonical bibcode resolving, which takes about 3-5 minutes total.

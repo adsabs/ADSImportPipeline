@@ -261,6 +261,7 @@ relations = {
       'url': '',
       'title': '',
       'count': '',
+      'access': '',
     },
   ],
 }
