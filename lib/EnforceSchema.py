@@ -312,7 +312,22 @@ class Enforcer:
           'content': j,
         })
     
+    r['data_sources'] = []
+    for i in eL(g('data_sources',[])):
+      for j in eL(i.get('data_source',[])):
+        r['data_sources'].append({
+          'origin': g('@origin'),
+          'content': j,
+        })
 
+    r['vizier_tables'] = []
+    for i in eL(g('vizier_tables',[])):
+      for j in eL(i.get('vizier_table',[])):
+        for k in eL(j):
+          r['vizier_tables'].append({
+            'origin': g('@origin'),
+            'content': k,
+          })
 
     for k in ['openaccess','ocrabstract','private','refereed']:
       r[k] = self.parseBool(g(k))

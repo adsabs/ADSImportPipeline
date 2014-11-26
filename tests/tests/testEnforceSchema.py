@@ -30,7 +30,7 @@ class TestEnforceSchema(unittest.TestCase):
     self.assertEqual(self.general,stubdata.GENERAL_ENFORCED)
 
   def test_propertiesEnforcer(self):
-    #self.maxDiff=None
+    self.maxDiff=None
     self.assertEqual(self.properties,stubdata.PROPERTIES_ENFORCED)
 
   def test_referencesEnforcer(self):

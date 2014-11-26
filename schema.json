@@ -199,6 +199,19 @@ properties = {
       'content': '',
       'comment': '',
     },
+
+  'data_sources': [
+    {
+      'origin':'',
+      'content': '',
+    },
+
+  'vizier_tables': [
+    {
+      'origin':'',
+      'content': '',
+    },
+
   ],
 
 // Should these all be booleans?
