@@ -21,7 +21,7 @@ INPUT_MONGO_DOC1={
     "_id" : 99999998,
     "modtime" : "2014-11-06T14:11:18.697474Z",
     "bibcode" : u"2000A&AS..143...41K_test",
-#    "JSON_fingerprint" : "{\"abs\":[{\"p\":\"/proj/ads/abstracts/ast/text/J20/J20-02694.abs\",\"primary\":1,\"t\":\"1317932566\"},{\"p\":\"/proj/ads/abstracts/ast/text/S20/S20-02694.abs\",\"t\":\"1347312274\"}],\"full\":[{\"p\":\"/proj/ads/fulltext/extracted/20/00/A&/AS/,,/14/3,/,,/41/K//meta.json\",\"t\":1395500064},{\"p\":\"/proj/ads/fulltext/extracted/20/00/A&/AS/,,/14/3,/,,/41/K//fulltext.txt\",\"t\":1363680233}],\"links\":{\"electr\":[{\"u\":\"http://dx.doi.org/10.1051%2Faas%3A2000170\"}],\"preprint\":[{\"u\":\"astro-ph/0002104\"}],\"spires\":[{\"u\":\"http://inspirehep.net/search?p=find+j+AAESB,143,41\"}]},\"prop\":[\"bibgroup: CfA\",\"refereed\"],\"refs\":[{\"p\":\"/proj/ads/references/resolved/A+AS/0143/iss1.raw.result\",\"t\":1374540245},{\"p\":\"/proj/ads/references/resolved/AUTHOR/Markus/MarkusMagic.pairs.result\",\"t\":1412026020},{\"p\":\"/proj/ads/references/resolved/ISI/A&AS/A&AS0143.isi.pairs.result\",\"t\":1414726893}]};{\"abs\":[{\"p\":\"/proj/ads/abstracts/pre/text/X00/X00-03262.abs\",\"primary\":1,\"t\":\"1257155059\"}],\"links\":{\"electr\":[{\"u\":\"http://dx.doi.org/10.1051%2Faas%3A2000170\"}],\"preprint\":[{\"u\":\"astro-ph/0002104\"}],\"spires\":[{\"u\":\"http://inspirehep.net/search?p=find+eprint+astro-ph/0002104\"}]},\"prop\":[\"bibgroup: CfA\"],\"refs\":[{\"p\":\"/proj/ads/references/resolved/astro-ph/2000/0002104.raw.result\",\"t\":1360840132}]}",
+    "JSON_fingerprint" : "{\"abs\":[{\"p\":\"/proj/ads/abstracts/ast/text/J20/J20-02694.abs\",\"primary\":1,\"t\":\"1317932566\"},{\"p\":\"/proj/ads/abstracts/ast/text/S20/S20-02694.abs\",\"t\":\"1347312274\"}],\"full\":[{\"p\":\"/proj/ads/fulltext/extracted/20/00/A&/AS/,,/14/3,/,,/41/K//meta.json\",\"t\":1395500064},{\"p\":\"/proj/ads/fulltext/extracted/20/00/A&/AS/,,/14/3,/,,/41/K//fulltext.txt\",\"t\":1363680233}],\"links\":{\"electr\":[{\"u\":\"http://dx.doi.org/10.1051%2Faas%3A2000170\"}],\"preprint\":[{\"u\":\"astro-ph/0002104\"}],\"spires\":[{\"u\":\"http://inspirehep.net/search?p=find+j+AAESB,143,41\"}]},\"prop\":[\"bibgroup: CfA\",\"refereed\"],\"refs\":[{\"p\":\"/proj/ads/references/resolved/A+AS/0143/iss1.raw.result\",\"t\":1374540245},{\"p\":\"/proj/ads/references/resolved/AUTHOR/Markus/MarkusMagic.pairs.result\",\"t\":1412026020},{\"p\":\"/proj/ads/references/resolved/ISI/A&AS/A&AS0143.isi.pairs.result\",\"t\":1414726893}]};{\"abs\":[{\"p\":\"/proj/ads/abstracts/pre/text/X00/X00-03262.abs\",\"primary\":1,\"t\":\"1257155059\"}],\"links\":{\"electr\":[{\"u\":\"http://dx.doi.org/10.1051%2Faas%3A2000170\"}],\"preprint\":[{\"u\":\"astro-ph/0002104\"}],\"spires\":[{\"u\":\"http://inspirehep.net/search?p=find+eprint+astro-ph/0002104\"}]},\"prop\":[\"bibgroup: CfA\"],\"refs\":[{\"p\":\"/proj/ads/references/resolved/astro-ph/2000/0002104.raw.result\",\"t\":1360840132}]}",
 
     "text": {},
     "metadata" : {
@@ -67,7 +67,7 @@ INPUT_MONGO_DOC1={
             "page" : u"41",
             "volume" : u"143",
             "page_range" : u"41-59",
-            "electronic_id" : None,
+            "electronic_id" : u"here is the eid",
             "issue" : None,
             "page_last" : u"59"
             },
@@ -289,6 +289,7 @@ EXPECTED_SOLR_DOC1={
     "pub": u"Astronomy and Astrophysics Supplement Series", 
     "volume": u"143", 
     "doi": [u"10.1051/aas:2000170"],
+    "eid": u"here is the eid",
     "author_norm": [u"Kurtz, M", u"Eichhorn, G", u"Accomazzi, A", u"Grant, C",
                     u"Murray, S", u"Watson, J"], 
     "date": u"2000-04-01T00:00:00.000000Z",
@@ -344,14 +345,4 @@ EXPECTED_SOLR_DOC2={
     'pubdate_sort' : 20140600,
     "property": [u"OPENACCESS", u"ARTICLE", u"NOT REFEREED"], 
 }
-
-SOLR_TESTS = [ 
-    { 'INPUT':  INPUT_MONGO_DOC,
-      'OUTPUT': EXPECTED_SOLR_DOC },
-    { 'INPUT':  INPUT_MONGO_DOC1,
-      'OUTPUT': EXPECTED_SOLR_DOC1 },
-    { 'INPUT':  INPUT_MONGO_DOC2,
-      'OUTPUT': EXPECTED_SOLR_DOC2 }
-    ]
-
     

@@ -69,7 +69,8 @@ class SolrAdapter(object):
     'copyright': [u'',],
     'database': [u'',],
     'date': u'YYYY-MM[-DD]',
-    'doi':[u'',], 
+    'doi':[u'',],
+    'eid':u'',
     'email': [u'',],
     'facility': [u'',],
     'first_author': u'',
@@ -137,6 +138,7 @@ class SolrAdapter(object):
   @staticmethod
   def _alternate_bibcode(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['relations'].get('alternates',[])]
+    result = list(set(result))
     return {'alternate_bibcode': result}
 
   @staticmethod
@@ -302,6 +304,11 @@ class SolrAdapter(object):
   def _doi(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('doi',[])]
     return {'doi': result}
+
+  @staticmethod
+  def _eid(ADS_record):
+    result = ADS_record['metadata']['general']['publication'].get('electronic_id')
+    return {'eid': result}
 
   @staticmethod
   def _email(ADS_record):
