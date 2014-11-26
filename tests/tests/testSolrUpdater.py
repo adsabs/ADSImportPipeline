@@ -15,10 +15,18 @@ class TestSolrAdapter(unittest.TestCase):
     self.maxDiff = None
 
   def test_SolrAdapter(self):
-    for t in stubdata.SOLR_TESTS:
-      r = SolrUpdater.SolrAdapter.adapt(t['INPUT'])
-      SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
-      self.assertEquals(r,t['OUTPUT'])
+
+    r = SolrUpdater.SolrAdapter.adapt(stubdata.INPUT_MONGO_DOC)
+    SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
+    self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC)
+
+    r = SolrUpdater.SolrAdapter.adapt(stubdata.INPUT_MONGO_DOC1)
+    SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
+    self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC1)
+
+    r = SolrUpdater.SolrAdapter.adapt(stubdata.INPUT_MONGO_DOC2)
+    SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
+    self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC2)
 
   def tearDown(self):
     pass

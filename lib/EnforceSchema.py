@@ -141,10 +141,10 @@ class Enforcer:
       for b in blocks:
         r['text'][f].append({
           'content':b.get('#text'),
-          'provider': b.get('@origin'),
+          'provider': b.get('@origin',u'ADS'),
           'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(datefmt),
           'tempdata': {
-            'origin': b.get('@origin'),
+            'origin': b.get('@origin',u'ADS'),
             'primary': True,
             'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(datefmt),
             },
@@ -312,7 +312,22 @@ class Enforcer:
           'content': j,
         })
     
+    r['data_sources'] = []
+    for i in eL(g('data_sources',[])):
+      for j in eL(i.get('data_source',[])):
+        r['data_sources'].append({
+          'origin': g('@origin'),
+          'content': j,
+        })
 
+    r['vizier_tables'] = []
+    for i in eL(g('vizier_tables',[])):
+      for j in eL(i.get('vizier_table',[])):
+        for k in eL(j):
+          r['vizier_tables'].append({
+            'origin': g('@origin'),
+            'content': k,
+          })
 
     for k in ['openaccess','ocrabstract','private','refereed']:
       r[k] = self.parseBool(g(k))

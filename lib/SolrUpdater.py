@@ -28,6 +28,20 @@ if not LOGGER.handlers:
 LOGGER.setLevel(logging.INFO)
 logger = LOGGER
 
+
+def get_date_by_datetype(ADS_record):
+  
+  """computes the standard pubdate by selecting the appropriate value
+  from the ADS_record and formatting it as YYYY-MM-DD"""
+
+  dates = ADS_record['metadata']['general']['publication']['dates']
+  for datetype in [ 'date-published', 'date-thesis', 'date-preprint' ]:
+    try:
+      return next(i['content'] for i in dates if i['type'].lower()==datetype)
+    except StopIteration:
+      pass
+  return None
+
 class SolrAdapter(object):
   SCHEMA = {
     'abstract': u'',
@@ -55,7 +69,8 @@ class SolrAdapter(object):
     'copyright': [u'',],
     'database': [u'',],
     'date': u'YYYY-MM[-DD]',
-    'doi':[u'',], 
+    'doi':[u'',],
+    'eid':u'',
     'email': [u'',],
     'facility': [u'',],
     'first_author': u'',
@@ -75,12 +90,11 @@ class SolrAdapter(object):
     'keyword_schema': [u'',],
     'lang': u'',
     'links_data': [u'',],
-    'page': u'',
+    'page': [u''],
     'property': [u'',],
     'pub': u'',
     'pub_raw': u'',
     'pubdate': u'',
-    'pubdate_sort': 0,
     'read_count': 0,
     'reader':[u'',],
     'recid': 0,
@@ -93,26 +107,6 @@ class SolrAdapter(object):
     'volume': u'',
     'year': u'',
   }
-
-  #------------------------------------------------
-  #Utility functions used by the static methods below
-
-  @staticmethod
-  def _get_pubdate(ADS_record):
-    """computes the standard pubdate by selecting the appropriate value
-    from the ADS_record and formatting it as YYYY-MM-DD"""
-    dates = ADS_record['metadata']['general']['publication']['dates']
-    result = None
-    for datetype in [ 'date-published', 'date-thesis', 'date-preprint' ]:
-      try:
-        result = next(i['content'] for i in dates if i['type'].lower()==datetype)
-      except StopIteration:
-        result = None
-      if result:
-        break
-    # if result is None should we throw an exception?
-    return result
-
 
   #------------------------------------------------
   #Private methods; responsible for translating schema: ADS->Solr
@@ -143,6 +137,7 @@ class SolrAdapter(object):
   @staticmethod
   def _alternate_bibcode(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['relations'].get('alternates',[])]
+    result = list(set(result))
     return {'alternate_bibcode': result}
 
   @staticmethod
@@ -295,7 +290,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _date(ADS_record):
-    result = SolrAdapter._get_pubdate(ADS_record)
+    result = get_date_by_datetype(ADS_record)
     if result:
       try:
         result = EnforceSchema.Enforcer.parseDate(result)
@@ -308,6 +303,11 @@ class SolrAdapter(object):
   def _doi(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('doi',[])]
     return {'doi': result}
+
+  @staticmethod
+  def _eid(ADS_record):
+    result = ADS_record['metadata']['general']['publication'].get('electronic_id')
+    return {'eid': result}
 
   @staticmethod
   def _email(ADS_record):
@@ -408,7 +408,10 @@ class SolrAdapter(object):
       
   @staticmethod
   def _page(ADS_record):
-    return {'page': ADS_record['metadata']['general'].get('publication',{}).get('page')}
+    result = [ADS_record['metadata']['general']['publication'].get('page')]
+    if ADS_record['metadata']['general']['publication'].get('electronic_id'):
+      result.append(ADS_record['metadata']['general']['publication']['electronic_id'])
+    return {'page': filter(None,result)}
 
   @staticmethod
   def _property(ADS_record):
@@ -422,7 +425,7 @@ class SolrAdapter(object):
     else:
       result.append(u"NONARTICLE")
     if u'REFEREED' not in result:
-      result.append(u"NOTREFEREED")
+      result.append(u"NOT REFEREED")
     return {'property':result}
 
   @staticmethod
@@ -435,18 +438,8 @@ class SolrAdapter(object):
 
   @staticmethod
   def _pubdate(ADS_record):
-    result = SolrAdapter._get_pubdate(ADS_record)
+    result = get_date_by_datetype(ADS_record)
     return {'pubdate':result}
-
-  @staticmethod
-  def _pubdate_sort(ADS_record):
-    result = SolrAdapter._get_pubdate(ADS_record)
-    if result:
-      try:
-        result = int(result.replace('-',''))
-      except:
-        result = None
-    return {'pubdate_sort': result}
 
   @staticmethod
   def _keyword(ADS_record):

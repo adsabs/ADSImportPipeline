@@ -59,6 +59,8 @@ MERGER_RULES = {
   'private':              'booleanMerger',
   'refereed':             'booleanMerger',
   'associates':           'takeAll',
+  'data_sources':         'takeAll',
+  'vizier_tables':        'takeAll',
 
   #<metadata type="references">
   'references':           'referencesMerger',
