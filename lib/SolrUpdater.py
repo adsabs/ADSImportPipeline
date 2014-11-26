@@ -479,14 +479,12 @@ class SolrAdapter(object):
 
   @staticmethod
   def _read_count(ADS_record):
-    result = ADS_record.get('adsdata',{}).get('read_count')
-    if result:
-      result = int(result)
-    return {'read_count': result}  
+    readers = ADS_record.get('adsdata',{}).get('readers',[])
+    return {'read_count': len(readers)}
 
   @staticmethod
   def _reader(ADS_record):
-    result = [i for i in ADS_record.get('adsdata',{}).get('readers',[])]
+    result = ADS_record.get('adsdata',{}).get('readers',[])
     return {'reader': result}
 
   @staticmethod

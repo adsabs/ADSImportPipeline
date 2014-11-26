@@ -10,10 +10,10 @@ class TestADSExports(unittest.TestCase):
   @unittest.skipIf(not os.path.exists('/proj/ads/soft/'),"Skipping because /proj/ads/soft/ is unavailable")
   def setUp(self):
     try:
-      from ads.ADSExports import ADSRecords
+      from ads.ADSCachedExports import ADSRecords
     except ImportError:
       sys.path.append('/proj/ads/soft/python/lib/site-packages')
-      from ads.ADSExports import ADSRecords
+      from ads.ADSCachedExports import ADSRecords
       print "Warning: Fallback to explicit path declaration for import"
 
   @unittest.skip("Skipping testing of ADSRecords instantiation")
@@ -51,3 +51,6 @@ class TestADSExports(unittest.TestCase):
     
     results = ReadRecords.canonicalize_records(OrderedDict((k,v) for k,v in records.iteritems()))
     self.assertEqual(results, expected)
+
+if __name__ == '__main__':
+    unittest.main()
