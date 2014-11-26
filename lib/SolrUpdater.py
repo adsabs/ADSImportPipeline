@@ -90,7 +90,7 @@ class SolrAdapter(object):
     'keyword_schema': [u'',],
     'lang': u'',
     'links_data': [u'',],
-    'page': u'',
+    'page': [u''],
     'property': [u'',],
     'pub': u'',
     'pub_raw': u'',
@@ -408,7 +408,10 @@ class SolrAdapter(object):
       
   @staticmethod
   def _page(ADS_record):
-    return {'page': ADS_record['metadata']['general'].get('publication',{}).get('page')}
+    result = [ADS_record['metadata']['general']['publication'].get('page')]
+    if ADS_record['metadata']['general']['publication'].get('electronic_id'):
+      result.append(ADS_record['metadata']['general']['publication']['electronic_id'])
+    return {'page': filter(None,result)}
 
   @staticmethod
   def _property(ADS_record):
