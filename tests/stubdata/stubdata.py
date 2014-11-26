@@ -30,7 +30,9 @@ INPUT_MONGO_DOC1={
                    'doctype': {'content': u'article', 'origin': u'ADS metadata'}, 
                    'private': False, 'ocrabstract': False, 
                    'databases': [{'content': u'ast', 'origin': ''}], 
-                   'bibgroups': [{'content': u'CfA', 'origin': ''}]
+                   'bibgroups': [{'content': u'CfA', 'origin': ''}],
+                   'data_sources': [{'content':u'foo','origin':u'bar'},{'content':u'foo2'}],
+                   'vizier_tables': [{'content':u'tab1','origin':u'vizier'},{'content':u'tab2'}],
                    },
     "relations": {},
     "general" : {
@@ -279,6 +281,8 @@ EXPECTED_SOLR_DOC1={
     "keyword_facet": [u"methods data analysis",
                       u"astrophysics"], 
     "email": [u"-", u"-", u"-", u"-", u"-", u"-"],
+    'data': [u'foo',u'foo2'],
+    'data_facet': [u'foo',u'foo2'],
     "arxiv_class": [u"Astrophysics"], 
     "bibgroup": [u"CfA"],
     "bibgroup_facet": [u"CfA"],
@@ -304,7 +308,9 @@ EXPECTED_SOLR_DOC1={
     "first_author_facet_hier": [u"0/Kurtz, M", u"1/Kurtz, M/Kurtz, Michael J."], 
     "title": [u"The NASA Astrophysics Data System: Overview"],
     "property": [u"REFEREED", u"ARTICLE"], 
-    "page": [u"41",u"here is the eid"]
+    "page": [u"41",u"here is the eid"],
+    'vizier':[u'tab1',u'tab2'],
+    'vizier_facet':[u'tab1',u'tab2'],
 }
 
 INPUT_MONGO_DOC2={
