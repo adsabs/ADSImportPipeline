@@ -400,5 +400,6 @@ class Enforcer:
           'url':      j.get('@url'),
           'title':    j.get('@title'),
           'count':    j.get('@count'),
+          'access':   j.get('@access'),
         })
     return r
