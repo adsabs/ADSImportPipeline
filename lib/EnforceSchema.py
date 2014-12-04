@@ -206,7 +206,7 @@ class Enforcer:
     for i in eL(g('author',[])):
       orcid = eL(i.get('author_ids',[]))
       assert len(orcid)==1 or len(orcid)==0
-      orcid = orcid[0]['author_id'].replace('ORCID:','') if orcid else None
+      orcid = eL(orcid[0]['author_id'])[0].replace('ORCID:','') if orcid else None
       r['authors'].append({
         'number':         i.get('@nr'),
         'type':           i.get('type'),
