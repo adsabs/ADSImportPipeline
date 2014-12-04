@@ -56,6 +56,7 @@ MERGER_RULES = {
   'private':              'originTrustMerger',
   'bibgroups':            'takeAll',
   'ocrabstract':          'booleanMerger',
+  'ads_scan':             'booleanMerger',
   'private':              'booleanMerger',
   'refereed':             'booleanMerger',
   'associates':           'takeAll',
