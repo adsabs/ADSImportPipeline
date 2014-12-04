@@ -269,7 +269,7 @@ class SolrAdapter(object):
   def _comment(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('comment',[])]
     if len(result)>1: #Hack to avoid a re-indexing because of non-multivalued field 'comment'
-      result = result[0] 
+      result = '\n'.join(result)
     return {'comment': result}
 
   @staticmethod
