@@ -223,7 +223,9 @@ properties = {
 
   'refereed': true||false,
 
-  'ads_scan': true||false,
+  'ads_openaccess': true||false,
+  'eprint_openaccess': true||false,
+  'pub_openaccess': true||false,
 }
 
 // REFERENCES

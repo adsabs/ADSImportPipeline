@@ -429,7 +429,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _property(ADS_record):
-    fields = ['openaccess','ocrabstract','private','refereed','ads_scan']
+    fields = ['openaccess','ocrabstract','private','refereed','ads_openaccess','eprint_openaccess','pub_openaccess']
     result = []
     for f in fields:
       if ADS_record['metadata']['properties'][f]:

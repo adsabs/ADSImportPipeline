@@ -329,7 +329,7 @@ class Enforcer:
             'content': k,
           })
 
-    for k in ['openaccess','ocrabstract','private','refereed','ads_scan']:
+    for k in ['openaccess','ocrabstract','private','refereed','ads_openaccess','eprint_openaccess','pub_openaccess']:
       r[k] = self.parseBool(g(k))
 
     return r
