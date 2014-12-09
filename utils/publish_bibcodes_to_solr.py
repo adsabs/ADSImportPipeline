@@ -5,7 +5,7 @@ sys.path.append(PROJECT_HOME)
 import argparse
 import json
 import time
-
+import datetime
 from pipeline import psettings
 from pipeline.workers import RabbitMQWorker
 
@@ -61,6 +61,7 @@ def main():
 
   args = parser.parse_args()
   if args.whole_database:
+    published_counter = 0
     bibcodes = getAllBibcodesFromMongo()
     bibcodes.batch_size(100)
     print "the cursor has returned",type(bibcodes)
@@ -76,16 +77,20 @@ def main():
       bibcodes = [i for i in args.bibcodes]
 
   while bibcodes:
+    if not published_counter % 1000:
+      print '%s\t %s' % (datetime.datetime.now(),published_counter)
     payload = []
     while len(payload) < args.bibcodes_per_message:
       try:
         b = bibcodes.pop()
+        published_counter +=1
         if isinstance(b,dict):
           b = b['bibcode']
         payload.append(b)
       except (IndexError, StopIteration):
-        break
-    publish(payload)
+        print "Publishing last payload now"
+        publish(payload)
+        sys.exit(0)
 
 
 
