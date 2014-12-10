@@ -95,6 +95,20 @@ class TestMongo(unittest.TestCase):
         ('test3','3'),
       ])
 
+  def test_findIgnoredRecords(self):
+    results = self.mongo.findNewRecords([
+        ('test1','ignore'),
+        ('test2','ignore'),
+        ('test3','ignore'),
+    ])
+
+    self.assertEqual(results,
+      [
+        (u'test1',u'1'),
+        (u'test2',u'2'),
+        (u'test3',u'ignore'),
+    ])    
+
   def tearDown(self):
     self.mongo.conn.drop_database(self.mongo.database)
     self.mongo.close()
