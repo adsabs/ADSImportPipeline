@@ -76,7 +76,6 @@ def readBibcodesFromFile(files,targetBibcodes):
       targetBibcodes = deque([L.strip() for L in fp.readlines() if L and not L.startswith('#')])
   with cd(PROJECT_HOME):
     records = OrderedDict()
-    targets = OrderedDict()
     for f in files:
       with open(f) as fp:
         logger.debug("...loading %s" % f)
@@ -96,10 +95,8 @@ def readBibcodesFromFile(files,targetBibcodes):
             continue
           if r[0] not in records:
             records[r[0]] = r[1]
-          if r[0] not in targets and r[0] in targetBibcodes:
-            targets[r[0]] = r[1]
-            targetBibcodes.remove(r[0])
         m.close()
+  targets = {bibcode:records[bibcode] for bibcode in args.targetBibcodes}
   logger.info("Loaded data in %0.1f seconds" % (time.time()-start))
   return deque(ReadRecords.canonicalize_records(records,targets))
 
