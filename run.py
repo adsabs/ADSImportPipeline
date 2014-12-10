@@ -171,7 +171,7 @@ def main(MONGO=MONGO,*args):
   total = float(len(records)) #Save to print later
 
   if args.ignore_json_fingerprints:
-    records = deque([r[0],'ignore' for r in records])
+    records = deque([(r[0],'ignore') for r in records])
 
   if not args.async:
     mongo = MongoConnection.PipelineMongoConnection(**MONGO)
