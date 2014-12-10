@@ -49,11 +49,11 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def publish(w,records,sleep=5,max_queue_size=5000,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
+def publish(w,records,sleep=5,max_queue_size=100000,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
 
   #Treat FindNewRecordsQueue a bit differently, since it can consume messages at a much higher rate
   response = w.channel.queue_declare(queue='FindNewRecordsQueue', passive=True)
-  while response.method.message_count >= max_queue_size*10:
+  while response.method.message_count >= max_queue_size:
     time.sleep(sleep)
     response = w.channel.queue_declare(queue='FindNewRecordsQueue', passive=True)
 
@@ -73,7 +73,7 @@ def readBibcodesFromFile(files,targetBibcodes):
   start = time.time()
   if targetBibcodes and targetBibcodes[0].startswith('@'):
     with open(targetBibcodes[0].replace('@','')) as fp:
-      targetBibcodes = [L.strip() for L in fp.readlines() if L and not L.startswith('#')]
+      targetBibcodes = deque([L.strip() for L in fp.readlines() if L and not L.startswith('#')])
   with cd(PROJECT_HOME):
     records = OrderedDict()
     targets = OrderedDict()
@@ -98,6 +98,7 @@ def readBibcodesFromFile(files,targetBibcodes):
             records[r[0]] = r[1]
           if r[0] not in targets and r[0] in targetBibcodes:
             targets[r[0]] = r[1]
+            targetBibcodes.remove(r[0])
         m.close()
   logger.info("Loaded data in %0.1f seconds" % (time.time()-start))
   return deque(ReadRecords.canonicalize_records(records,targets))
@@ -150,6 +151,14 @@ def main(MONGO=MONGO,*args):
     help='Output records to a file'
     )
 
+  parser.add_argument(
+    '--ignore-json-fingerprints',
+    default=False,
+    action='store_true',
+    dest='ignore_json_fingerprints',
+    help='ignore json fingerprints when finding new records to update (ie, force update)',
+    )
+
   args = parser.parse_args()
 
   if not args.dont_init_lookers_cache:
@@ -161,11 +170,12 @@ def main(MONGO=MONGO,*args):
   records = readBibcodesFromFile(BIBCODE_FILES, args.targetBibcodes)
   total = float(len(records)) #Save to print later
 
+  if args.ignore_json_fingerprints:
+    records = deque([r[0],'ignore' for r in records])
+
   if not args.async:
     mongo = MongoConnection.PipelineMongoConnection(**MONGO)
-    if args.targetBibcodes:
-      ignoreUnchangedRecords=False
-    records = mongo.findNewRecords(records,ignoreUnchangedRecords=ignoreUnchangedRecords)
+    records = mongo.findNewRecords(records)
     if args.load_records_from_pickle:
       records = ReadRecords.readRecordsFromPickles(records,args.load_records_from_pickle)
     else:
