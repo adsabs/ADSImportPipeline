@@ -160,7 +160,7 @@ WORKERS = {
     ],
   }, 
 
-    'FindDeletedRecordsWorkers': {
+    'FindDeletedRecordsWorker': {
     'concurrency': 1,
     'publish': [
       {'exchange': 'MergerPipelineExchange','routing_key': 'DeletionRoute',}
