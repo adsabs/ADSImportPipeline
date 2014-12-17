@@ -233,7 +233,7 @@ class FindDeletedRecordsWorker(RabbitMQWorker):
     try:
       results = self.f(message,op='$nin',query_limiter={'bibcode':1,'_id':0})
       if results:
-        self.publish(json.dumps(results))
+        self.publish(json.dumps([i['bibcode'] for i in results]))
     except Exception, e:
       self.logger.error('%s: %s' % (e,traceback.format_exc()))
       self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)
