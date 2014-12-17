@@ -123,7 +123,7 @@ WORKERS = {
   },
 
   'ReadRecordsWorker': { 
-    'concurrency': 2,
+    'concurrency': 4,
     'publish': [
       {'exchange': 'MergerPipelineExchange', 'routing_key': 'UpdateRecordsRoute',},
     ],
@@ -153,7 +153,7 @@ WORKERS = {
   },
 
   'SolrUpdateWorker': {
-    'concurrency': 1,
+    'concurrency': 7,
     'publish': [],
     'subscribe': [
       {'queue':'SolrUpdateQueue',},
