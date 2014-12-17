@@ -200,8 +200,6 @@ def main(MONGO=MONGO,*args):
     w = RabbitMQWorker()   
     w.connect(psettings.RABBITMQ_URL)
     lastLogged = None
-    if args.process_deletions:
-        publish(w,[i[0] for i in records],routing_key='FindDeletedRecordsRoute')
     while records:
       payload = []
       while len(payload) < BIBCODES_PER_JOB:
@@ -213,6 +211,8 @@ def main(MONGO=MONGO,*args):
       if not percent % 5 and percent!=lastLogged:
         lastLogged=percent
         logger.info("There are %s records left (%0.1f%% completed)" % (len(records),percent))
+      if args.process_deletions:
+        publish(w,[i[0] for i in payload],routing_key='FindDeletedRecordsRoute')
       publish(w,payload)
 
     
