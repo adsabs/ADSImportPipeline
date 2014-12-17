@@ -82,7 +82,7 @@ class ErrorHandlerWorker(RabbitMQWorker):
       'UpdateRecordsWorker':    UpdateRecords.mergeRecords, #expects [{record}, ...]
       'MongoWriteWorker':       self.mongo.upsertRecords, #expects [{records}, ...]
       'SolrUpdateWorker':       SolrUpdater.solrUpdate, #expects ['bibcode', ...]
-      'FindNewRecordsWorker':   lambda f: return [], #Since this job __requires__ the entire dataset, we cannot split it
+      'FindDeletedRecordsWorker':   lambda f: return [], #Since this job __requires__ the entire dataset, we cannot split it
       'DeletionWorker':         self.mongo.remove, #expects ['bibcode',...]
     }
 
@@ -232,7 +232,7 @@ class FindDeletedRecordsWorker(RabbitMQWorker):
     message = json.loads(body)
     try:
       results = [i['bibcode'] for i in self.f(message,query_limiter={'bibcode':1,'_id':0})]
-      results = set(message).difference(results)
+      results = list(set(message).difference(results))
       if results:
         self.publish(json.dumps(results)
     except Exception, e:

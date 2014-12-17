@@ -3,7 +3,7 @@ PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
 sys.path.append(PROJECT_HOME)
 from settings import MONGO
 from lib import MongoConnection
-
+import json
 import pymongo
 import logging
 
@@ -132,9 +132,16 @@ class TestMongo(unittest.TestCase):
       u'_id':self.mongo._getNextSequence(),
       u'bibcode':u'test4',
       }
+    bibcodes = [i['bibcode'] for i in self.docs]
+    bibcodes.append(record['bibcode'])
+    results = self.mongo.getRecordsFromBibcodes(bibcodes)
+    results = [i['bibcode'] for i in results]
+    self.assertEqual(json.dumps(list(set(bibcodes).difference(results))),json.dumps([record['bibcode']]))
+
     self.mongo.db[self.mongo.collection].insert(record,w=1,multi=False)
     results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records],op="$nin")
     self.assertEqual(results[0],record)
+
 
   def test_findIgnoredRecords(self):
     results = self.mongo.findNewRecords([
