@@ -66,14 +66,10 @@ def publish(w,records,sleep=5,max_queue_size=100000,url=psettings.RABBITMQ_URL,e
   
   payload = json.dumps(records)
   w.channel.basic_publish(exchange,routing_key,payload)
-  #w.connection.close()
 
 
-def readBibcodesFromFile(files,targetBibcodes):
+def readBibcodesFromFile(files):
   start = time.time()
-  if targetBibcodes and targetBibcodes[0].startswith('@'):
-    with open(targetBibcodes[0].replace('@','')) as fp:
-      targetBibcodes = deque([L.strip() for L in fp.readlines() if L and not L.startswith('#')])
   with cd(PROJECT_HOME):
     records = OrderedDict()
     for f in files:
@@ -96,9 +92,8 @@ def readBibcodesFromFile(files,targetBibcodes):
           if r[0] not in records:
             records[r[0]] = r[1]
         m.close()
-  targets = {bibcode:records[bibcode] for bibcode in targetBibcodes}
   logger.info("Loaded data in %0.1f seconds" % (time.time()-start))
-  return deque(ReadRecords.canonicalize_records(records,targets))
+  return records
 
 
 def main(MONGO=MONGO,*args):
@@ -112,7 +107,7 @@ def main(MONGO=MONGO,*args):
     nargs='*',
     default=[],
     dest='targetBibcodes',
-    help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Use the syntax @filename.txt to read these from file (1 bibcode per file)'
+    help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Only works when --async=False. Use the syntax @filename.txt to read these from file (1 bibcode per file)'
     )
 
   parser.add_argument(
@@ -120,7 +115,7 @@ def main(MONGO=MONGO,*args):
     default=False,
     action='store_true',
     dest='async',
-    help='start in async mode (publish messages to rabbitmq)'
+    help='start in async mode'
     )
 
   parser.add_argument(
@@ -156,6 +151,14 @@ def main(MONGO=MONGO,*args):
     help='ignore json fingerprints when finding new records to update (ie, force update)',
     )
 
+  parser.add_argument(
+    '--process-deletions',
+    default=False,
+    action='store_true',
+    dest='process_deletions',
+    help='Send bibcodes to delete to rabbitMQ',
+    )
+
   args = parser.parse_args()
 
   if not args.dont_init_lookers_cache:
@@ -164,7 +167,15 @@ def main(MONGO=MONGO,*args):
     ReadRecords.INIT_LOOKERS_CACHE()
     logger.info("init_lookers_cache() returned in %0.1f sec" % (time.time()-start))
 
-  records = readBibcodesFromFile(BIBCODE_FILES, args.targetBibcodes)
+  records = readBibcodesFromFile(BIBCODE_FILES)
+
+  targets = None
+  if args.targetBibcodes and args.targetBibcodes[0].startswith('@'):
+    with open(args.targetBibcodes[0].replace('@','')) as fp:
+      targetBibcodes = deque([L.strip() for L in fp.readlines() if L and not L.startswith('#')])
+    targets = {bibcode:records[bibcode] for bibcode in args.targetBibcodes}
+  
+  records = deque(ReadRecords.canonicalize_records(records,targets))
   total = float(len(records)) #Save to print later
 
   if args.ignore_json_fingerprints:
@@ -201,6 +212,8 @@ def main(MONGO=MONGO,*args):
         lastLogged=percent
         logger.info("There are %s records left (%0.1f%% completed)" % (len(records),percent))
       publish(w,payload)
+      if args.process_deletions:
+        publish(w,[i[0] for i in payload],routing_key='FindDeletedRecordsRoute')
 
     
 if __name__ == '__main__':

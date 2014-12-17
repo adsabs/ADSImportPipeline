@@ -3,17 +3,7 @@ import sys
 
 PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
 
-SOLR_URL='http://localhost:8900/solr/update'
-
-#Order matches their priority
-BIBCODE_FILES = [
-  '/proj/ads/abstracts/ast/load/current/index.status',
-  '/proj/ads/abstracts/phy/load/current/index.status',
-  '/proj/ads/abstracts/gen/load/current/index.status',
-  '/proj/ads/abstracts/pre/load/current/index.status',
-]
-
-BIBCODES_PER_JOB = 100
+SOLR_URL='http://54.173.87.140:8983/solr/update'
 
 MONGO = {
   'HOST': os.environ.get('MONGO_HOST','localhost'),
@@ -29,7 +19,18 @@ MONGO_ADSDATA['DATABASE'] = 'adsdata'
 MONGO_ADSDATA['COLLECTION'] = 'docs'
 MONGO_ADSDATA['PORT'] = '27017'
 MONGO_ADSDATA['USER'] = 'adsdata'
-MONGO_ADSDATA['PASSWD'] = 'fake'
+MONGO_ADSDATA['PASSWD'] = 'Ri1cGV7sNr'
+
+
+#Order matches their priority
+BIBCODE_FILES = [
+  '/proj/ads/abstracts/ast/load/current/index.status',
+  '/proj/ads/abstracts/phy/load/current/index.status',
+  '/proj/ads/abstracts/gen/load/current/index.status',
+  '/proj/ads/abstracts/pre/load/current/index.status',
+]
+
+BIBCODES_PER_JOB = 100
 
 MERGER_RULES = {
   #<metadata type="general">

@@ -29,9 +29,8 @@ class PipelineMongoConnection:
     if self.collection not in self.db.collection_names():
       self.initializeCollection()
 
-
-  def getRecordsFromBibcodes(self,bibcodes,key="bibcode"):
-    results = self.db[self.collection].find({key: {"$in": bibcodes}})
+  def getRecordsFromBibcodes(self,bibcodes,key="bibcode",op="$in"):
+    results = self.db[self.collection].find({key: {op: bibcodes}})
     return list(results)
 
   def initializeLogging(self,**kwargs):
@@ -53,6 +52,12 @@ class PipelineMongoConnection:
 
   def close(self):
     self.conn.close()
+
+  def remove(self,spec_or_id=None,force=False):
+    if not spec_or_id and not force:
+      self.logger.warning("Recieved id_or_spec=None without force=True. Normally, this would remove all documents! Returning no-op now.")
+      return
+    self.db[self.collection].remove(spec_or_id=spec_or_id,fsync=True,w=1)
 
   def initializeCollection(self,_index='bibcode',**kwargs):
     self.logger.info('Initialize index %s for %s/%s' % (_index,self.database,self.collection))
