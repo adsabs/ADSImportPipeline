@@ -28,6 +28,18 @@ if not LOGGER.handlers:
 LOGGER.setLevel(logging.INFO)
 logger = LOGGER
 
+def delete_by_bibcodes(bibcodes,dryrun=False):
+  '''Deletes a record in solr and, iif no errors returned, the cooresponding record in mongo'''
+  m = MongoConnection.PipelineMongoConnection(**MONGO)
+  for bibcode in bibcodes:
+    headers = {"Content-Type":"application/json"}
+    data = json.dumps({'delete':{"query":"bibcode:%s" % bibcode}})
+    logger.debug("Delete: %s" % bibcode)
+    if dryrun:
+      continue
+    r = requests.post(url,headers=headers,data=data)
+    r.raise_for_status()
+    m.remove({'bibcode':bibcode})
 
 def get_date_by_datetype(ADS_record):
   
