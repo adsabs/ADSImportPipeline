@@ -82,6 +82,8 @@ class ErrorHandlerWorker(RabbitMQWorker):
       'UpdateRecordsWorker':    UpdateRecords.mergeRecords, #expects [{record}, ...]
       'MongoWriteWorker':       self.mongo.upsertRecords, #expects [{records}, ...]
       'SolrUpdateWorker':       SolrUpdater.solrUpdate, #expects ['bibcode', ...]
+      'FindNewRecordsWorker':   lambda f: self.mongo.getRecordsFromBibcodes(f,op="$nin",query_limiter={'bibcode':1,'_id':0}), #expects ['bibcode',...]
+      'DeletionWorker':         self.mongo.remove, #expects ['bibcode',...]
     }
 
   def on_message(self, channel, method_frame, header_frame, body):
@@ -229,7 +231,7 @@ class FindDeletedRecordsWorker(RabbitMQWorker):
   def on_message(self, channel, method_frame, header_frame, body):
     message = json.loads(body)
     try:
-      results = self.f(message,op='$nin')
+      results = self.f(message,op='$nin',query_limiter={'bibcode':1,'_id':0})
       if results:
         self.publish(json.dumps(results))
     except Exception, e:

@@ -29,8 +29,8 @@ class PipelineMongoConnection:
     if self.collection not in self.db.collection_names():
       self.initializeCollection()
 
-  def getRecordsFromBibcodes(self,bibcodes,key="bibcode",op="$in"):
-    results = self.db[self.collection].find({key: {op: bibcodes}})
+  def getRecordsFromBibcodes(self,bibcodes,key="bibcode",op="$in",query_limiter=None):
+    results = self.db[self.collection].find({key: {op: bibcodes}},query_limiter)
     return list(results)
 
   def initializeLogging(self,**kwargs):
