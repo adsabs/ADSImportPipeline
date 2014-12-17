@@ -96,7 +96,7 @@ def readBibcodesFromFile(files,targetBibcodes):
           if r[0] not in records:
             records[r[0]] = r[1]
         m.close()
-  targets = {bibcode:records[bibcode] for bibcode in args.targetBibcodes}
+  targets = {bibcode:records[bibcode] for bibcode in targetBibcodes}
   logger.info("Loaded data in %0.1f seconds" % (time.time()-start))
   return deque(ReadRecords.canonicalize_records(records,targets))
 
@@ -112,7 +112,7 @@ def main(MONGO=MONGO,*args):
     nargs='*',
     default=[],
     dest='targetBibcodes',
-    help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Only works when --async=False. Use the syntax @filename.txt to read these from file (1 bibcode per file)'
+    help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Use the syntax @filename.txt to read these from file (1 bibcode per file)'
     )
 
   parser.add_argument(
@@ -120,7 +120,7 @@ def main(MONGO=MONGO,*args):
     default=False,
     action='store_true',
     dest='async',
-    help='start in async mode'
+    help='start in async mode (publish messages to rabbitmq)'
     )
 
   parser.add_argument(
