@@ -19,7 +19,7 @@ MONGO_ADSDATA['DATABASE'] = 'adsdata'
 MONGO_ADSDATA['COLLECTION'] = 'docs'
 MONGO_ADSDATA['PORT'] = '27017'
 MONGO_ADSDATA['USER'] = 'adsdata'
-MONGO_ADSDATA['PASSWD'] = 'Ri1cGV7sNr'
+MONGO_ADSDATA['PASSWD'] = 'fake'
 
 
 #Order matches their priority
