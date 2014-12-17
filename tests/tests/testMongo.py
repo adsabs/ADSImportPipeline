@@ -108,6 +108,14 @@ class TestMongo(unittest.TestCase):
           u'JSON_fingerprint':u'1',
         }],alldocs())
 
+    record = {
+      u'_id':self.mongo._getNextSequence(),
+      u'bibcode':u'test4',
+      }
+    self.mongo.db[self.mongo.collection].insert(record,w=1,multi=False)
+    self.mongo.remove({'bibcode':'test1'})
+    self.assertEqual(record,alldocs()[0])
+
     self.mongo.remove(force=True)
     self.assertEqual([],alldocs())
 
