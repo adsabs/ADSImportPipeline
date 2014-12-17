@@ -95,6 +95,23 @@ class TestMongo(unittest.TestCase):
         ('test3','3'),
       ])
 
+  def test_remove(self):
+    def alldocs():
+      return list( self.mongo.db[self.mongo.collection].find() )
+    self.mongo.remove()
+    self.assertEqual(alldocs(),self.docs)
+
+    self.mongo.remove(2)
+    self.assertEqual([{
+          u'_id': 1,
+          u'bibcode':u'test1',
+          u'JSON_fingerprint':u'1',
+        }],alldocs())
+
+    self.mongo.remove(force=True)
+    self.assertEqual([],alldocs())
+
+
   def test_getRecordsFromBibcodes(self):
     results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records])
     self.assertEqual(results,self.docs)

@@ -53,6 +53,12 @@ class PipelineMongoConnection:
   def close(self):
     self.conn.close()
 
+  def remove(self,spec_or_id=None,force=False):
+    if not spec_or_id and not force:
+      self.logger.warning("Recieved id_or_spec=None without force=True. Normally, this would remove all documents! Returning no-op now.")
+      return
+    self.db[self.collection].remove(spec_or_id=spec_or_id,fsync=True,w=1)
+
   def initializeCollection(self,_index='bibcode',**kwargs):
     self.logger.info('Initialize index %s for %s/%s' % (_index,self.database,self.collection))
     self.db[self.collection].ensure_index(_index,unique=True)
