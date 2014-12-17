@@ -95,6 +95,22 @@ class TestMongo(unittest.TestCase):
         ('test3','3'),
       ])
 
+  def test_getRecordsFromBibcodes(self):
+    results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records])
+    self.assertEqual(results,self.docs)
+
+  def test_getRecords_NotIn_Bibcodes(self):
+    results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records],op="$nin")
+    self.assertEqual(results,[])
+
+    record = {
+      u'_id':self.mongo._getNextSequence(),
+      u'bibcode':u'test4',
+      }
+    self.mongo.db[self.mongo.collection].insert(record,w=1,multi=False)
+    results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records],op="$nin")
+    self.assertEqual(results[0],record)
+
   def test_findIgnoredRecords(self):
     results = self.mongo.findNewRecords([
         ('test1','ignore'),
