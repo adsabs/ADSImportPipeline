@@ -82,7 +82,7 @@ class ErrorHandlerWorker(RabbitMQWorker):
       'UpdateRecordsWorker':    UpdateRecords.mergeRecords, #expects [{record}, ...]
       'MongoWriteWorker':       self.mongo.upsertRecords, #expects [{records}, ...]
       'SolrUpdateWorker':       SolrUpdater.solrUpdate, #expects ['bibcode', ...]
-      'FindNewRecordsWorker':   lambda f: return [] #Since this job __requires__ the entire dataset, we cannot split it
+      'FindNewRecordsWorker':   lambda f: return [], #Since this job __requires__ the entire dataset, we cannot split it
       'DeletionWorker':         self.mongo.remove, #expects ['bibcode',...]
     }
 
