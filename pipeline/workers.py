@@ -218,7 +218,7 @@ class SolrUpdateWorker(RabbitMQWorker):
     self.subscribe(self.on_message)
 
 
-class FindDeletetedRecordsWorker(RabbitMQWorker):
+class FindDeletedRecordsWorker(RabbitMQWorker):
   def __init__(self,params):
     self.params=params
     from lib.MongoConnection import PipelineMongoConnection
