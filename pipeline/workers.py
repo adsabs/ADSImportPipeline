@@ -229,7 +229,9 @@ class FindDeletedRecordsWorker(RabbitMQWorker):
   def on_message(self, channel, method_frame, header_frame, body):
     message = json.loads(body)
     try:
-      self.f(message,op='$nin')
+      results = self.f(message,op='$nin')
+      if results:
+        self.publish(json.dumps(results))
     except Exception, e:
       self.logger.error('%s: %s' % (e,traceback.format_exc()))
       self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)
