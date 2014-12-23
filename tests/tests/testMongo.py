@@ -142,6 +142,8 @@ class TestMongo(unittest.TestCase):
     results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records],op="$nin")
     self.assertEqual(results[0],record)
 
+    results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records],op="$nin",iterate=True)
+    self.assertEqual(results[0],record)
 
   def test_findIgnoredRecords(self):
     results = self.mongo.findNewRecords([

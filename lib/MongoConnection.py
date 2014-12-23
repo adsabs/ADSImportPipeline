@@ -3,6 +3,7 @@ import pymongo
 import logging
 import logging.handlers
 from cloghandler import ConcurrentRotatingFileHandler
+from collections import deque
 
 class PipelineMongoConnection:
 
@@ -29,9 +30,18 @@ class PipelineMongoConnection:
     if self.collection not in self.db.collection_names():
       self.initializeCollection()
 
-  def getRecordsFromBibcodes(self,bibcodes,key="bibcode",op="$in",query_limiter=None):
-    results = self.db[self.collection].find({key: {op: bibcodes}},query_limiter)
-    return list(results)
+  def getRecordsFromBibcodes(self,bibcodes,key="bibcode",op="$in",query_limiter=None,iterate=False):
+    if not iterate:
+      results = self.db[self.collection].find({key: {op: bibcodes}},query_limiter)
+      return list(results)
+    cur = self.db[self.collection].find({key: {op: bibcodes}},query_limiter)
+    results = deque()
+    while 1:
+      try:
+        results.append(cur.next())
+      except StopIteration:
+        return list(results)
+
 
   def initializeLogging(self,**kwargs):
     logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'

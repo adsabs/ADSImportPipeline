@@ -231,7 +231,7 @@ class FindDeletedRecordsWorker(RabbitMQWorker):
   def on_message(self, channel, method_frame, header_frame, body):
     message = json.loads(body)
     try:
-      results = [i['bibcode'] for i in self.f(message,query_limiter={'bibcode':1,'_id':0})]
+      results = [i['bibcode'] for i in self.f(message,query_limiter={'bibcode':1,'_id':0},op="$nin",iterate=True)]
       results = list(set(message).difference(results))
       if results:
         self.publish(json.dumps(results))
