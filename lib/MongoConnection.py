@@ -30,6 +30,17 @@ class PipelineMongoConnection:
     if self.collection not in self.db.collection_names():
       self.initializeCollection()
 
+  def findDeletedBibcodes(self,bibcodes):
+    cur = self.db[self.collection].find({},{'bibcode':1,'_id':0})
+    results = deque()
+    while 1:
+      try:
+        results.append(cur.next())
+      except StopIteration:
+        results = set(r['bibcode'] for r in results)
+        return list(set(results).difference(set(bibcodes)))
+
+
   def getRecordsFromBibcodes(self,bibcodes,key="bibcode",op="$in",query_limiter=None,iterate=False):
     if not iterate:
       results = self.db[self.collection].find({key: {op: bibcodes}},query_limiter)

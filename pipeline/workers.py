@@ -225,14 +225,13 @@ class FindDeletedRecordsWorker(RabbitMQWorker):
     self.params=params
     from lib.MongoConnection import PipelineMongoConnection
     self.mongo = PipelineMongoConnection(**settings.MONGO)
-    self.f = self.mongo.getRecordsFromBibcodes
+    self.f = self.mongo.findDeletedBibcodes
     self.logger = self.setup_logging()
     self.logger.debug("Initialized")
   def on_message(self, channel, method_frame, header_frame, body):
     message = json.loads(body)
     try:
-      results = [i['bibcode'] for i in self.f(message,query_limiter={'bibcode':1,'_id':0},op="$nin",iterate=True)]
-      results = list(set(message).difference(results))
+      results = self.f(message)
       if results:
         self.publish(json.dumps(results))
     except Exception, e:
