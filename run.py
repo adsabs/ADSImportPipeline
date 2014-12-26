@@ -187,7 +187,7 @@ def main(MONGO=MONGO,*args):
     logger.warning("No updates will be processed when --process-deletions is set")
     mongo = MongoConnection.PipelineMongoConnection(**MONGO)
     mongo.close()
-    results = mongo.findAllBibcodes()
+    results = mongo.getAllBibcodes()
     records = filter(lambda i: i[0], records)
     payload = list(set(results).difference(set(records)))
     w = RabbitMQWorker()   
