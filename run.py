@@ -156,7 +156,7 @@ def main(MONGO=MONGO,*args):
     default=False,
     action='store_true',
     dest='process_deletions',
-    help='Send bibcodes to delete to rabbitMQ',
+    help='Find orphaned bibcodes in the mongodb, then send these bibcodes to delete via rabbitMQ. No updates will be processed with this flag is set.',
     )
 
   args = parser.parse_args()
@@ -181,6 +181,22 @@ def main(MONGO=MONGO,*args):
   if args.ignore_json_fingerprints:
     records = deque([(r[0],'ignore') for r in records])
 
+  if args.process_deletions:
+    start = time.time()
+    logger.info("Processing deletions. This will block for several hours until the database is compared, then exit.")
+    logger.warning("No updates will be processed when --process-deletions is set")
+    mongo = MongoConnection.PipelineMongoConnection(**MONGO)
+    mongo.close()
+    results = mongo.findAllBibcodes()
+    records = filter(lambda i: i[0], records)
+    payload = list(set(results).difference(set(records)))
+    w = RabbitMQWorker()   
+    w.connect(psettings.RABBITMQ_URL)
+    publish(w,payload,routing_key='DeletionRoute')
+    logger.info("Found orphaned bibcodes in %0.1f seconds." % (time.time()-start))
+    sys.exit(0)
+
+
   if not args.async:
     mongo = MongoConnection.PipelineMongoConnection(**MONGO)
     records = mongo.findNewRecords(records)
@@ -199,8 +215,6 @@ def main(MONGO=MONGO,*args):
   elif args.async:
     w = RabbitMQWorker()   
     w.connect(psettings.RABBITMQ_URL)
-    if args.process_deletions:
-      publish(w,[i[0] for i in records],routing_key='FindDeletedRecordsRoute')
     lastLogged = None
     while records:
       payload = []

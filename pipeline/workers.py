@@ -82,7 +82,6 @@ class ErrorHandlerWorker(RabbitMQWorker):
       'UpdateRecordsWorker':    UpdateRecords.mergeRecords, #expects [{record}, ...]
       'MongoWriteWorker':       self.mongo.upsertRecords, #expects [{records}, ...]
       'SolrUpdateWorker':       SolrUpdater.solrUpdate, #expects ['bibcode', ...]
-      'FindDeletedRecordsWorker':   lambda f: [], #Since this job __requires__ the entire dataset, we cannot split it
       'DeletionWorker':         self.mongo.remove, #expects ['bibcode',...]
     }
 
@@ -219,29 +218,6 @@ class SolrUpdateWorker(RabbitMQWorker):
     self.connect(self.params['RABBITMQ_URL'])
     self.subscribe(self.on_message)
 
-
-class FindDeletedRecordsWorker(RabbitMQWorker):
-  def __init__(self,params):
-    self.params=params
-    from lib.MongoConnection import PipelineMongoConnection
-    self.mongo = PipelineMongoConnection(**settings.MONGO)
-    self.f = self.mongo.findDeletedBibcodes
-    self.logger = self.setup_logging()
-    self.logger.debug("Initialized")
-  def on_message(self, channel, method_frame, header_frame, body):
-    message = json.loads(body)
-    try:
-      results = self.f(message)
-      if results:
-        self.publish(json.dumps(results))
-    except Exception, e:
-      self.logger.error('%s: %s' % (e,traceback.format_exc()))
-      self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)
-      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}),header_frame=header_frame)
-    self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-  def run(self):
-    self.connect(self.params['RABBITMQ_URL'])
-    self.subscribe(self.on_message)
 
 class DeletionWorker(RabbitMQWorker):
   def __init__(self,params):

@@ -90,11 +90,6 @@ RABBITMQ_ROUTES = {
       'routing_key':  'SolrUpdateRoute',
     },
     {
-      'queue':        'FindDeletedRecordsQueue',
-      'exchange':     'MergerPipelineExchange',
-      'routing_key':  'FindDeletedRecordsRoute',
-    },
-    {
       'queue':        'DeletionQueue',
       'exchange':     'MergerPipelineExchange',
       'routing_key':  'DeletionRoute',
@@ -160,17 +155,7 @@ WORKERS = {
     ],
   }, 
 
-    'FindDeletedRecordsWorker': {
-    'concurrency': 1,
-    'publish': [
-      {'exchange': 'MergerPipelineExchange','routing_key': 'DeletionRoute',}
-    ],
-    'subscribe': [
-      {'queue':'FindDeletedRecordsQueue',},
-    ],
-  }, 
-
-    'DeletionWorker': {
+  'DeletionWorker': {
     'concurrency': 1,
     'publish': [],
     'subscribe': [

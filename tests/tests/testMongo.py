@@ -124,6 +124,10 @@ class TestMongo(unittest.TestCase):
     results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records])
     self.assertEqual(results,self.docs)
 
+  def test_getAllBibcodes(self):
+    results = self.mongo.getAllBibcodes()
+    self.assertEqual(results,[i['bibcode'] for i in self.docs])
+
   def test_getRecords_NotIn_Bibcodes(self):
     results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records],op="$nin")
     self.assertEqual(results,[])
@@ -144,9 +148,6 @@ class TestMongo(unittest.TestCase):
 
     results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records],op="$nin",iterate=True)
     self.assertEqual(results[0],record)
-
-    results = self.mongo.findDeletedBibcodes([i[0] for i in self.records])
-    self.assertEqual(results[0],record['bibcode'])
 
   def test_findIgnoredRecords(self):
     results = self.mongo.findNewRecords([
