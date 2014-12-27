@@ -28,6 +28,32 @@ if not LOGGER.handlers:
 LOGGER.setLevel(logging.INFO)
 logger = LOGGER
 
+def delete_by_bibcodes(bibcodes,dryrun=False):
+  '''Deletes a record in solr and, iif no errors returned, the cooresponding record in mongo'''
+  m = MongoConnection.PipelineMongoConnection(**MONGO)
+  for bibcode in bibcodes:
+    headers = {"Content-Type":"application/json"}
+    data = json.dumps({'delete':{"query":"bibcode:%s" % bibcode}})
+    logger.debug("Delete: %s" % bibcode)
+    if dryrun:
+      continue
+    r = requests.post(url,headers=headers,data=data)
+    r.raise_for_status()
+    m.remove({'bibcode':bibcode})
+
+def get_date_by_datetype(ADS_record):
+  
+  """computes the standard pubdate by selecting the appropriate value
+  from the ADS_record and formatting it as YYYY-MM-DD"""
+
+  dates = ADS_record['metadata']['general']['publication']['dates']
+  for datetype in [ 'date-published', 'date-thesis', 'date-preprint' ]:
+    try:
+      return next(i['content'] for i in dates if i['type'].lower()==datetype)
+    except StopIteration:
+      pass
+  return None
+
 class SolrAdapter(object):
   SCHEMA = {
     'abstract': u'',
@@ -55,7 +81,10 @@ class SolrAdapter(object):
     'copyright': [u'',],
     'database': [u'',],
     'date': u'YYYY-MM[-DD]',
-    'doi':[u'',], 
+    'data':[u''],
+    'data_facet': [u''],
+    'doi':[u'',],
+    'eid':u'',
     'email': [u'',],
     'facility': [u'',],
     'first_author': u'',
@@ -75,12 +104,11 @@ class SolrAdapter(object):
     'keyword_schema': [u'',],
     'lang': u'',
     'links_data': [u'',],
-    'page': u'',
+    'page': [u''],
     'property': [u'',],
     'pub': u'',
     'pub_raw': u'',
     'pubdate': u'',
-    'pubdate_sort': 0,
     'read_count': 0,
     'reader':[u'',],
     'recid': 0,
@@ -125,6 +153,7 @@ class SolrAdapter(object):
   @staticmethod
   def _alternate_bibcode(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['relations'].get('alternates',[])]
+    result = list(set(result))
     return {'alternate_bibcode': result}
 
   @staticmethod
@@ -189,26 +218,31 @@ class SolrAdapter(object):
   @staticmethod
   def _bibgroup(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('bibgroups',[])]
+    result = list(set(result))
     return {'bibgroup': result}
 
   @staticmethod
   def _bibgroup_facet(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('bibgroups',[])]
+    result = list(set(result))
     return {'bibgroup_facet': result}   
 
   @staticmethod
   def _bibstem(ADS_record):
     b = ADS_record['bibcode']
-    result = map(unicode,[b[4:9].replace('.',''),b[4:13]])
+    # index both long and short bibstems
+    result = map(unicode,[re.sub(r'\.+$','',b[4:9]),b[4:13]])
     return {'bibstem':result}
 
   @staticmethod
   def _bibstem_facet(ADS_record):
     b = ADS_record['bibcode']
     if re.match("^[\\.\\d]+$",b[9:13]):
+      # is a serial publication, user short bibstem
       result = b[4:9].replace('.','')
     else:
-      result = b[4:13]
+      # is book/conference/arxiv, use long bibstem
+      result = re.sub(r'\.+$','',b[4:13])
     return {'bibstem_facet':unicode(result)}
 
   @staticmethod
@@ -248,6 +282,8 @@ class SolrAdapter(object):
   @staticmethod
   def _comment(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('comment',[])]
+    if len(result)>1: #Hack to avoid a re-indexing because of non-multivalued field 'comment'
+      result = '\n'.join(result)
     return {'comment': result}
 
   @staticmethod
@@ -262,6 +298,16 @@ class SolrAdapter(object):
     return {'database': result}
 
   @staticmethod
+  def _data(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['properties'].get('data_sources',[])]
+    return {'data': result}
+
+  @staticmethod
+  def _data_facet(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['properties'].get('data_sources',[])]
+    return {'data_facet': result}    
+
+  @staticmethod
   def _year(ADS_record):
     dates = ADS_record['metadata']['general']['publication']['dates']
     try:
@@ -272,17 +318,24 @@ class SolrAdapter(object):
 
   @staticmethod
   def _date(ADS_record):
-    dates = ADS_record['metadata']['general']['publication']['dates']
-    try:
-      result = EnforceSchema.Enforcer.parseDate(next(i['content'] for i in dates if i['type'].lower()=='date-published'))
-    except StopIteration, ValueError:
-      result = None
+    result = get_date_by_datetype(ADS_record)
+    if result:
+      try:
+        result = EnforceSchema.Enforcer.parseDate(result)
+      except ValueError:
+        result = None
+    # should we throw an exception if result is null?
     return {'date':result}
 
   @staticmethod
   def _doi(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('doi',[])]
     return {'doi': result}
+
+  @staticmethod
+  def _eid(ADS_record):
+    result = ADS_record['metadata']['general']['publication'].get('electronic_id')
+    return {'eid': result}
 
   @staticmethod
   def _email(ADS_record):
@@ -325,11 +378,11 @@ class SolrAdapter(object):
 
   @staticmethod
   def _lang(ADS_record):
-    return {'lang': ADS_record['text']['body'].get('language','')}
+    return {'lang': ADS_record['text'].get('body',{}).get('language','')}
 
   @staticmethod
   def _links_data(ADS_record):
-    result = ['''{"title":"%s", "type":"%s", "instances":"%s"}''' % (i['title'],i['type'],i['count']) for i in ADS_record['metadata']['relations']['links']]
+    result = ['''{"title":"%s", "type":"%s", "instances":"%s", "access":"%s"}''' % (i['title'],i['type'],i['count'],i['access']) for i in ADS_record['metadata']['relations'].get('links',[])]
     result = [unicode(r.replace('None','')) for r in result]
     return {'links_data':result}
 
@@ -383,11 +436,14 @@ class SolrAdapter(object):
       
   @staticmethod
   def _page(ADS_record):
-    return {'page': ADS_record['metadata']['general'].get('publication',{}).get('page')}
+    result = [ADS_record['metadata']['general']['publication'].get('page')]
+    if ADS_record['metadata']['general']['publication'].get('electronic_id'):
+      result.append(ADS_record['metadata']['general']['publication']['electronic_id'])
+    return {'page': filter(None,result)}
 
   @staticmethod
   def _property(ADS_record):
-    fields = ['openaccess','ocrabstract','private','refereed']
+    fields = ['openaccess','ocrabstract','private','refereed','ads_openaccess','eprint_openaccess','pub_openaccess']
     result = []
     for f in fields:
       if ADS_record['metadata']['properties'][f]:
@@ -396,6 +452,8 @@ class SolrAdapter(object):
       result.append(u"ARTICLE")
     else:
       result.append(u"NONARTICLE")
+    if u'REFEREED' not in result:
+      result.append(u"NOT REFEREED")
     return {'property':result}
 
   @staticmethod
@@ -408,62 +466,50 @@ class SolrAdapter(object):
 
   @staticmethod
   def _pubdate(ADS_record):
-    dates = ADS_record['metadata']['general']['publication']['dates']
-    try:
-      result = next(i['content'] for i in dates if i['type'].lower()=='date-published')
-    except StopIteration:
-      result = None
-    return {'pubdate': result}
-
-  @staticmethod
-  def _pubdate_sort(ADS_record):
-    dates = ADS_record['metadata']['general']['publication']['dates']
-    try:
-      result = next(i['content'] for i in dates if i['type'].lower()=='date-published')
-      result = int(result.replace('-',''))
-    except:
-      result = None
-    return {'pubdate_sort': result}
+    result = get_date_by_datetype(ADS_record)
+    return {'pubdate':result}
 
   @staticmethod
   def _keyword(ADS_record):
+    """original keywords; must match one-to-one with _keyword_schema and _keyword_norm"""
     result = [i['original'] if i['original'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
-    result.extend( [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])] )
-    if result == [[]]:
-      result = []
     return {'keyword': result}
 
   @staticmethod
   def _keyword_norm(ADS_record):
+    """normalized keywords; must match one-to-one with _keyword and _keyword_schema"""
     result = [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword_norm': result}  
 
   @staticmethod
   def _keyword_schema(ADS_record):
+    """keyword system; must match one-to-one with _keyword and _keyword_norm"""
     result = [i['type'] if i['type'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
     return {'keyword_schema': result}    
 
   @staticmethod
   def _keyword_facet(ADS_record):
-    result = [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords',[])]
+    # keep only non-empty normalized keywords
+    result = filter(None, [i['normalized'] for i in ADS_record['metadata']['general'].get('keywords',[])])
     return {'keyword_facet':result}
 
   @staticmethod
   def _read_count(ADS_record):
-    result = ADS_record.get('adsdata',{}).get('read_count')
-    if result:
-      result = int(result)
-    return {'read_count': result}  
+    readers = ADS_record.get('adsdata',{}).get('readers',[])
+    return {'read_count': len(readers)}
 
   @staticmethod
   def _reader(ADS_record):
-    result = [i for i in ADS_record.get('adsdata',{}).get('readers',[])]
+    result = ADS_record.get('adsdata',{}).get('readers',[])
     return {'reader': result}
 
   @staticmethod
   def _reference(ADS_record):
-    result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i['bibcode'] and i['score'] and i['score'] < 5]
-    return {'reference': result}
+    # take only bibcodes for references which are resolved (score > 0) and verified (score < 5)
+    result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i['bibcode'] and i['score'] and int(i['score']) > 0 and int(i['score']) < 5]
+    # there may be multiple references in the merged document, so unique the list and 
+    # sort it so that it's easier to manage
+    return {'reference': sorted(set(result))}
 
   @staticmethod
   def _simbid(ADS_record):
@@ -498,6 +544,15 @@ class SolrAdapter(object):
   def _volume(ADS_record):
     return {'volume': ADS_record['metadata']['general'].get('publication',{}).get('volume')}
 
+  @staticmethod
+  def _vizier(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['properties'].get('vizier_tables',[])]
+    return {'vizier': result}
+
+  @staticmethod
+  def _vizier_facet(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['properties'].get('vizier_tables',[])]
+    return {'vizier_facet': result}    
 
   #------------------------------------------------
   #Public Entrypoints
@@ -529,15 +584,11 @@ class SolrAdapter(object):
     SCHEMA = cls.SCHEMA
     assert isinstance(r,dict)
     for k,v in r.iteritems():
-      try:
-        assert k in SCHEMA
-        assert isinstance(v,type(SCHEMA[k]))
-        if isinstance(v,list) and v: #No expectation of nested lists
-          assert len(set([type(i) for i in v])) == 1
-          assert isinstance(v[0],type(SCHEMA[k][0]))
-      except AssertionError, err:
-        logger.error( "%s: %s does not have the expected form %s (%s)" % (k,v,SCHEMA[k],r['bibcode']) )
-        raise
+      assert k in SCHEMA, '%s: not in schema' % k
+      assert isinstance(v,type(SCHEMA[k])), '%s: has an unexpected type (%s!=%s)' % (k,type(v),SCHEMA[k])
+      if isinstance(v,list) and v: #No expectation of nested lists
+        assert len(set([type(i) for i in v])) == 1, "%s: multiple data-types in a list" % k
+        assert isinstance(v[0],type(SCHEMA[k][0])), "%s: inner list element has unexpected type (%s!=%s)" % (k,type(v[0]),SCHEMA[k][0])
 
 def simbad_type_mapper(otype):
   """

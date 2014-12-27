@@ -12,14 +12,21 @@ from stubdata import stubdata
 
 class TestSolrAdapter(unittest.TestCase):
   def setUp(self):
-    self.INPUT = stubdata.INPUT_MONGO_DOC
-    self.OUTPUT = stubdata.EXPECTED_SOLR_DOC
     self.maxDiff = None
 
   def test_SolrAdapter(self):
-    r = SolrUpdater.SolrAdapter.adapt(self.INPUT)
+
+    r = SolrUpdater.SolrAdapter.adapt(stubdata.INPUT_MONGO_DOC)
     SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
-    self.assertEquals(r,self.OUTPUT)
+    self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC)
+
+    r = SolrUpdater.SolrAdapter.adapt(stubdata.INPUT_MONGO_DOC1)
+    SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
+    self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC1)
+
+    r = SolrUpdater.SolrAdapter.adapt(stubdata.INPUT_MONGO_DOC2)
+    SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
+    self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC2)
 
   def tearDown(self):
     pass

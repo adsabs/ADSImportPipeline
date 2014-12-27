@@ -3,17 +3,7 @@ import sys
 
 PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
 
-SOLR_URL='http://localhost:8900/solr/update'
-
-#Order matches their priority
-BIBCODE_FILES = [
-  '/proj/ads/abstracts/ast/load/current/index.status',
-  '/proj/ads/abstracts/phy/load/current/index.status',
-  '/proj/ads/abstracts/gen/load/current/index.status',
-  '/proj/ads/abstracts/pre/load/current/index.status',
-]
-
-BIBCODES_PER_JOB = 100
+SOLR_URL='http://54.173.87.140:8983/solr/update'
 
 MONGO = {
   'HOST': os.environ.get('MONGO_HOST','localhost'),
@@ -30,6 +20,17 @@ MONGO_ADSDATA['COLLECTION'] = 'docs'
 MONGO_ADSDATA['PORT'] = '27017'
 MONGO_ADSDATA['USER'] = 'adsdata'
 MONGO_ADSDATA['PASSWD'] = 'fake'
+
+
+#Order matches their priority
+BIBCODE_FILES = [
+  '/proj/ads/abstracts/ast/load/current/index.status',
+  '/proj/ads/abstracts/phy/load/current/index.status',
+  '/proj/ads/abstracts/gen/load/current/index.status',
+  '/proj/ads/abstracts/pre/load/current/index.status',
+]
+
+BIBCODES_PER_JOB = 100
 
 MERGER_RULES = {
   #<metadata type="general">
@@ -53,12 +54,17 @@ MERGER_RULES = {
   'doctype':              'originTrustMerger',
   'bibgroups':            'takeAll',
   'openaccess':           'booleanMerger',
+  'ads_openaccess':       'booleanMerger',
+  'eprint_openaccess':    'booleanMerger',
+  'pub_openaccess':       'booleanMerger',
   'private':              'originTrustMerger',
   'bibgroups':            'takeAll',
   'ocrabstract':          'booleanMerger',
   'private':              'booleanMerger',
   'refereed':             'booleanMerger',
   'associates':           'takeAll',
+  'data_sources':         'takeAll',
+  'vizier_tables':        'takeAll',
 
   #<metadata type="references">
   'references':           'referencesMerger',
@@ -72,9 +78,9 @@ MERGER_RULES = {
 _PRIORITIES_DEFAULT = {
   10: ['ADS METADATA',],
   1.0: ['ISI'],
-  0.5: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
+  0.5: ['ASJ','A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
       'ACASN', 'ACHA', 'ACTA', 'ADASS', 'ADIL', 'ADS', 'AFRSK', 'AG',
-      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANRFM', 'ANRMS',
+      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANREV', 'ANRFM', 'ANRMS',
       'APJ', 'APS', 'ARA&A', 'ARAA', 'ARAC', 'AREPS', 'ARNPS', 'ASBIO',
       'ASD', 'ASL', 'ASP', 'ASPC', 'ASTL', 'ASTRON', 'ATEL', 'ATSIR',
       'AUTHOR', 'OTHER', 'BAAA', 'BAAS', 'BALTA', 'BASBR', 'BASI', 'BAVSR', 'BEO',
@@ -117,9 +123,9 @@ _PRIORITIES_DEFAULT = {
 _PRIORITIES_JOURNALS = {
   10: ['ADS METADATA',],
   1.0: ['ISI'],
-  0.5: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
+  0.5: ['ASJ','A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
       'ACASN', 'ACHA', 'ACTA', 'ADASS', 'ADIL', 'ADS', 'AFRSK', 'AG',
-      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANRFM', 'ANRMS',
+      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANREV', 'ANRFM', 'ANRMS',
       'APJ', 'APS', 'ARA&A', 'ARAA', 'ARAC', 'AREPS', 'ARNPS', 'ASBIO',
       'ASD', 'ASL', 'ASP', 'ASPC', 'ASTL', 'ASTRON', 'ATEL', 'ATSIR',
       'AUTHOR', 'OTHER', 'BAAA', 'BAAS', 'BALTA', 'BASBR', 'BASI', 'BAVSR', 'BEO',
@@ -163,9 +169,9 @@ _PRIORITIES_JOURNALS = {
 _PRIORITIES_AUTHORS = {
   10: ['ADS METADATA',],
   1.0: ['ISI'],
-  0.5: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
+  0.5: ['ASJ','A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
       'ACASN', 'ACHA', 'ACTA', 'ADASS', 'ADIL', 'ADS', 'AFRSK', 'AG',
-      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANRFM', 'ANRMS',
+      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANREV', 'ANRFM', 'ANRMS',
       'APJ', 'APS', 'ARA&A', 'ARAA', 'ARAC', 'AREPS', 'ARNPS', 'ASBIO',
       'ASD', 'ASL', 'ASP', 'ASPC', 'ASTL', 'ASTRON', 'ATEL', 'ATSIR',
       'AUTHOR', 'OTHER', 'BAAA', 'BAAS', 'BALTA', 'BASBR', 'BASI', 'BAVSR', 'BEO',
@@ -209,9 +215,9 @@ _PRIORITIES_AUTHORS = {
 _PRIORITIES_ABSTRACTS = {
   10: ['ADS METADATA',],
   1.0: ['ISI'],
-  0.5: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
+  0.5: ['ASJ','A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
       'ACASN', 'ACHA', 'ACTA', 'ADASS', 'ADIL', 'ADS', 'AFRSK', 'AG',
-      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANRFM', 'ANRMS',
+      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN','ANREV', 'ANRFM', 'ANRMS',
       'APJ', 'APS', 'ARA&A', 'ARAA', 'ARAC', 'AREPS', 'ARNPS', 'ASBIO',
       'ASD', 'ASL', 'ASP', 'ASPC', 'ASTL', 'ASTRON', 'ATEL', 'ATSIR',
       'AUTHOR', 'OTHER', 'BAAA', 'BAAS', 'BALTA', 'BASBR', 'BASI', 'BAVSR', 'BEO',
@@ -255,9 +261,9 @@ _PRIORITIES_ABSTRACTS = {
 _PRIORITIES_REFERENCES = {
   0: ['AUTHOR','ISI','OTHER'],
   9.1: ['SPRINGER',],
-  9: ['A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
+  9: ['ASJ','A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
       'ACASN', 'ACHA', 'ACTA', 'ADASS', 'ADIL', 'ADS', 'AFRSK', 'AG',
-      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANRFM', 'ANRMS',
+      'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN','ANREV', 'ANRFM', 'ANRMS',
       'APJ', 'APS', 'ARA&A', 'ARAA', 'ARAC', 'AREPS', 'ARNPS', 'ASBIO',
       'ASD', 'ASL', 'ASP', 'ASPC', 'ASTL', 'ASTRON', 'ATEL', 'ATSIR',
       'BAAA', 'BAAS', 'BALTA', 'BASBR', 'BASI', 'BAVSR', 'BEO',

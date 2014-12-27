@@ -82,6 +82,7 @@ class ErrorHandlerWorker(RabbitMQWorker):
       'UpdateRecordsWorker':    UpdateRecords.mergeRecords, #expects [{record}, ...]
       'MongoWriteWorker':       self.mongo.upsertRecords, #expects [{records}, ...]
       'SolrUpdateWorker':       SolrUpdater.solrUpdate, #expects ['bibcode', ...]
+      'DeletionWorker':         self.mongo.remove, #expects ['bibcode',...]
     }
 
   def on_message(self, channel, method_frame, header_frame, body):
@@ -208,6 +209,27 @@ class SolrUpdateWorker(RabbitMQWorker):
     message = json.loads(body)
     try:
       self.f(message)
+    except Exception, e:
+      self.logger.error('%s: %s' % (e,traceback.format_exc()))
+      self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)
+      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}),header_frame=header_frame)
+    self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+  def run(self):
+    self.connect(self.params['RABBITMQ_URL'])
+    self.subscribe(self.on_message)
+
+
+class DeletionWorker(RabbitMQWorker):
+  def __init__(self,params):
+    self.params=params
+    from lib import SolrUpdater
+    self.f = SolrUpdater.delete_by_bibcodes
+    self.logger = self.setup_logging()
+    self.logger.debug("Initialized")
+  def on_message(self, channel, method_frame, header_frame, body):
+    message = json.loads(body)
+    try:
+      self.f(message,dryrun=True)
     except Exception, e:
       self.logger.error('%s: %s' % (e,traceback.format_exc()))
       self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)

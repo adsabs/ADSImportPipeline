@@ -141,10 +141,10 @@ class Enforcer:
       for b in blocks:
         r['text'][f].append({
           'content':b.get('#text'),
-          'provider': b.get('@origin'),
+          'provider': b.get('@origin',u'ADS'),
           'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(datefmt),
           'tempdata': {
-            'origin': b.get('@origin'),
+            'origin': b.get('@origin',u'ADS'),
             'primary': True,
             'modtime': datetime.datetime.fromtimestamp(float(b['@time_stamp'])).strftime(datefmt),
             },
@@ -206,7 +206,7 @@ class Enforcer:
     for i in eL(g('author',[])):
       orcid = eL(i.get('author_ids',[]))
       assert len(orcid)==1 or len(orcid)==0
-      orcid = orcid[0]['author_id'].replace('ORCID:','') if orcid else None
+      orcid = eL(orcid[0]['author_id'])[0].replace('ORCID:','') if orcid else None
       r['authors'].append({
         'number':         i.get('@nr'),
         'type':           i.get('type'),
@@ -312,9 +312,24 @@ class Enforcer:
           'content': j,
         })
     
+    r['data_sources'] = []
+    for i in eL(g('data_sources',[])):
+      for j in eL(i.get('data_source',[])):
+        r['data_sources'].append({
+          'origin': g('@origin'),
+          'content': j,
+        })
 
+    r['vizier_tables'] = []
+    for i in eL(g('vizier_tables',[])):
+      for j in eL(i.get('vizier_table',[])):
+        for k in eL(j):
+          r['vizier_tables'].append({
+            'origin': g('@origin'),
+            'content': k,
+          })
 
-    for k in ['openaccess','ocrabstract','private','refereed']:
+    for k in ['openaccess','ocrabstract','private','refereed','ads_openaccess','eprint_openaccess','pub_openaccess']:
       r[k] = self.parseBool(g(k))
 
     return r
@@ -385,5 +400,6 @@ class Enforcer:
           'url':      j.get('@url'),
           'title':    j.get('@title'),
           'count':    j.get('@count'),
+          'access':   j.get('@access'),
         })
     return r

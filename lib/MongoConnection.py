@@ -3,6 +3,7 @@ import pymongo
 import logging
 import logging.handlers
 from cloghandler import ConcurrentRotatingFileHandler
+from collections import deque
 
 class PipelineMongoConnection:
 
@@ -29,10 +30,27 @@ class PipelineMongoConnection:
     if self.collection not in self.db.collection_names():
       self.initializeCollection()
 
+  def getAllBibcodes(self):
+    cur = self.db[self.collection].find({},{'bibcode':1,'_id':0})
+    results = deque()
+    while 1:
+      try:
+        results.append(cur.next()['bibcode'])
+      except StopIteration:
+        return list(results)
 
-  def getRecordsFromBibcodes(self,bibcodes,key="bibcode"):
-    results = self.db[self.collection].find({key: {"$in": bibcodes}})
-    return list(results)
+  def getRecordsFromBibcodes(self,bibcodes,key="bibcode",op="$in",query_limiter=None,iterate=False):
+    if not iterate:
+      results = self.db[self.collection].find({key: {op: bibcodes}},query_limiter)
+      return list(results)
+    cur = self.db[self.collection].find({key: {op: bibcodes}},query_limiter)
+    results = deque()
+    while 1:
+      try:
+        results.append(cur.next())
+      except StopIteration:
+        return list(results)
+
 
   def initializeLogging(self,**kwargs):
     logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
@@ -53,6 +71,12 @@ class PipelineMongoConnection:
 
   def close(self):
     self.conn.close()
+
+  def remove(self,spec_or_id=None,force=False):
+    if not spec_or_id and not force:
+      self.logger.warning("Recieved id_or_spec=None without force=True. Normally, this would remove all documents! Returning no-op now.")
+      return
+    self.db[self.collection].remove(spec_or_id=spec_or_id,fsync=True,w=1)
 
   def initializeCollection(self,_index='bibcode',**kwargs):
     self.logger.info('Initialize index %s for %s/%s' % (_index,self.database,self.collection))
@@ -138,6 +162,22 @@ class PipelineMongoConnection:
       return []
 
     currentRecords = [(r['bibcode'],r['JSON_fingerprint']) for r in self.db[self.collection].find({"bibcode": {"$in": [rec[0] for rec in records]}})]
+
+    #If the JSON fingerprint is the string 'ignore' and it isnt marked for updated,
+    #Make sure it gets updated anyways.
+    if any(r[1]=='ignore' for r in records):
+      if any(r[1]!='ignore' for r in records):
+        self.logger.warning("Unexpected of mixture of JSON ignore/unignore'd in this payload! Proceed with ignore strategy")
+      results = []
+      for r in records:
+        if r[0] not in results:
+          if r[0] in [i[0] for i in currentRecords]:
+            results.append(filter(lambda t: t[0]==r[0], currentRecords)[0])
+          else:
+            results.append(r)
+      return results
+
     results = list(set([(r[0],r[1]) for r in records]).difference(currentRecords))
+
     self.logger.info('findChangedRecords: %s results' % len(results))
     return results

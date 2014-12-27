@@ -199,6 +199,19 @@ properties = {
       'content': '',
       'comment': '',
     },
+
+  'data_sources': [
+    {
+      'origin':'',
+      'content': '',
+    },
+
+  'vizier_tables': [
+    {
+      'origin':'',
+      'content': '',
+    },
+
   ],
 
 // Should these all be booleans?
@@ -209,6 +222,10 @@ properties = {
   'private': true||false,
 
   'refereed': true||false,
+
+  'ads_openaccess': true||false,
+  'eprint_openaccess': true||false,
+  'pub_openaccess': true||false,
 }
 
 // REFERENCES
@@ -248,6 +265,7 @@ relations = {
       'url': '',
       'title': '',
       'count': '',
+      'access': '',
     },
   ],
 }

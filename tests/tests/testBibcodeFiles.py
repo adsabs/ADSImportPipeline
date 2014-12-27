@@ -28,3 +28,6 @@ class TestBibcodeFiles(unittest.TestCase):
 
   def tearDown(self):
     del self.content
+
+if __name__ == '__main__':
+    unittest.main()
