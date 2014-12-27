@@ -82,7 +82,7 @@ class ErrorHandlerWorker(RabbitMQWorker):
       'UpdateRecordsWorker':    UpdateRecords.mergeRecords, #expects [{record}, ...]
       'MongoWriteWorker':       self.mongo.upsertRecords, #expects [{records}, ...]
       'SolrUpdateWorker':       SolrUpdater.solrUpdate, #expects ['bibcode', ...]
-      'DeletionWorker':         self.mongo.remove, #expects ['bibcode',...]
+      'DeletionWorker':         lambda i: SolrUpdater.delete_by_bibcodes(i,dryrun=True), #expects ['bibcode',...]
     }
 
   def on_message(self, channel, method_frame, header_frame, body):

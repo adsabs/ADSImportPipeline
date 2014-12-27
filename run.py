@@ -188,12 +188,15 @@ def main(MONGO=MONGO,*args):
     mongo = MongoConnection.PipelineMongoConnection(**MONGO)
     mongo.close()
     results = mongo.getAllBibcodes()
-    records = filter(lambda i: i[0], records)
+    if len(results) != mongo.db[mongo.collection].count():
+      logger.error("len getAllBibcodes (%s) != len count (%s)" % (len(results),mongo.db[mongo.collection].count()))
+      sys.exit(1)
+    records = [i[0] for i in records]
     payload = list(set(results).difference(set(records)))
     w = RabbitMQWorker()   
     w.connect(psettings.RABBITMQ_URL)
     publish(w,payload,routing_key='DeletionRoute')
-    logger.info("Found orphaned bibcodes in %0.1f seconds." % (time.time()-start))
+    logger.info("Found %s orphaned bibcodes in %0.1f seconds." % (len(payload),time.time()-start))
     sys.exit(0)
 
 

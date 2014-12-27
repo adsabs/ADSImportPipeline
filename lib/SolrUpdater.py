@@ -34,7 +34,7 @@ def delete_by_bibcodes(bibcodes,dryrun=False):
   for bibcode in bibcodes:
     headers = {"Content-Type":"application/json"}
     data = json.dumps({'delete':{"query":"bibcode:%s" % bibcode}})
-    logger.debug("Delete: %s" % bibcode)
+    logger.info("Delete: %s" % bibcode)
     if dryrun:
       continue
     r = requests.post(url,headers=headers,data=data)
