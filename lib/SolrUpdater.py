@@ -104,6 +104,7 @@ class SolrAdapter(object):
     'keyword_schema': [u'',],
     'lang': u'',
     'links_data': [u'',],
+    'orcid': [u''],
     'page': [u''],
     'property': [u'',],
     'pub': u'',
@@ -494,6 +495,13 @@ class SolrAdapter(object):
     return {'keyword_facet':result}
 
   @staticmethod
+  def _orcid(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    authors = sorted(authors,key=lambda k: int(k['number']))
+    result = [i['orcid'] if i['orcid'] else u'-' for i in authors]
+    return {'orcid': result}
+
+  @staticmethod
   def _read_count(ADS_record):
     readers = ADS_record.get('adsdata',{}).get('readers',[])
     return {'read_count': len(readers)}
@@ -522,6 +530,7 @@ class SolrAdapter(object):
     for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
       otype = simbad_type_mapper(object['type'])
       result.append(otype)
+    result = list(set(result))
     return {'simbtype': result}
 
   @staticmethod
@@ -597,23 +606,23 @@ def simbad_type_mapper(otype):
   used in AladinLite
   """
   if otype.startswith('G') or otype.endswith('G'):
-    return 'Galaxy'
+    return u'Galaxy'
   elif otype=='Star' or otype.find('*') >= 0:
-    return 'Star'
+    return u'Star'
   elif otype=='Neb' or otype.startswith('PN') or otype.startswith('SNR'):
-    return 'Nebula'
+    return u'Nebula'
   elif otype=='HII':
-    return 'HII Region'
+    return u'HII Region'
   elif otype=='X':
-    return 'X-ray'
+    return u'X-ray'
   elif otype.startswith('Radio') or otype=='Maser' or otype=='HI':
-    return 'Radio'
+    return u'Radio'
   elif otype=='IR' or otype.startswith('Red'):
-    return 'Infrared'
+    return u'Infrared'
   elif otype=='UV':
-    return 'UV'
+    return u'UV'
   else:
-    return 'Other'
+    return u'Other'
 
 
 def solrUpdate(bibcodes,url=SOLR_URL):
