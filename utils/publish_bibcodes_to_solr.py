@@ -91,6 +91,7 @@ def main():
         print "Publishing last payload now"
         publish(payload)
         sys.exit(0)
+    publish(payload)
 
 
 
