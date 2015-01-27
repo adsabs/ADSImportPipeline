@@ -77,7 +77,9 @@ def readBibcodesFromFile(files):
         logger.debug("...loading %s" % f)
         # Size 0 will read the ENTIRE file into memory!
         m = mmap.mmap(fp.fileno(), 0, prot=mmap.PROT_READ) #File is open read-only
-
+        if m.size() < 1 or os.path.getsize(f) < 1:
+          logger.error("%s is seemingly an empty file; Exit!")
+          sys.exit(1)
         # note the file is already in memory
         line = 'init'
         while line:
@@ -168,7 +170,6 @@ def main(MONGO=MONGO,*args):
     logger.info("init_lookers_cache() returned in %0.1f sec" % (time.time()-start))
 
   records = readBibcodesFromFile(BIBCODE_FILES)
-
   targets = None
   if args.targetBibcodes and args.targetBibcodes[0].startswith('@'):
     with open(args.targetBibcodes[0].replace('@','')) as fp:
@@ -189,8 +190,7 @@ def main(MONGO=MONGO,*args):
     mongo.close()
     results = mongo.getAllBibcodes()
     if len(results) != mongo.db[mongo.collection].count():
-      logger.error("len getAllBibcodes (%s) != len count (%s)" % (len(results),mongo.db[mongo.collection].count()))
-      sys.exit(1)
+      logger.warning("len getAllBibcodes (%s) != len count (%s). Continue anyways." % (len(results),mongo.db[mongo.collection].count()))
     records = [i[0] for i in records]
     payload = list(set(results).difference(set(records)))
     w = RabbitMQWorker()   
