@@ -178,7 +178,6 @@ def main(MONGO=MONGO,*args):
     else:
         targetBibcodes = args.targetBibcodes
     targets = {bibcode:records[bibcode] for bibcode in targetBibcodes}
-    print "targets",targets
   
   records = deque(ReadRecords.canonicalize_records(records,targets))
   total = float(len(records)) #Save to print later
