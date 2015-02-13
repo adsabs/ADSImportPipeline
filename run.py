@@ -171,10 +171,14 @@ def main(MONGO=MONGO,*args):
 
   records = readBibcodesFromFile(BIBCODE_FILES)
   targets = None
-  if args.targetBibcodes and args.targetBibcodes[0].startswith('@'):
-    with open(args.targetBibcodes[0].replace('@','')) as fp:
-      targetBibcodes = deque([L.strip() for L in fp.readlines() if L and not L.startswith('#')])
-    targets = {bibcode:records[bibcode] for bibcode in args.targetBibcodes}
+  if args.targetBibcodes:
+    if args.targetBibcodes[0].startswith('@'):
+      with open(args.targetBibcodes[0].replace('@','')) as fp:
+        targetBibcodes = deque([L.strip() for L in fp.readlines() if L and not L.startswith('#')])
+    else:
+        targetBibcodes = args.targetBibcodes
+    targets = {bibcode:records[bibcode] for bibcode in targetBibcodes}
+    print "targets",targets
   
   records = deque(ReadRecords.canonicalize_records(records,targets))
   total = float(len(records)) #Save to print later
