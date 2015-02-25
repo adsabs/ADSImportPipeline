@@ -28,7 +28,7 @@ if not LOGGER.handlers:
 LOGGER.setLevel(logging.INFO)
 logger = LOGGER
 
-def delete_by_bibcodes(bibcodes,dryrun=False):
+def delete_by_bibcodes(bibcodes,dryrun=False,url=SOLR_URL):
   '''Deletes a record in solr and, iif no errors returned, the cooresponding record in mongo'''
   m = MongoConnection.PipelineMongoConnection(**MONGO)
   for bibcode in bibcodes:
@@ -263,7 +263,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _citation_count(ADS_record):
-    result = ADS_record.get('adsdata',{}).get('citation_count')
+    result = len([i for i in ADS_record.get('adsdata',{}).get('citations',[])])
     return {'citation_count': result}
 
   @staticmethod
