@@ -656,9 +656,9 @@ def solrUpdate(bibcodes,urls=SOLR_URLS):
     solrRecords.append(r)
   payload = json.dumps(solrRecords)
   headers = {'content-type': 'application/json'}
-  logger.info("Posting payload of length %s to %s" % (len(solrRecords),url))
   logger.debug("Payload: %s" % payload)
   for url in urls:
+    logger.info("Posting payload of length %s to %s" % (len(solrRecords),url))
     r = requests.post(url,data=payload,headers=headers)
 
 def main():
