@@ -3,7 +3,10 @@ import sys
 
 PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
 
-SOLR_URL='http://54.173.87.140:8983/solr/update'
+SOLR_URLS=[
+  'http://ads1/solr/update',
+  'http://ads2/solr/update',
+]
 
 MONGO = {
   'HOST': os.environ.get('MONGO_HOST','localhost'),
