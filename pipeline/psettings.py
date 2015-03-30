@@ -5,8 +5,8 @@
 #backpressure_detection is currently broken in pika(stable), but fixed in master.
 #Push expected in 0.9.14 release
 #see https://github.com/pika/pika/issues/347
-#RABBITMQ_URL = 'amqp://guest:guest@localhost:5672/%2F?backpressure_detection=t'
-RABBITMQ_URL = 'amqp://admin:password@localhost:5672/%2F?socket_timeout=10&backpressure_detection=t' #Max message size = 500kb
+#RABBITMQ_URL = 'amqp://admin:password@localhost:5672/%2F?socket_timeout=10&backpressure_detection=t' #Max message size = 500kb
+RABBITMQ_URL = 'amqp://admin:password@localhost:5672/ADSimportpipeline?socket_timeout=10&backpressure_detection=t' #Max message size = 500kb
 
 PIDFILE = '/tmp/ADSimportpipeline.lock'
 POLL_INTERVAL = 15 #per-worker poll interval (to check health) in seconds.
@@ -31,6 +31,10 @@ RABBITMQ_ROUTES = {
     },
     {
       'queue': 'FindNewRecordsQueue',
+      'durable': True,
+    },
+    {
+      'queue': 'ReingestRecordsQueue',
       'durable': True,
     },
     {
@@ -69,6 +73,11 @@ RABBITMQ_ROUTES = {
       'exchange':     'MergerPipelineExchange',
       'routing_key':  'FindNewRecordsRoute',
     },
+    {
+      'queue':        'ReingestRecordsQueue',
+      'exchange':     'MergerPipelineExchange',
+      'routing_key':  'ReingestRecordsRoute',
+    },    
     {
       'queue':        'ReadRecordsQueue',
       'exchange':     'MergerPipelineExchange',
@@ -116,6 +125,16 @@ WORKERS = {
       {'queue': 'FindNewRecordsQueue',},
     ],
   },
+
+  'ReingestRecordsWorker': { 
+    'concurrency': 5,
+    'publish': [
+      {'exchange': 'MergerPipelineExchange', 'routing_key': 'ReadRecordsRoute',},
+    ],
+    'subscribe': [
+      {'queue': 'ReingestRecordsQueue',},
+    ],
+  },  
 
   'ReadRecordsWorker': { 
     'concurrency': 4,
