@@ -60,8 +60,8 @@ def main():
   )
 
   args = parser.parse_args()
+  published_counter = 0
   if args.whole_database:
-    published_counter = 0
     bibcodes = getAllBibcodesFromMongo()
     bibcodes.batch_size(100)
     print "the cursor has returned",type(bibcodes)
