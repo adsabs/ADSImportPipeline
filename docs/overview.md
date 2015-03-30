@@ -35,7 +35,7 @@ Essentially removes elements from the input message to create the output, where 
 #### ReingestRecordsQueue
   - Expects ["bibcode",...]
 
-Perpares the `[["bibcode","fingerprint],...]` payload necessary for the ReadRecordsQueue based on the bibcodes passed to it. The fingerprint passed will be its current fingerprint. Use this queue as a entrypoint to publish bibcodes that should be re-read, re-merged, re-saved to mongo, and reindexed to solr regardless of their fingerprint.
+Perpares the `[["bibcode","fingerprint],...]` payload necessary for the ReadRecordsQueue based on the bibcodes passed to it. The fingerprint passed will be its current fingerprint. Use this queue as a entrypoint to publish bibcodes that should be re-read, re-merged, re-saved to mongo, and reindexed to solr regardless of their fingerprint. Any bibcodes that do not already exist in the mongo database will be silently ignored.
 
 #### ReadRecordsQueue
   - Expects: [["bibcode","fingerprint"],...]
