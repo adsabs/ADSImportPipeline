@@ -78,7 +78,7 @@ class ErrorHandlerWorker(RabbitMQWorker):
 
     self.strategies = {
       'FindNewRecordsWorker':   self.mongo.findNewRecords, #expects [('bibcode','fingerprint'),...]
-      'ReingestRecordsWorker':  formatRecordsforReingestion, #expects ['bibcode',...]
+      'ReingestRecordsWorker':  self.mongo.formatRecordsforReingestion, #expects ['bibcode',...]
       'ReadRecordsWorker':      ReadRecords.readRecordsFromADSExports, #expects [('bibcode','fingerprint'),...]
       'UpdateRecordsWorker':    UpdateRecords.mergeRecords, #expects [{record}, ...]
       'MongoWriteWorker':       self.mongo.upsertRecords, #expects [{records}, ...]
@@ -139,7 +139,7 @@ class ReingestRecordsWorker(RabbitMQWorker):
     self.params=params
     from lib.MongoConnection import PipelineMongoConnection
     self.mongo = PipelineMongoConnection(**settings.MONGO)
-    self.f = formatRecordsforReingestion
+    self.f = self.mongo.formatRecordsforReingestion
     self.logger = self.setup_logging()
     self.logger.debug("Initialized")
   def on_message(self, channel, method_frame, header_frame, body):
