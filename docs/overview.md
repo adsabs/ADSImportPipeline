@@ -32,6 +32,10 @@ Essentially removes elements from the input message to create the output, where 
     [1] currentRecords = [(r['bibcode'],r['JSON_fingerprint']) for r in self.db[self.collection].find({"bibcode": {"$in": [rec[0] for rec in records]}})]
     [2] results = list(set([(r[0],r[1]) for r in records]).difference(currentRecords))
 
+#### ReingestRecordsQueue
+  - Expects ["bibcode",...]
+
+Perpares the `[["bibcode","fingerprint],...]` payload necessary for the ReadRecordsQueue based on the bibcodes passed to it. The fingerprint passed will be its current fingerprint. Use this queue as a entrypoint to publish bibcodes that should be re-read, re-merged, re-saved to mongo, and reindexed to solr regardless of their fingerprint.
 
 #### ReadRecordsQueue
   - Expects: [["bibcode","fingerprint"],...]
