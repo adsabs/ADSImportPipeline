@@ -232,19 +232,21 @@ class SolrAdapter(object):
   @staticmethod
   def _bibstem(ADS_record):
     b = ADS_record['bibcode']
+    short, long = bibstem_mapper(b)
     # index both long and short bibstems
-    result = map(unicode,[re.sub(r'\.+$','',b[4:9]),b[4:13]])
+    result = map(unicode,[re.sub(r'\.+$','',short),long])
     return {'bibstem':result}
 
   @staticmethod
   def _bibstem_facet(ADS_record):
     b = ADS_record['bibcode']
-    if re.match("^[\\.\\d]+$",b[9:13]):
-      # is a serial publication, user short bibstem
-      result = b[4:9].replace('.','')
+    short, long = bibstem_mapper(b)
+    if re.match(r'^[\.\d]+$',long[5:9]):
+      # is a serial publication, use short bibstem
+      result = short.replace('.','')
     else:
       # is book/conference/arxiv, use long bibstem
-      result = re.sub(r'\.+$','',b[4:13])
+      result = re.sub(r'\.+$','',long)
     return {'bibstem_facet':unicode(result)}
 
   @staticmethod
@@ -625,6 +627,57 @@ def simbad_type_mapper(otype):
   else:
     return u'Other'
 
+arxiv_categories = set(["acc.phys.",
+                        "adap.org.",
+                        "alg.geom.",
+                        "ao.sci...",
+                        "astro.ph.",
+                        "atom.ph..",
+                        "bayes.an.",
+                        "chao.dyn.",
+                        "chem.ph..",
+                        "cmp.lg...",
+                        "comp.gas.",
+                        "cond.mat.",
+                        "cs.......",
+                        "dg.ga....",
+                        "funct.an.",
+                        "gr.qc....",
+                        "hep.ex...",
+                        "hep.lat..",
+                        "hep.ph...",
+                        "hep.th...",
+                        "math.....",
+                        "math.ph..",
+                        "mtrl.th..",
+                        "nlin.....",
+                        "nucl.ex..",
+                        "nucl.th..",
+                        "patt.sol.",
+                        "physics..",
+                        "plasm.ph.",
+                        "q.alg....",
+                        "q.bio....",
+                        "quant.ph.",
+                        "solv.int.",
+                        "supr.con."])
+def bibstem_mapper(bibcode):
+  short_stem = bibcode[4:9]
+  long_stem = bibcode[4:13]
+  vol_field = bibcode[9:13]
+  # first take care of special cases
+  # ApJL
+  if short_stem == 'ApJ..' and bibcode[13:14] == 'L':
+    short_stem = u'ApJL.'
+  # MPECs have a letter in the journal field which should be ignored
+  elif short_stem == 'MPEC.' and re.match(r'^[\.\w]+$',vol_field):
+    vol_field = u'....'
+  # map old arXiv bibcodes to arXiv only
+  elif long_stem in arxiv_categories:
+    short_stem = u'arXiv'
+    vol_field = u'....'
+  long_stem = short_stem + vol_field
+  return (unicode(short_stem),unicode(long_stem))
 
 def solrUpdate(bibcodes,urls=SOLR_URLS):
   solrRecords = []
