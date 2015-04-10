@@ -11,7 +11,7 @@ import re
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from lib import MongoConnection
 from lib import EnforceSchema
-from settings import MONGO, MONGO_ADSDATA, SOLR_URL
+from settings import MONGO, MONGO_ADSDATA, SOLR_URLS
 
 logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
 datefmt= '%m/%d/%Y %H:%M:%S'
@@ -28,7 +28,7 @@ if not LOGGER.handlers:
 LOGGER.setLevel(logging.INFO)
 logger = LOGGER
 
-def delete_by_bibcodes(bibcodes,dryrun=False,url=SOLR_URL):
+def delete_by_bibcodes(bibcodes,dryrun=False,urls=SOLR_URLS):
   '''Deletes a record in solr and, iif no errors returned, the cooresponding record in mongo'''
   m = MongoConnection.PipelineMongoConnection(**MONGO)
   for bibcode in bibcodes:
@@ -37,7 +37,8 @@ def delete_by_bibcodes(bibcodes,dryrun=False,url=SOLR_URL):
     logger.info("Delete: %s" % bibcode)
     if dryrun:
       continue
-    r = requests.post(url,headers=headers,data=data)
+    for url in urls:
+      r = requests.post(url,headers=headers,data=data)
     r.raise_for_status()
     m.remove({'bibcode':bibcode})
 
@@ -678,7 +679,7 @@ def bibstem_mapper(bibcode):
   long_stem = short_stem + vol_field
   return (unicode(short_stem),unicode(long_stem))
 
-def solrUpdate(bibcodes,url=SOLR_URL):
+def solrUpdate(bibcodes,urls=SOLR_URLS):
   solrRecords = []
   logger.debug("Recieved a payload of %s bibcodes" % len(bibcodes))
   if not bibcodes:
@@ -708,9 +709,10 @@ def solrUpdate(bibcodes,url=SOLR_URL):
     solrRecords.append(r)
   payload = json.dumps(solrRecords)
   headers = {'content-type': 'application/json'}
-  logger.info("Posting payload of length %s to %s" % (len(solrRecords),url))
   logger.debug("Payload: %s" % payload)
-  r = requests.post(url,data=payload,headers=headers)
+  for url in urls:
+    logger.info("Posting payload of length %s to %s" % (len(solrRecords),url))
+    r = requests.post(url,data=payload,headers=headers)
 
 def main():
   parser = argparse.ArgumentParser()
@@ -725,14 +727,15 @@ def main():
     )
 
   parser.add_argument(
-    '--solr_url',
-    default=SOLR_URL,
-    dest='url',
-    help='solr update endpoint'
+    '--solr_urls',
+    default=SOLR_URLS,
+    nargs='*',
+    dest='urls',
+    help='solr update endpoints'
     )
 
   args = parser.parse_args()
-  solrUpdate(args.records,url=args.url)
+  solrUpdate(args.records,urls=args.urls)
 
 if __name__ == '__main__':
   main()

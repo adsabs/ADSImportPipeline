@@ -78,11 +78,12 @@ class ErrorHandlerWorker(RabbitMQWorker):
 
     self.strategies = {
       'FindNewRecordsWorker':   self.mongo.findNewRecords, #expects [('bibcode','fingerprint'),...]
+      'ReingestRecordsWorker':  self.mongo.formatRecordsforReingestion, #expects ['bibcode',...]
       'ReadRecordsWorker':      ReadRecords.readRecordsFromADSExports, #expects [('bibcode','fingerprint'),...]
       'UpdateRecordsWorker':    UpdateRecords.mergeRecords, #expects [{record}, ...]
       'MongoWriteWorker':       self.mongo.upsertRecords, #expects [{records}, ...]
       'SolrUpdateWorker':       SolrUpdater.solrUpdate, #expects ['bibcode', ...]
-      'DeletionWorker':         lambda i: SolrUpdater.delete_by_bibcodes(i,dryrun=True), #expects ['bibcode',...]
+      'DeletionWorker':         SolrUpdater.delete_by_bibcodes, #expects ['bibcode',...]
     }
 
   def on_message(self, channel, method_frame, header_frame, body):
@@ -117,6 +118,28 @@ class FindNewRecordsWorker(RabbitMQWorker):
     from lib.MongoConnection import PipelineMongoConnection
     self.mongo = PipelineMongoConnection(**settings.MONGO)
     self.f = self.mongo.findNewRecords
+    self.logger = self.setup_logging()
+    self.logger.debug("Initialized")
+  def on_message(self, channel, method_frame, header_frame, body):
+    message = json.loads(body)
+    try:
+      results = self.f(message)
+      if results:
+        self.publish(json.dumps(results,default=date_handler))
+    except Exception, e:
+      self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e.message)
+      self.publish_to_error_queue(json.dumps({self.__class__.__name__:message}),header_frame=header_frame)
+    self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+  def run(self):
+    self.connect(self.params['RABBITMQ_URL'])
+    self.subscribe(self.on_message)
+
+class ReingestRecordsWorker(RabbitMQWorker):
+  def __init__(self,params):
+    self.params=params
+    from lib.MongoConnection import PipelineMongoConnection
+    self.mongo = PipelineMongoConnection(**settings.MONGO)
+    self.f = self.mongo.formatRecordsforReingestion
     self.logger = self.setup_logging()
     self.logger.debug("Initialized")
   def on_message(self, channel, method_frame, header_frame, body):

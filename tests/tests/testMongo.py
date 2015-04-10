@@ -149,6 +149,16 @@ class TestMongo(unittest.TestCase):
     results = self.mongo.getRecordsFromBibcodes([i[0] for i in self.records],op="$nin",iterate=True)
     self.assertEqual(results[0],record)
 
+  def test_formatRecordsforReingestion(self):
+    results = self.mongo.formatRecordsforReingestion(['test1'])
+    self.assertEqual(results,[['test1','1']])
+
+    results = self.mongo.formatRecordsforReingestion(['test1','test2'])
+    self.assertEqual(results,[['test1','1'],['test2','2']])
+
+    results = self.mongo.formatRecordsforReingestion(['test1','test2','test3'])
+    self.assertEqual(results,[['test1','1'],['test2','2']])
+
   def test_findIgnoredRecords(self):
     results = self.mongo.findNewRecords([
         ('test1','ignore'),

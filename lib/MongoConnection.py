@@ -51,6 +51,12 @@ class PipelineMongoConnection:
       except StopIteration:
         return list(results)
 
+  def formatRecordsforReingestion(self,bibcodes):
+    records = self.getRecordsFromBibcodes(
+      bibcodes,
+      query_limiter={'bibcode':1,'JSON_fingerprint':1,'_id':0}
+    )
+    return [[i['bibcode'],i['JSON_fingerprint']]for i in records]
 
   def initializeLogging(self,**kwargs):
     logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
