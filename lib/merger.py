@@ -1,6 +1,7 @@
 import sys,os
 from settings import (MERGER_RULES,PRIORITIES,REFERENCES_ALWAYS_APPEND)
 import types
+import datetime
 import itertools
 import logging
 import logging.handlers
@@ -237,6 +238,9 @@ class Merger:
       return f1
     if f2[1]['primary'] and not f1[1]['primary']:
       return f2
+
+    dt_0 = want_datetime(f1[0]['modtime'])
+    dt_1 = want_datetime(f1[1]['modtime'])
     #2. Same origin, diff modtime -> latest modtime
     if f1[1]['origin']==f2[1]['origin'] and f1[1]['modtime'] != f2[1]['modtime']:
       return f1 if f1[1]['modtime'] > f2[1]['modtime'] else f2
@@ -248,3 +252,15 @@ class Merger:
       return f1 if f1[1]['modtime'] > f2[1]['modtime'] else f2
     #5. Doesn't matter anymore. Return one of them.
     return f1
+
+  def want_datetime(self,obj):
+    if isinstance(obj,datetime.date):
+      return obj
+    try:
+      try:
+        return datetime.datetime.fromtimestamp(int(obj))
+      except ValueError:
+        return datetime.datetime.strptime(obj,'%Y-%m-%dT%H:%M:%S.%fZ')
+    except Exception as e:
+      self.logger.warning('Error coercing {0} to a datetime. Returning datetime.now(): {1}'.format(obj,e))
+      return datetime.datetime.now() # Should return something that has __cmp__ defined

@@ -7,6 +7,7 @@ sys.path.append(os.path.join(PROJECT_HOME,'tests'))
 
 from lib import UpdateRecords
 from lib import merger
+import datetime
 from stubdata import stubdata
 
 class TestMerger(unittest.TestCase):
@@ -44,6 +45,36 @@ class TestMerger(unittest.TestCase):
     ]
     self.assertEqual(results,expectedResults)
 
+  def test_want_datetime(self):
+    m = merger.Merger([])
+
+    # Test that inputting a datetime is noop
+    dt = datetime.datetime.now()
+    self.assertEqual(dt,m.want_datetime(dt))
+
+    # Test that passing an integer is treated as a timestamp
+    dt = 123
+    self.assertEqual(datetime.datetime.fromtimestamp(dt),m.want_datetime(dt))
+
+    # Passing a string that int() can operate on also should return a datetime
+    dt = '123'
+    self.assertEqual(datetime.datetime.fromtimestamp(int(dt)),m.want_datetime(dt))
+
+    # Passing a properly ISO formatted string should return a datetime
+    dt = '2015-03-26T06:28:56.424424Z'
+    res = m.want_datetime(dt)
+    self.assertTrue(isinstance(res,datetime.date))
+    self.assertEqual(res.year,2015)
+    self.assertEqual(res.month,3)
+    self.assertEqual(res.day,26)
+    self.assertEqual(res.hour,6)
+
+    # Passing an unrecognizeable string returns datetime.datetime.now()
+    dt = 'foo'
+    res = m.want_datetime(dt)
+    now = datetime.datetime.now()
+    self.assertTrue(isinstance(res,datetime.date))
+    self.assertEqual(res.minute,now.minute)
 
 if __name__ == '__main__':
     unittest.main()
