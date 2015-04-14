@@ -239,17 +239,17 @@ class Merger:
     if f2[1]['primary'] and not f1[1]['primary']:
       return f2
 
-    dt_0 = self.want_datetime(f1[0]['modtime'])
     dt_1 = self.want_datetime(f1[1]['modtime'])
+    dt_2 = self.want_datetime(f2[1]['modtime'])
     #2. Same origin, diff modtime -> latest modtime
-    if f1[1]['origin']==f2[1]['origin'] and f1[1]['modtime'] != f2[1]['modtime']:
-      return f1 if f1[1]['modtime'] > f2[1]['modtime'] else f2
+    if f1[1]['origin']==f2[1]['origin'] and dt_1 != dt_2:
+      return f1 if dt_1 > dt_2 else f2
     #3. Length of content
     if len(f1[0]) != len(f2[0]):
       return f1 if len(f1[0]) > len(f2[0]) else f2
     #4. latest modtime (regardless of origins)
-    if f1[1]['modtime'] != f2[1]['modtime']:
-      return f1 if f1[1]['modtime'] > f2[1]['modtime'] else f2
+    if dt_1 != dt_2:
+      return f1 if dt_1 > dt_2 else f2
     #5. Doesn't matter anymore. Return one of them.
     return f1
 
