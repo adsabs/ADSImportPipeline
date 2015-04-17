@@ -6,5 +6,5 @@ install:
 services:
   - mongodb
   - rabbitmq
-script: coverage run tests/unittests.py
+script: coverage run --omit=lib/daemon/* --source=. tests/unittests.py
 after_success: coveralls
