@@ -49,7 +49,7 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def publish(w,records,sleep=5,max_queue_size=100000,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
+def publish(w,records,sleep=5,max_queue_size=150000,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange',routing_key='FindNewRecordsRoute'):
 
   #Treat FindNewRecordsQueue a bit differently, since it can consume messages at a much higher rate
   response = w.channel.queue_declare(queue='FindNewRecordsQueue', passive=True)
