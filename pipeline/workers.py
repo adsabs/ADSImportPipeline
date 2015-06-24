@@ -252,7 +252,7 @@ class DeletionWorker(RabbitMQWorker):
   def on_message(self, channel, method_frame, header_frame, body):
     message = json.loads(body)
     try:
-      self.f(message,dryrun=True)
+      self.f(message,dryrun=False)
     except Exception, e:
       self.logger.error('%s: %s' % (e,traceback.format_exc()))
       self.logger.warning("Offloading to ErrorWorker due to exception: %s" % e)

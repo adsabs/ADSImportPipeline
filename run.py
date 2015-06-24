@@ -161,6 +161,14 @@ def main(MONGO=MONGO,*args):
     help='Find orphaned bibcodes in the mongodb, then send these bibcodes to delete via rabbitMQ. No updates will be processed with this flag is set.',
     )
 
+  parser.add_argument(
+    '--max-deletions',
+    default=2000,
+    type=int,
+    dest='max_deletions',
+    help='Maximum number of deletions to attempt; If over this limit, exit and log an error',
+    )
+
   args = parser.parse_args()
 
   if not args.dont_init_lookers_cache:
@@ -196,6 +204,9 @@ def main(MONGO=MONGO,*args):
       logger.warning("len getAllBibcodes (%s) != len count (%s). Continue anyways." % (len(results),mongo.db[mongo.collection].count()))
     records = [i[0] for i in records]
     payload = list(set(results).difference(set(records)))
+    if len(payload) > args.max_deletions:
+      logger.critical("Too many deletions: {} > {}".format(len(payload), args.max_deletions))
+      sys.exit(0)
     w = RabbitMQWorker()   
     w.connect(psettings.RABBITMQ_URL)
     publish(w,payload,routing_key='DeletionRoute')
