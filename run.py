@@ -206,7 +206,7 @@ def main(MONGO=MONGO,*args):
     payload = list(set(results).difference(set(records)))
     if len(payload) > args.max_deletions:
       logger.critical("Too many deletions: {} > {}".format(len(payload), args.max_deletions))
-      sys.exit(0)
+      sys.exit(1)
     w = RabbitMQWorker()   
     w.connect(psettings.RABBITMQ_URL)
     publish(w,payload,routing_key='DeletionRoute')
