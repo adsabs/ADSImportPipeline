@@ -84,6 +84,7 @@ class SolrAdapter(object):
     'date': u'YYYY-MM[-DD]',
     'data':[u''],
     'data_facet': [u''],
+    'doctype': u'',
     'doi':[u'',],
     'eid':u'',
     'email': [u'',],
@@ -330,6 +331,14 @@ class SolrAdapter(object):
         result = None
     # should we throw an exception if result is null?
     return {'date':result}
+
+  @staticmethod
+  def _doctype(ADS_record):
+    result = ADS_record['metadata']['properties']\
+        .get('doctype', {})\
+        .get('content')\
+        .lower()
+    return {'doctype': result}
 
   @staticmethod
   def _doi(ADS_record):
