@@ -11,7 +11,7 @@ import re
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from lib import MongoConnection
 from lib import EnforceSchema
-from settings import MONGO, MONGO_ADSDATA, SOLR_URLS
+from settings import MONGO, MONGO_ADSDATA, SOLR_URLS, MONGO_ORCID
 
 logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
 datefmt= '%m/%d/%Y %H:%M:%S'
@@ -107,6 +107,9 @@ class SolrAdapter(object):
     'lang': u'',
     'links_data': [u'',],
     'orcid': [u''],
+    'orcid1': [u''],
+    'orcid2': [u''],
+    'orcid3': [u''],
     'page': [u''],
     'property': [u'',],
     'pub': u'',
@@ -511,7 +514,18 @@ class SolrAdapter(object):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))
     result = [i['orcid'] if i['orcid'] else u'-' for i in authors]
-    return {'orcid': result}
+    out = {'orcid1': result}
+    if 'orcid_claims' in ADS_record:
+        for indexname, claimname in [('orcid2', 'verified'), ('orcid3', 'unverified')]:
+            if claimname in ADS_record['orcid_claims']:
+                claims = ADS_record['orcid_claims'][claimname]
+                # basic check, the length should be equal
+                if len(claims) != len(authors):
+                    logger.warn("Potential problem with orcid claims for: {0} (len(authors) != len(claims))"
+                                .format(ADS_record['bibcode']))
+                    continue
+                out[indexname] = claims
+    return out
 
   @staticmethod
   def _read_count(ADS_record):
@@ -609,7 +623,7 @@ class SolrAdapter(object):
       assert isinstance(v,type(SCHEMA[k])), '%s: has an unexpected type (%s!=%s)' % (k,type(v),SCHEMA[k])
       if isinstance(v,list) and v: #No expectation of nested lists
         assert len(set([type(i) for i in v])) == 1, "%s: multiple data-types in a list" % k
-        assert isinstance(v[0],type(SCHEMA[k][0])), "%s: inner list element has unexpected type (%s!=%s)" % (k,type(v[0]),SCHEMA[k][0])
+        assert isinstance(v[0],type(SCHEMA[k][0])), "%s: inner list element has unexpected type (%s!=%s)" % (k,type(v[0]),type(SCHEMA[k][0]))
 
 def simbad_type_mapper(otype):
   """
@@ -688,28 +702,51 @@ def bibstem_mapper(bibcode):
   long_stem = short_stem + vol_field
   return (unicode(short_stem),unicode(long_stem))
 
-def solrUpdate(bibcodes,urls=SOLR_URLS):
+
+# HACK: keep the connections (the old code was establishing and closing)
+# the connection on every query; but it used a global MONGO object
+# for the configuration, therefore it was *always* the same database
+_mongo = {}
+
+def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
   solrRecords = []
   logger.debug("Recieved a payload of %s bibcodes" % len(bibcodes))
   if not bibcodes:
     logger.warning("solrUpdate did not recieve any bibcodes")
     return
 
-  m = MongoConnection.PipelineMongoConnection(**MONGO)
-  metadata = m.getRecordsFromBibcodes(bibcodes)
-  m.close()
-
   #Until we have a proper union of mongos, we need to compile a full record from several DBs
   #This in-line configuration will be dumped when that happens.
-  m = MongoConnection.PipelineMongoConnection(**MONGO_ADSDATA)
-  adsdata = m.getRecordsFromBibcodes(bibcodes,key="_id")
-  m.close()
-
+  if not _mongo:
+    _mongo['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
+    _mongo['adsdata'] = MongoConnection.PipelineMongoConnection(**MONGO_ADSDATA)
+    _mongo['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
+  
+  try:
+    metadata = _mongo['classic'].getRecordsFromBibcodes(bibcodes)
+    adsdata = _mongo['adsdata'].getRecordsFromBibcodes(bibcodes,key="_id")
+    orcid_claims = _mongo['orcid_claims'].getRecordsFromBibcodes(bibcodes,key="_id")
+  except:
+    if on_dbfailure_retry:
+      for k,v in _mongo.iteritems():
+        try:
+          v.close()
+        except:
+          pass
+      _mongo['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
+      _mongo['adsdata'] = MongoConnection.PipelineMongoConnection(**MONGO_ADSDATA)
+      _mongo['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
+      return solrUpdate(bibcodes, urls=urls, on_dbfailure_retry=False)
+    raise
+  
+  # stick the values from other dbs into one rec
+  adsdata_kv = dict((x['_id'], x) for x in adsdata)
+  orcid_kv = dict((x['_id'], x) for x in orcid_claims)
+  
   for r in metadata:
-    try:
-      r.update({'adsdata':next(doc for doc in adsdata if doc['_id']==r['bibcode'])})
-    except StopIteration:
-      r['adsdata'] = {}
+    r['adsdata'] = adsdata_kv.get(r['bibcode'], {})
+    r['orcid_claims'] = orcid_kv.get(r['bibcode'], {})
+
   logger.debug("Combined payload has %s records" % len(metadata))
 
   for record in metadata:
