@@ -25,6 +25,9 @@ MONGO_ADSDATA['USER'] = 'adsdata'
 MONGO_ADSDATA['PASSWD'] = 'fake'
 
 
+MONGO_ORCID = MONGO_ADSDATA.copy()
+MONGO_ORCID['COLLECTION'] = 'orcid_claims'
+
 #Order matches their priority
 BIBCODE_FILES = [
   '/proj/ads/abstracts/ast/load/current/index.status',
