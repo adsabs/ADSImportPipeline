@@ -107,9 +107,9 @@ class SolrAdapter(object):
     'lang': u'',
     'links_data': [u'',],
     'orcid': [u''],
-    'orcid1': [u''],
-    'orcid2': [u''],
-    'orcid3': [u''],
+    'orcid_pub': [u''],
+    'orcid_user': [u''],
+    'orcid_other': [u''],
     'page': [u''],
     'property': [u'',],
     'pub': u'',
@@ -514,9 +514,9 @@ class SolrAdapter(object):
     authors = ADS_record['metadata']['general'].get('authors',[])
     authors = sorted(authors,key=lambda k: int(k['number']))
     result = [i['orcid'] if i['orcid'] else u'-' for i in authors]
-    out = {'orcid1': result}
+    out = {'orcid_pub': result}
     if 'orcid_claims' in ADS_record:
-        for indexname, claimname in [('orcid2', 'verified'), ('orcid3', 'unverified')]:
+        for indexname, claimname in [('orcid_user', 'verified'), ('orcid_other', 'unverified')]:
             if claimname in ADS_record['orcid_claims']:
                 claims = ADS_record['orcid_claims'][claimname]
                 # basic check, the length should be equal
