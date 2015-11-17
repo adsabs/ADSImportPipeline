@@ -7,6 +7,7 @@ from cloghandler import ConcurrentRotatingFileHandler
 import logging.handlers
 import os, sys
 import re
+import traceback
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from lib import MongoConnection
@@ -728,6 +729,8 @@ def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
     orcid_claims = _mongo['orcid_claims'].getRecordsFromBibcodes(bibcodes,key="_id")
   except:
     if on_dbfailure_retry:
+      logger.error('Error connecting to a database, trying to reconnect...\n({0})'
+                   .format(traceback.format_exc()))
       for k,v in _mongo.iteritems():
         try:
           v.close()
