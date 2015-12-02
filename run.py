@@ -205,6 +205,7 @@ def main(MONGO=MONGO,*args):
     records = [i[0] for i in records]
     payload = list(set(results).difference(set(records)))
     if len(payload) > args.max_deletions:
+      logger.critical("|".join(payload))
       logger.critical("Too many deletions: {} > {}".format(len(payload), args.max_deletions))
       sys.exit(1)
     w = RabbitMQWorker()   
