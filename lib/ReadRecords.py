@@ -3,6 +3,7 @@ import json
 import time
 import logging
 import logging.handlers
+import timeout_decorator
 #import hashlib
 from cloghandler import ConcurrentRotatingFileHandler
 
@@ -72,6 +73,13 @@ def canonicalize_records(records,targets=None):
   logger.info("Canonicalized/Resolved in %0.1f seconds" % (time.time()-start))
   return results
 
+@timeout_decorator.timeout(120)
+def xml_to_dict(adsrecords):
+  """
+  wrapper for parsing XML
+  :param adsrecords: adsrecords object
+  """
+  return xmltodict.parse(adsrecords.serialize())
 
 def readRecordsFromADSExports(records):
   '''
@@ -106,7 +114,7 @@ def readRecordsFromADSExports(records):
   rate = len(targets)/ttc
 
   e = EnforceSchema.Enforcer()
-  adsrecords = e.ensureList(xmltodict.parse(adsrecords.serialize())['records']['record'])
+  adsrecords = e.ensureList(xml_to_dict(adsrecords)['records']['record'])
   logger.info("Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" % 
     {
       'num_records': len(records),

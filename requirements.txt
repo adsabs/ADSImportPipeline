@@ -5,3 +5,4 @@ requests
 numpy
 ConcurrentLogHandler
 coveralls
+timeout-decorator
