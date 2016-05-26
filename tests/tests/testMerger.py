@@ -45,6 +45,40 @@ class TestMerger(unittest.TestCase):
     ]
     self.assertEqual(results,expectedResults)
 
+  def test_multipleOriginMerger(self):
+    A1,A2,C1,C2,M1,M2 = self.A1,self.A2,self.C1,self.C2,self.M1,self.M2
+    # priorities are: IOP > SIMBAD > STI
+    B1 = {'tempdata':{'origin':'STI; IOP','type':'general'}}
+    B2 = {'tempdata':{'origin':'SIMBAD','type':'general'}}
+    
+    B1['titles'] = [ 'Publisher title' ]
+    B2['titles'] = [ 'SIMBAD title' ]
+
+    blocks = [B1,B2]
+    m = merger.Merger(blocks)
+    m.merge()
+    results = m.block
+
+    expectedResults = { 'titles': [ 'Publisher title' ], 'altpublications': [] }
+    self.assertEqual(results,expectedResults)
+
+  def test_unknownOriginMerger(self):
+    A1,A2,C1,C2,M1,M2 = self.A1,self.A2,self.C1,self.C2,self.M1,self.M2
+    # 'foobar' in unknown origin, and will default to 'PUBLISHER' which is greater than SIMBAD in priorities
+    B1 = {'tempdata':{'origin':'foobar','type':'general'}}
+    B2 = {'tempdata':{'origin':'SIMBAD','type':'general'}}
+    
+    B1['titles'] = [ 'Publisher title' ]
+    B2['titles'] = [ 'SIMBAD title' ]
+
+    blocks = [B1,B2]
+    m = merger.Merger(blocks)
+    m.merge()
+    results = m.block
+
+    expectedResults = { 'titles': [ 'Publisher title' ], 'altpublications': [] }
+    self.assertEqual(results,expectedResults)
+
   def test_want_datetime(self):
     m = merger.Merger([])
 
