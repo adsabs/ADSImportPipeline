@@ -68,7 +68,7 @@ def main():
     bibcodes.pop = bibcodes.next
 
   if args.bibcode_file:
-    with open(args.bibcode_file) as fp:
+    with open(args.bibcode_file[0]) as fp:
       bibcodes = [L.strip() for L in fp.readlines() if L and not L.startswith('#')]
   else:
     if not args.bibcodes and not args.whole_database:
