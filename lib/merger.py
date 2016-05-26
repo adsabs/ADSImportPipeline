@@ -214,11 +214,18 @@ class Merger:
       p = PRIORITIES['default']
     else:
       p = PRIORITIES[field]
-    #TODO: we should pick the one with the highest origin instead of the first one.
-    o1 = f1[1]['origin'] if f1[1]['origin'] in p else f1[1]['origin'].split(';')[0]
-    o2 = f2[1]['origin'] if f2[1]['origin'] in p else f2[1]['origin'].split(';')[0]
-    P1 = p[o1.upper()]
-    P2 = p[o2.upper()]
+    # pick the origin with the highest priority for each record
+    origins = f1[1]['origin'].split('; ')
+    o1 = origins.pop()
+    for i in origins:
+      o1 = i if p.get(i.upper(),0) >= p.get(o1.upper(),0) else o1
+    origins = f2[1]['origin'].split('; ')
+    o2 = origins.pop()
+    for i in origins:
+      o2 = i if p.get(i.upper(),0) >= p.get(o2.upper(),0) else o2
+    # if origin not defined, default to 'PUBLISHER'
+    P1 = p.get(o1.upper(),p.get('PUBLISHER'))
+    P2 = p.get(o2.upper(),p.get('PUBLISHER'))
     if P1==P2:
       return self.equalTrustFallback(f1,f2)
     return f1 if P1 > P2 else f2
