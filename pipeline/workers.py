@@ -97,6 +97,7 @@ class ErrorHandlerWorker(RabbitMQWorker):
     #Iterate over each element of the batch, log and discard the failure(s)
     for content in message[producer]:
       try:
+        self.logger.info('processing type = %s' % producer)
         result = json.dumps(self.strategies[producer]([content]))
       except Exception, e:
         if producer in ['UpdateRecordsWorker','MongoWriteWorker']:
