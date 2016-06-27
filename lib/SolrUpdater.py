@@ -41,7 +41,7 @@ def delete_by_bibcodes(bibcodes,dryrun=False,urls=SOLR_URLS):
     for url in urls:
       r = requests.post(url,headers=headers,data=data)
       if r.status_code == 200:
-        r.close()  # do not close on error to preserve state for raise
+        r.connection.close()  # do not close on error to preserve state for raise
     r.raise_for_status()
     m.remove({'bibcode':bibcode})
 
@@ -764,7 +764,7 @@ def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
   for url in urls:
     logger.info("Posting payload of length %s to %s" % (len(solrRecords),url))
     r = requests.post(url,data=payload,headers=headers)
-    r.close()
+    r.connection.close()
 
 def main():
   parser = argparse.ArgumentParser()
