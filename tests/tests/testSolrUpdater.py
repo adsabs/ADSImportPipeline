@@ -9,7 +9,6 @@ from lib import SolrUpdater
 from stubdata import stubdata
 
 
-
 class TestSolrAdapter(unittest.TestCase):
   def setUp(self):
     self.maxDiff = None
