@@ -7,8 +7,6 @@ sys.path.append(os.path.join(PROJECT_HOME,'tests'))
 
 from lib import SolrUpdater
 from stubdata import stubdata
-from settings import MONGO
-from requests.exceptions import InvalidSchema
 
 
 class TestSolrAdapter(unittest.TestCase):
@@ -54,23 +52,6 @@ class TestBibstemMapper(unittest.TestCase):
       s, l = SolrUpdater.bibstem_mapper(t['bibcode'])
       self.assertEquals([s,l],t['bibstems'])
 
-  def tearDown(self):
-    pass
-
-class TestSolrException(unittest.TestCase):
-  def setUp(self):
-    pass
-
-  def test_delete_bibcode_exception(self):
-    MONGO['DATABASE'] = 'unittests_tmp'
-    MONGO['COLLECTION'] = 'unittests_tmp'
-    MONGO['PORT'] = '27017'
-    
-    with self.assertRaises(InvalidSchema):
-      # should call raise_for_status due to illegal url
-      SolrUpdater.delete_by_bibcodes(['2015Prmtm.book...81D'], False, ['foo://bar'])
-      
-  
   def tearDown(self):
     pass
 
