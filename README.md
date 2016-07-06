@@ -33,3 +33,29 @@ The workflow is initiated by invoking `run.py`.
 - pymongo + mongo
 - Note: The rabbitmq server should be configured for frame_max=512000
 - Note: pika should be configured with frame_max=512000 (seemingly must be changed in spec.py in addition to normal connection definition)
+
+## Updating Solr
+It is possible for Solr to be missing data on some bibcodes.  When
+this happens, use ADSimportpipeline to add the missing bibcodes.  
+First, to obtain a list of bibcodes known to Solr use:
+```
+curl 
+http://solrInstance:8983/solr/collection1/select?q=*:*&rows=20000000&fl=bibcode&wt=csv
+> solrBibcodes.txt
+```
+
+The canonical list of bibcodes is available from as a column/flat file
+from the ingest pipeline.  Comparing these two files requires sorting
+them (via the unix sort command) and then using unix’s comm command:
+
+```
+comm -2 -3 bibcodes.list.can.sorted solrBibcodes.txt.sorted > notInSolr-20160616.txt
+```
+
+This creates a file with bibcodes that were in canonical but not
+solr.  This list can be injected into the pipeline with:
+```
+python/bin/python2.7 utils/publish_bibcodes_to_solr.py --from-file reindex/notInSolr-20160616.txt
+```
+
+
