@@ -17,15 +17,28 @@ MONGO = {
   'COLLECTION': 'classic',
 }
 
-MONGO_ADSDATA = MONGO.copy()
-MONGO_ADSDATA['DATABASE'] = 'adsdata'
-MONGO_ADSDATA['COLLECTION'] = 'docs'
-MONGO_ADSDATA['PORT'] = '27017'
-MONGO_ADSDATA['USER'] = 'adsdata'
-MONGO_ADSDATA['PASSWD'] = 'fake'
+SQL = {
+  'HOST': os.environ.get('SQL_HOST',':memory'),
+  'PORT': os.environ.get('SQL_PORT',''),
+  'DATABASE': os.environ.get('SQL_DATABASE','ads'),
+  'USER': None,    
+  'PASSWD': None,  
+}
+
+SQL_ADSDATA = SQL.copy()
+SQL_ADSDATA['HOST'] = 'localhost'
+SQL_ADSDATA['PORT'] = '5432'
+SQL_ADSDATA['DATABASE'] = ''
+SQL_ADSDATA['SCHEMA'] = ''
+SQL_ADSDATA['USER'] = 'SpacemanSteve'
+SQL_ADSDATA['PASSWD'] = None
 
 
-MONGO_ORCID = MONGO_ADSDATA.copy()
+MONGO_ORCID = MONGO.copy()
+MONGO_ORCID['DATABASE'] = 'adsdata'
+MONGO_ORCID['PORT'] = '27017'
+MONGO_ORCID['USER'] = 'adsdata'
+MONGO_ORCID['PASSWD'] = 'fake'
 MONGO_ORCID['COLLECTION'] = 'orcid_claims'
 
 #Order matches their priority

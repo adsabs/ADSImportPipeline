@@ -13,7 +13,7 @@ class TestSolrAdapter(unittest.TestCase):
   def setUp(self):
     self.maxDiff = None
 
-  def test_SolrAdapter(self):
+  def xtest_SolrAdapter(self):
 
     r = SolrUpdater.SolrAdapter.adapt(stubdata.INPUT_MONGO_DOC)
     SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
@@ -26,6 +26,27 @@ class TestSolrAdapter(unittest.TestCase):
     r = SolrUpdater.SolrAdapter.adapt(stubdata.INPUT_MONGO_DOC2)
     SolrUpdater.SolrAdapter.validate(r) #Raises AssertionError if not validated
     self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC2)
+
+  def test_SolrAdapter(self):
+    "combine mongo and sql input docs and verify correct Solr record created"
+    x = stubdata.INPUT_MONGO_DOC.copy()
+    x.update({'adsdata': stubdata.INPUT_SQL_SOLR_CHECK})
+    z = SolrUpdater.SolrAdapter.adapt(x)
+    self.assertEquals(z, stubdata.EXPECTED_SOLR_DOC)
+    SolrUpdater.SolrAdapter.validate(z)
+
+    x = stubdata.INPUT_MONGO_DOC1.copy()
+    x.update({'adsdata': stubdata.INPUT_SQL_SOLR_CHECK1})
+    z = SolrUpdater.SolrAdapter.adapt(x)
+    self.assertEquals(z, stubdata.EXPECTED_SOLR_DOC1)
+    SolrUpdater.SolrAdapter.validate(z)
+
+    x = stubdata.INPUT_MONGO_DOC2.copy()
+    x.update({'adsdata': stubdata.INPUT_SQL_SOLR_CHECK2})
+    z = SolrUpdater.SolrAdapter.adapt(x)
+    self.assertEquals(z, stubdata.EXPECTED_SOLR_DOC2)
+    SolrUpdater.SolrAdapter.validate(z)
+
 
   def tearDown(self):
     pass
