@@ -402,15 +402,34 @@ class SolrAdapter(object):
   @staticmethod
   def _grant(ADS_record):
     result = []
-    for grant in ADS_record.get('adsdata', {}).get('grants', {}):
+
+    grant_dicts = SolrAdapter.convert_grants(ADS_record.get('adsdata', {}).get('grants'))
+    for grant in grant_dicts: # ADS_record.get('adsdata',{}).get('grants',{})
       result.append(grant['agency'])
       result.append(grant['grant'])
     return {'grant': result}
 
   @staticmethod
+  def convert_grants(grants_string):
+    "convert sql string to the dict mongo used so other code can remain unchanged"
+    grant_dicts = []
+    if grants_string is None:
+      return grant_dicts
+    for current in grants_string:
+      current = current.strip()
+      parts = current.split(' ')
+      if len(parts) == 2:
+        d = {'agency': unicode(parts[0]), 'grant': unicode(parts[1])}
+        grant_dicts.append(d)
+      else:
+        print 'warning, band length to grant string {}'.format(current)
+    return grant_dicts
+
+  @staticmethod
   def _grant_facet_hier(ADS_record):
+    grant_dicts = SolrAdapter.convert_grants(ADS_record.get('adsdata', {}).get('grants'))
     result = []
-    for grant in ADS_record.get('adsdata', {}).get('grants', []):
+    for grant in grant_dicts:  # ADS_record.get('adsdata',{}).get('grants',[]):
       r = u"0/%s" % (grant['agency'],)
       result.append(r)
       r = u"1/%s/%s" % (grant['agency'], grant['grant'])
@@ -550,13 +569,35 @@ class SolrAdapter(object):
 
   @staticmethod
   def _simbid(ADS_record):
-    result = [int(i['id']) for i in ADS_record.get('adsdata', {}).get('simbad_objects', [])]
+    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata',{}).get('simbad_objects',[]))
+    result = [int(i['id']) for i in simbad] # ADS_record.get('adsdata',{}).get('simbad_objects',[])]
     return {'simbid': result}
 
   @staticmethod
+  def convert_simbad(simbad_strings):
+    """convert sql string to the dict mongo used so other code can remain unchanged
+    sql version contains an array of strings: ['1010152 PN', '1010659 PN', '1011325 PN']"""
+    simbad_dicts = []
+    if simbad_strings is None:
+      return simbad_dicts
+    for current in simbad_strings:
+      current = current.strip()
+      parts = current.split(' ')
+      if len(parts) == 2:
+        d = {'type': unicode(parts[1]), 'id': unicode(parts[0])}
+        simbad_dicts.append(d)
+      else:
+        print 'warning, bad length to simbad string {}'.format(current)
+
+    return simbad_dicts
+
+
+
+  @staticmethod
   def _simbtype(ADS_record):
+    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata', {}).get('simbad_objects', []))
     result = []
-    for object in ADS_record.get('adsdata', {}).get('simbad_objects', []):
+    for object in simbad: # ADS_record.get('adsdata',{}).get('simbad_objects',[]):
       otype = simbad_type_mapper(object['type'])
       result.append(otype)
     result = list(set(result))
@@ -564,8 +605,9 @@ class SolrAdapter(object):
 
   @staticmethod
   def _simbad_object_facet_hier(ADS_record):
+    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata', {}).get('simbad_objects', []))
     result = []
-    for object in ADS_record.get('adsdata', {}).get('simbad_objects', []):
+    for object in simbad:  # ADS_record.get('adsdata',{}).get('simbad_objects',[]):
       otype = simbad_type_mapper(object['type'])
       r = u"0/%s" % (otype,)
       result.append(r)
@@ -728,11 +770,10 @@ def bibstem_mapper(bibcode):
 
 
 
-
 def update_solr(json_record, solr_urls):
     record = transform_json_record(json_record)
-    #r = SolrAdapter.adapt(record)
-    #SolrAdapter.validate(r)  # Raises AssertionError if not validated
+    r = SolrAdapter.adapt(record)
+    SolrAdapter.validate(r)  # Raises AssertionError if not validated
     payload = json.dumps([record])
     for url in solr_urls:
         r = requests.post(url, data=payload, headers={'content-type': 'application/json'})
@@ -751,7 +792,9 @@ def transform_json_record(db_record):
         out['body'] = db_record['fulltext']
     
     return out
-    
+
+
+
 
 def main():
   parser = argparse.ArgumentParser()

@@ -13,6 +13,24 @@ SOLR_URLS=[
 ]
 
 
+SQL = {
+  'HOST': os.environ.get('SQL_HOST',':memory'),
+  'PORT': os.environ.get('SQL_PORT',''),
+  'DATABASE': os.environ.get('SQL_DATABASE','ads'),
+  'USER': None,    
+  'PASSWD': None,  
+}
+
+SQL_ADSDATA = SQL.copy()
+SQL_ADSDATA['HOST'] = 'localhost'
+SQL_ADSDATA['PORT'] = '5432'
+SQL_ADSDATA['DATABASE'] = ''
+SQL_ADSDATA['SCHEMA'] = ''
+SQL_ADSDATA['USER'] = 'SpacemanSteve'
+SQL_ADSDATA['PASSWD'] = None
+
+
+
 #Order matches their priority
 BIBCODE_FILES = [
   '/proj/ads/abstracts/ast/load/current/index.status',
