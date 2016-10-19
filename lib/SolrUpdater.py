@@ -526,7 +526,14 @@ class SolrAdapter(object):
                 if len(claims) != len(authors):
                     logger.warn("Potential problem with orcid claims for: {0} (len(authors) != len(claims))"
                                 .format(ADS_record['bibcode']))
-                    continue
+                    # TODO: in the grant scheme of things, we should trigger ADS orcid update (let the remote
+                    # pipeline processes know, that something is out of sync); for now we'll just truncate the
+                    # data
+                    if len(claims) > len(authors):
+                        claims = claims[0:len(authors)]
+                    else:
+                        claims = claims + ['-'] * (len(authors) - len(claims)) 
+
                 out[indexname] = claims
     return out
 
