@@ -532,7 +532,7 @@ class SolrAdapter(object):
                     if len(claims) > len(authors):
                         claims = claims[0:len(authors)]
                     else:
-                        claims = claims + ['-'] * (len(authors) - len(claims)) 
+                        claims = claims + [u'-'] * (len(authors) - len(claims)) 
 
                 out[indexname] = claims
     return out

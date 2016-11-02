@@ -137,7 +137,7 @@ WORKERS = {
   },  
 
   'ReadRecordsWorker': { 
-    'concurrency': 4,
+    'concurrency': 5,
     'publish': [
       {'exchange': 'MergerPipelineExchange', 'routing_key': 'UpdateRecordsRoute',},
     ],
