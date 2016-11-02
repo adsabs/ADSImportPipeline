@@ -12,21 +12,19 @@ MONGO = {
   'HOST': os.environ.get('MONGO_HOST','localhost'),
   'PORT': os.environ.get('MONGO_PORT',27018),
   'DATABASE': os.environ.get('MONGO_DATABASE','ads'),
-  'USER': None,    #May be set to None
-  'PASSWD': None,  #May be set to None
-  'COLLECTION': 'classic',
+  'USER': os.environ.get('MONGO_USER', None),
+  'PASSWD': os.environ.get('MONGO_PASSWD', None),
+  'COLLECTION': os.environ.get('MONGO_COLLECTION', 'classic')
 }
 
+# these will be modified by local_settings.py
 MONGO_ADSDATA = MONGO.copy()
-MONGO_ADSDATA['DATABASE'] = 'adsdata'
-MONGO_ADSDATA['COLLECTION'] = 'docs'
-MONGO_ADSDATA['PORT'] = '27017'
-MONGO_ADSDATA['USER'] = 'adsdata'
-MONGO_ADSDATA['PASSWD'] = 'fake'
-
-
 MONGO_ORCID = MONGO_ADSDATA.copy()
-MONGO_ORCID['COLLECTION'] = 'orcid_claims'
+
+try:
+    from local_settings import *
+except ImportError:
+    pass
 
 #Order matches their priority
 BIBCODE_FILES = [
