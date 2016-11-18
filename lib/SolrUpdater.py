@@ -787,7 +787,7 @@ def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
     raise
   
   # stick the values from other dbs into one rec
-  adsdata_kv = dict((x['_id'], x) for x in adsdata)
+  adsdata_kv = dict((x['bibcode'], dict(x)) for x in adsdata)
   orcid_kv = dict((x['_id'], x) for x in orcid_claims)
   
   for r in metadata:
