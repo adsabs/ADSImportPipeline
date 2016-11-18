@@ -769,7 +769,6 @@ def bibstem_mapper(bibcode):
   return (unicode(short_stem), unicode(long_stem))
 
 
-
 def update_solr(json_record, solr_urls):
     record = transform_json_record(json_record)
     r = SolrAdapter.adapt(record)
