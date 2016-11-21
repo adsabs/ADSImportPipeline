@@ -82,6 +82,7 @@ class SolrAdapter(object):
     'cite_read_boost': 0.0,
     'classic_factor': 0,
     'comment': [u'',],
+    #'comment': u'',
     'copyright': [u'',],
     'database': [u'',],
     'date': u'YYYY-MM[-DD]',
@@ -293,8 +294,10 @@ class SolrAdapter(object):
   @staticmethod
   def _comment(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('comment',[])]
-    if len(result)>1: #Hack to avoid a re-indexing because of non-multivalued field 'comment'
-      result = '\n'.join(result)
+    result = list(set(result))
+    #XXX - Hack to avoid a re-indexing because of non-multivalued field 'comment'
+    if len(result) > 1:
+      result = [ '\n'.join(result) ]
     return {'comment': result}
 
   @staticmethod
