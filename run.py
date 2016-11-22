@@ -109,7 +109,7 @@ def main(MONGO=MONGO,*args):
     nargs='*',
     default=[],
     dest='targetBibcodes',
-    help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Only works when --async=False. Use the syntax @filename.txt to read these from file (1 bibcode per file)'
+    help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Only works when --async=False. Use the syntax @filename.txt to read these from file (1 bibcode per line)'
     )
 
   parser.add_argument(

@@ -34,6 +34,26 @@ The workflow is initiated by invoking `run.py`.
 - Note: The rabbitmq server should be configured for frame_max=512000
 - Note: pika should be configured with frame_max=512000 (seemingly must be changed in spec.py in addition to normal connection definition)
 
+## Updating Mongo
+Occasionally ingest of a record into mongo fails due to a number of possible problems
+(badly formatted metadata, encoding issues, unexpected schema elements).  These problems
+are visible as errors and warnings in the ReadRecords.log file.
+
+In other cases, the record may get created successfully in mongo but its serialization into
+a solr document may fail due to unexpected formatting or schema conversion.  These errors
+are found in the SolrUpdateWorker.log and ErrorHandlerWorker.log files.
+
+When such problems are fixed in the ADS classic records or new code is deployed to deal with
+them, it may be necessary to force the re-creation of a specific record in mongo. This is because
+by default the ingest pipeline will only update a record when its metadata is updated (by
+comparing its json fingerprint), and therefore will not detect a change in the handling of the
+metadata in software.
+
+To force an update in mongo of a list of bibcodes use the following:
+```
+python run.py --ignore-json-fingerprints --target-bibcodes @reindex/reingest_20161122.txt
+```
+
 ## Updating Solr
 It is possible for Solr to be missing data on some bibcodes.  When
 this happens, use ADSimportpipeline to add the missing bibcodes.  
@@ -44,18 +64,26 @@ http://solrInstance:8983/solr/collection1/select?q=*:*&rows=20000000&fl=bibcode&
 > solrBibcodes.txt
 ```
 
-The canonical list of bibcodes is available from as a column/flat file
-from the ingest pipeline.  Comparing these two files requires sorting
-them (via the unix sort command) and then using unix’s comm command:
+The canonical list of bibcodes is available as a column/flat file (sorted case-insensitively)
+from the ingest pipeline.  Comparing these two files requires sorting the new file
+and then using unix's join command:
 
 ```
-comm -2 -3 bibcodes.list.can.sorted solrBibcodes.txt.sorted > notInSolr-20160616.txt
+sort -f solrBibcodes.txt | join -i bibcodes.list.can - > notInSolr_20161122.txt
 ```
 
 This creates a file with bibcodes that were in canonical but not
 solr.  This list can be injected into the pipeline with:
 ```
-python/bin/python2.7 utils/publish_bibcodes_to_solr.py --from-file reindex/notInSolr-20160616.txt
+python/bin/python2.7 utils/publish_bibcodes_to_solr.py --from-file reindex/notInSolr_20161122.txt
 ```
 
+## Updating the code
+
+When new code for the pipeline (or any of the libraries it uses) is released, it takes two steps
+to have it become active in the ingest process:
+
+1. deploy code in the proper location: `git pull`
+
+1. restart running processes so that new code is loaded and executed: `supervisorctl restart ADSimportpipeline`
 
