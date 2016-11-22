@@ -764,7 +764,7 @@ def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
   #This in-line configuration will be dumped when that happens.
   if not _dbstore:
     _dbstore['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
-    _dbstore['adsdata'] = SqlConnection.PipelineSqlConnection(**DB_ADSDATA)
+    _dbstore['adsdata'] = SqlConnection.PipelineSqlConnection(**SQL_ADSDATA)
     _dbstore['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
   
   try:
@@ -781,7 +781,7 @@ def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
         except:
           pass
       _dbstore['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
-      _dbstore['adsdata'] = SqlConnection.PipelineSqlConnection(**DB_ADSDATA)
+      _dbstore['adsdata'] = SqlConnection.PipelineSqlConnection(**SQL_ADSDATA)
       _dbstore['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
       return solrUpdate(bibcodes, urls=urls, on_dbfailure_retry=False)
     raise
