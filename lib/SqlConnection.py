@@ -25,6 +25,8 @@ class PipelineSqlConnection:
         auth = ''
         if self.user and self.password:
             auth =  '%s@' % (':'.join([self.user,self.password]))
+        elif self.user:
+            auth = self.user + '@'
         self.uri = 'postgres://%s%s:%s/%s' % (auth,self.host,self.port,self.database)
 
         #self.engine = create_engine('postgresql://SpacemanSteve@localhost:5432/unittests_', echo=False)
