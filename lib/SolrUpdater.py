@@ -445,10 +445,15 @@ class SolrAdapter(object):
 
   @staticmethod
   def _isbn(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['general'].get('isbns',[])]
+    isbns = [i['content'] for i in ADS_record['metadata']['general'].get('isbns',[])]
     #Ugly hack, we should fix this in Enforcer properly.
-    if result and isinstance(result[0],list):
-      result = [i for i in result[0]]
+    result = []
+    for i in isbns:
+      if isinstance(i,list):
+        result += i
+      else:
+        result.append(i)
+    result = list(set(result))
     return {'isbn': result}
 
   @staticmethod
@@ -632,11 +637,11 @@ class SolrAdapter(object):
     SCHEMA = cls.SCHEMA
     assert isinstance(r,dict)
     for k,v in r.iteritems():
-      assert k in SCHEMA, '%s: not in schema' % k
-      assert isinstance(v,type(SCHEMA[k])), '%s: has an unexpected type (%s!=%s)' % (k,type(v),SCHEMA[k])
+      assert k in SCHEMA, '{0}: not in schema'.format(k)
+      assert isinstance(v,type(SCHEMA[k])), '{0}: has an unexpected type ({1}!={2}): {3}'.format(k,type(v),SCHEMA[k],v)
       if isinstance(v,list) and v: #No expectation of nested lists
-        assert len(set([type(i) for i in v])) == 1, "%s: multiple data-types in a list" % k
-        assert isinstance(v[0],type(SCHEMA[k][0])), "%s: inner list element has unexpected type (%s!=%s)" % (k,type(v[0]),type(SCHEMA[k][0]))
+        assert len(set([type(i) for i in v])) == 1, "{0}: multiple data-types in list: {1}".format(k,v)
+        assert isinstance(v[0],type(SCHEMA[k][0])), "{0}: inner list element has unexpected type ({1}!={2}): {3}" % (k,type(v[0]),type(SCHEMA[k][0]),v)
 
 def simbad_type_mapper(otype):
   """
