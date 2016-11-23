@@ -34,7 +34,7 @@ def delete_by_bibcodes(bibcodes,dryrun=False,urls=SOLR_URLS):
   m = MongoConnection.PipelineMongoConnection(**MONGO)
   for bibcode in bibcodes:
     headers = {"Content-Type":"application/json"}
-    data = json.dumps({'delete':{"query":"bibcode:%s" % bibcode}})
+    data = json.dumps({'delete':{"query":'bibcode:"%s"' % bibcode}})
     logger.info("Delete: %s" % bibcode)
     if dryrun:
       continue
@@ -441,19 +441,13 @@ class SolrAdapter(object):
   @staticmethod
   def _issn(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('issns',[])]
+    result = unroll_unique_list(result)
     return {'issn': result}
 
   @staticmethod
   def _isbn(ADS_record):
-    isbns = [i['content'] for i in ADS_record['metadata']['general'].get('isbns',[])]
-    #Ugly hack, we should fix this in Enforcer properly.
-    result = []
-    for i in isbns:
-      if isinstance(i,list):
-        result += i
-      else:
-        result.append(i)
-    result = list(set(result))
+    result = [i['content'] for i in ADS_record['metadata']['general'].get('isbns',[])]
+    result = unroll_unique_list(result)
     return {'isbn': result}
 
   @staticmethod
@@ -641,7 +635,26 @@ class SolrAdapter(object):
       assert isinstance(v,type(SCHEMA[k])), '{0}: has an unexpected type ({1}!={2}): {3}'.format(k,type(v),SCHEMA[k],v)
       if isinstance(v,list) and v: #No expectation of nested lists
         assert len(set([type(i) for i in v])) == 1, "{0}: multiple data-types in list: {1}".format(k,v)
-        assert isinstance(v[0],type(SCHEMA[k][0])), "{0}: inner list element has unexpected type ({1}!={2}): {3}" % (k,type(v[0]),type(SCHEMA[k][0]),v)
+        assert isinstance(v[0],type(SCHEMA[k][0])), "{0}: inner list element has unexpected type ({1}!={2}): {3}".format(k,type(v[0]),type(SCHEMA[k][0]),v)
+
+
+def unroll_unique_list(array):
+  """
+  Takes a list in input, unpacks nested elements, uniques them,
+  and returns a list.  Used to normalize some fields such as
+  isbns and issns for which different data structures may be
+  created by the json import due to XML element multiplicity
+  (or lack thereof).  Yes, it's a hack that could be avoided if
+  we tightened the Enforcer code.
+  """
+  result = []
+  for i in array:
+    if isinstance(i,list):
+      result += i
+    else:
+      result.append(i)
+  return list(set(result))
+  
 
 def simbad_type_mapper(otype):
   """
