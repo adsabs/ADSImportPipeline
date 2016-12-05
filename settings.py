@@ -4,9 +4,11 @@ import sys
 PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
 
 SOLR_URLS=[
-  'http://ads1/solr/update',
-  'http://ads2/solr/update',
+  'http://localhost:9983/solr/BumblebeeETL/update'
 ]
+#  'http://ads1/solr/update',
+#  'http://ads2/solr/update',
+
 
 MONGO = {
   'HOST': os.environ.get('MONGO_HOST','localhost'),
@@ -28,9 +30,9 @@ SQL = {
 SQL_ADSDATA = SQL.copy()
 SQL_ADSDATA['HOST'] = 'localhost'
 SQL_ADSDATA['PORT'] = '5432'
-SQL_ADSDATA['DATABASE'] = ''
-SQL_ADSDATA['SCHEMA'] = ''
-SQL_ADSDATA['USER'] = 'SpacemanSteve'
+SQL_ADSDATA['DATABASE'] = 'postgres'
+SQL_ADSDATA['SCHEMA'] = 'rowview'
+SQL_ADSDATA['USER'] = 'postgres'
 SQL_ADSDATA['PASSWD'] = None
 
 
@@ -43,10 +45,10 @@ MONGO_ORCID['COLLECTION'] = 'orcid_claims'
 
 #Order matches their priority
 BIBCODE_FILES = [
-  '/proj/ads/abstracts/ast/load/current/index.status',
-  '/proj/ads/abstracts/phy/load/current/index.status',
-  '/proj/ads/abstracts/gen/load/current/index.status',
-  '/proj/ads/abstracts/pre/load/current/index.status',
+  '/mnt/abstracts/ast/load/current/index.status',
+  '/mnt/abstracts/phy/load/current/index.status',
+  '/mnt/abstracts/gen/load/current/index.status',
+  '/mnt/abstracts/pre/load/current/index.status',
 ]
 
 BIBCODES_PER_JOB = 100

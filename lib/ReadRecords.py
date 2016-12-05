@@ -19,7 +19,7 @@ try:
   from ads.ADSCachedExports import ADSRecords, init_lookers_cache
   from lib import conversions
 except ImportError:
-  sys.path.append('/proj/ads/soft/python/lib/site-packages')
+  sys.path.append(SITE_PACKAGES_PATH)
   try:
     from ads.ADSCachedExports import ADSRecords, init_lookers_cache
     from lib import conversions
