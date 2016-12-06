@@ -8,7 +8,7 @@ CELERY_BROKER = 'pyamqp://guest@localhost:6672/new_host'
 
 
 SOLR_URLS=[
-  'http://localhost:9983/solr/BumblebeeETL/update'
+  'http://localhost:9983/solr/BumblebeeETL/update' 
 ]
 #  'http://ads1/solr/update',
 #  'http://ads2/solr/update',
@@ -35,10 +35,11 @@ SQL_ADSDATA['PASSWD'] = None
 
 #Order matches their priority
 BIBCODE_FILES = [
-  '/mnt/abstracts/ast/load/current/index.status',
-  '/mnt/abstracts/phy/load/current/index.status',
-  '/mnt/abstracts/gen/load/current/index.status',
-  '/mnt/abstracts/pre/load/current/index.status',
+  '/proj/ads/abstracts/ast/load/current/index.status',
+  '/proj/ads/abstracts/phy/load/current/index.status',
+  '/proj/ads/abstracts/gen/load/current/index.status',
+  '/proj/ads/abstracts/pre/load/current/index.status',
+
 ]
 
 BIBCODES_PER_JOB = 100
