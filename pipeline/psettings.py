@@ -8,8 +8,6 @@
 #RABBITMQ_URL = 'amqp://admin:password@localhost:5672/%2F?socket_timeout=10&backpressure_detection=t' #Max message size = 500kb
 RABBITMQ_URL = 'amqp://admin:password@adsx:5672/BumblebeeETL?socket_timeout=10&backpressure_detection=t' #Max message size = 500kb
 
-SITE_PACKAGES_PATH = '/mnt/ads_soft'  # '/proj/ads/soft/python/lib/site-packages'
-
 PIDFILE = '/tmp/ADSimportpipeline.lock'
 POLL_INTERVAL = 15 #per-worker poll interval (to check health) in seconds.
 ERROR_HANDLER = {
