@@ -136,7 +136,6 @@ def main(*args):
             sys.exit(1)
         for x in orphaned:
             app.task_delete_documents.delay(x)
-
     
     # submit others (to be compared and updated if necessary)
     bpj = config.get('BIBCODES_PER_JOB', 100)
