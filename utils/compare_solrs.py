@@ -71,16 +71,19 @@ def parseDocs(result):
 
 
 def compare_fields(result1, result2):
+  mismatches = []
   if not ('response' in result1 and 'docs' in result1['response'] and len(result1['response']['docs']) > 0):
-    message = 'invalid response ' + str(result1)
+    message = 'invalid response first solr' + str(result1)
     print message
     logger.error(message)
-    return
+    mismatches.append('invalid response first solr')
+    return mismatches
   if not ('response' in result2 and 'docs' in result2['response'] and len(result1['response']['docs']) > 0):
-    message = 'invalid response:' + str(result2)
+    message = 'invalid response second solr' + str(result2)
     print message
     logger.error(message)
-    return
+    mismatches.append('invalid response second solr')
+    return mismatches
   
   doc1 = result1['response']['docs'][0]
   doc2 = result2['response']['docs'][0]
@@ -92,7 +95,7 @@ def compare_fields(result1, result2):
   for key in doc1.keys():
     if key not in skip:
       if key not in doc2:
-        message = 'bibcode {} has no value for key {}'.format(bibcode, key)
+        message = 'bibcode {} has no value for key {}, value from first solr {}'.format(bibcode, key, doc1[key])
         print message
         logger.warn(message)
         continue
@@ -106,18 +109,25 @@ def compare_fields(result1, result2):
             error_count += 1
             message = u'bibcode = {}, key mismatch {} on values {}, {}'.format(bibcode, key, doc1[key], doc2[key])
             print message
+            mismatches.append(key)
             logger.warn(message)
           else:
             message = u'bibcode = {}, key {} delta within threshold on values {}, {}'.format(bibcode, key, unicode(value1).encode('unicode-escape'), unicode(value2).encode('unicode-escape'))
             print message
             logger.warn(message)
+        elif isinstance(doc1[key], list) and isinstance(doc2[key], list):
+          # do not require arrays to have elements in the same order?
+          if doc1[key].sort() != doc2[key].sort():
+            message = u'bibcode = {} array values mismatch, {}, {}'.format(bibcode, doc1[key], doc2[key])
+            mismatches.append(key)
         else:
           error_count += 1
           message = u'bibcode = {}, key mismatch {} on values {}, {}'.format(bibcode, key, unicode(doc1[key]).encode('unicode-escape'), unicode(doc2[key]).encode('unicode-escape'))
           print message
+          mismatches.append(key)
           logger.warn(message)
   
-  return error_count
+  return mismatches
 
 def isnumber(arg):
   try:
@@ -135,8 +145,8 @@ def query_and_compare(bibcode, endpoint1, endpoint2):
   result1 = query_solr(endpoint1, query, the_filter=the_filter, fl='*')
   result2 = query_solr(endpoint2, query, the_filter=the_filter, fl='*')
   failure = compare_fields(result1, result2)
-  if failure:
-    message = 'bibcode {} failed with {} errors'.format(bibcode, failure)
+  if len(failure) > 0:
+    message = 'bibcode {} failed with {} errors: {}'.format(bibcode, len(failure), failure)
     logger.error(message)
     print message
   else:
@@ -191,6 +201,7 @@ def main():
       
   elif args.command == 'fields':
     # for the passed bibcode, do the two solrs contain the same values
+    print 'arg', args.bibcode[0], args.bibcode[0] == 'stdin'
     if args.bibcode[0] == 'stdin':
       while True:
         line = sys.stdin.readline()
