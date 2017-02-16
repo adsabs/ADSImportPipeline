@@ -18,8 +18,7 @@ class PipelineSqlConnection:
         self.database = kwargs.get('DATABASE',None)
         self.user = kwargs.get('USER','SpacemanSteve')
         self.password = kwargs.get('PASSWD',None)
-        self.collection = kwargs.get('SCHEMA',None)
-        self.schema = ''
+        self.schema = kwargs.get('SCHEMA',None)
         self.meta = MetaData()
 
         auth = ''
@@ -28,6 +27,8 @@ class PipelineSqlConnection:
         elif self.user:
             auth = self.user + '@'
         self.uri = 'postgres://%s%s:%s/%s' % (auth,self.host,self.port,self.database)
+        self.logger.info('solr url: {}, schema: {}'.format(self.uri, self.schema))
+
 
         #self.engine = create_engine('postgresql://SpacemanSteve@localhost:5432/unittests_', echo=False)
         self.engine = create_engine(self.uri, echo=False)
@@ -53,7 +54,7 @@ class PipelineSqlConnection:
                      Column('downloads', ARRAY(Integer)),
                      Column('reads', ARRAY(Integer)),
                      Column('reference', ARRAY(String)),
-                     #                 schema=self.schema,
+                     schema=self.schema,
                      extend_existing=True)
 
 
