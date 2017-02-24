@@ -35,7 +35,7 @@ def delete_by_bibcodes(bibcodes,dryrun=False,urls=SOLR_URLS):
   m = MongoConnection.PipelineMongoConnection(**MONGO)
   for bibcode in bibcodes:
     headers = {"Content-Type":"application/json"}
-    data = json.dumps({'delete':{"query":"bibcode:%s" % bibcode}})
+    data = json.dumps({'delete':{"query":'bibcode:"%s"' % bibcode}})
     logger.info("Delete: %s" % bibcode)
     if dryrun:
       continue
@@ -83,6 +83,7 @@ class SolrAdapter(object):
     'cite_read_boost': 0.0,
     'classic_factor': 0,
     'comment': [u'',],
+    #'comment': u'',
     'copyright': [u'',],
     'database': [u'',],
     'date': u'YYYY-MM[-DD]',
@@ -294,8 +295,10 @@ class SolrAdapter(object):
   @staticmethod
   def _comment(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('comment',[])]
-    if len(result)>1: #Hack to avoid a re-indexing because of non-multivalued field 'comment'
-      result = '\n'.join(result)
+    result = list(set(result))
+    #XXX - Hack to avoid a re-indexing because of non-multivalued field 'comment'
+    if len(result) > 1:
+      result = [ '\n'.join(result) ]
     return {'comment': result}
 
   @staticmethod
@@ -457,14 +460,13 @@ class SolrAdapter(object):
   @staticmethod
   def _issn(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('issns',[])]
+    result = unroll_unique_list(result)
     return {'issn': result}
 
   @staticmethod
   def _isbn(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('isbns',[])]
-    #Ugly hack, we should fix this in Enforcer properly.
-    if result and isinstance(result[0],list):
-      result = [i for i in result[0]]
+    result = unroll_unique_list(result)
     return {'isbn': result}
 
   @staticmethod
@@ -545,7 +547,14 @@ class SolrAdapter(object):
                 if len(claims) != len(authors):
                     logger.warn("Potential problem with orcid claims for: {0} (len(authors) != len(claims))"
                                 .format(ADS_record['bibcode']))
-                    continue
+                    # TODO: in the grant scheme of things, we should trigger ADS orcid update (let the remote
+                    # pipeline processes know, that something is out of sync); for now we'll just truncate the
+                    # data
+                    if len(claims) > len(authors):
+                        claims = claims[0:len(authors)]
+                    else:
+                        claims = claims + [u'-'] * (len(authors) - len(claims)) 
+
                 out[indexname] = claims
     return out
 
@@ -664,11 +673,30 @@ class SolrAdapter(object):
     SCHEMA = cls.SCHEMA
     assert isinstance(r,dict)
     for k,v in r.iteritems():
-      assert k in SCHEMA, '%s: not in schema' % k
-      assert isinstance(v,type(SCHEMA[k])), '%s: has an unexpected type (%s!=%s)' % (k,type(v),SCHEMA[k])
+      assert k in SCHEMA, '{0}: not in schema'.format(k)
+      assert isinstance(v,type(SCHEMA[k])), '{0}: has an unexpected type ({1}!={2}): {3}'.format(k,type(v),SCHEMA[k],v)
       if isinstance(v,list) and v: #No expectation of nested lists
-        assert len(set([type(i) for i in v])) == 1, "%s: multiple data-types in a list" % k
-        assert isinstance(v[0],type(SCHEMA[k][0])), "%s: inner list element has unexpected type (%s!=%s)" % (k,type(v[0]),type(SCHEMA[k][0]))
+        assert len(set([type(i) for i in v])) == 1, "{0}: multiple data-types in list: {1}".format(k,v)
+        assert isinstance(v[0],type(SCHEMA[k][0])), "{0}: inner list element has unexpected type ({1}!={2}): {3}".format(k,type(v[0]),type(SCHEMA[k][0]),v)
+
+
+def unroll_unique_list(array):
+  """
+  Takes a list in input, unpacks nested elements, uniques them,
+  and returns a list.  Used to normalize some fields such as
+  isbns and issns for which different data structures may be
+  created by the json import due to XML element multiplicity
+  (or lack thereof).  Yes, it's a hack that could be avoided if
+  we tightened the Enforcer code.
+  """
+  result = []
+  for i in array:
+    if isinstance(i,list):
+      result += i
+    else:
+      result.append(i)
+  return list(set(result))
+  
 
 def simbad_type_mapper(otype):
   """

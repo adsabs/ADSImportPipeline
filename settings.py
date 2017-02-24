@@ -14,10 +14,11 @@ MONGO = {
   'HOST': os.environ.get('MONGO_HOST','localhost'),
   'PORT': os.environ.get('MONGO_PORT',27018),
   'DATABASE': os.environ.get('MONGO_DATABASE','ads'),
-  'USER': None,    #May be set to None
-  'PASSWD': None,  #May be set to None
-  'COLLECTION': 'classic',
+  'USER': os.environ.get('MONGO_USER', None),
+  'PASSWD': os.environ.get('MONGO_PASSWD', None),
+  'COLLECTION': os.environ.get('MONGO_COLLECTION', 'classic')
 }
+
 
 SQL = {
   'HOST': os.environ.get('SQL_HOST',':memory'),
@@ -31,7 +32,7 @@ SQL_ADSDATA = SQL.copy()
 SQL_ADSDATA['HOST'] = 'localhost'
 SQL_ADSDATA['PORT'] = '5432'
 SQL_ADSDATA['DATABASE'] = 'postgres'
-SQL_ADSDATA['SCHEMA'] = 'rowview'
+SQL_ADSDATA['SCHEMA'] = 'nonbib'
 SQL_ADSDATA['USER'] = 'postgres'
 SQL_ADSDATA['PASSWD'] = None
 
@@ -42,6 +43,16 @@ MONGO_ORCID['PORT'] = '27017'
 MONGO_ORCID['USER'] = 'adsdata'
 MONGO_ORCID['PASSWD'] = 'fake'
 MONGO_ORCID['COLLECTION'] = 'orcid_claims'
+
+# these will be modified by local_settings.py
+MONGO_ADSDATA = MONGO.copy()
+MONGO_ORCID = MONGO_ADSDATA.copy()
+
+try:
+    from local_settings import *
+except ImportError:
+    pass
+
 
 #Order matches their priority
 BIBCODE_FILES = [
@@ -123,7 +134,7 @@ _PRIORITIES_DEFAULT = {
       'PJAB', 'PKAS', 'PLR', 'PNAS', 'POBEO', 'PSRD', 'PTP', 'PZP',
       'QJRAS', 'RMXAA', 'RMXAC', 'ROAJ', 'RSOC', 'RVMA', 'S&T', 'SABER', 'SAI',
       'SAJ', 'SAO', 'SAS', 'SCI', 'SCIENCE', 'SERB', 'SF2A', 'SIF', 'SLO',
-      'SPIE', 'SPIKA', 'SPITZER', 'SPRINGER', 'SPRN', 'STARD', 'STECF',
+      'SOFIA', 'SPIE', 'SPIKA', 'SPITZER', 'SPRINGER', 'SPRN', 'STARD', 'STECF',
       'SerAJ', 'T+F', 'TERRAPUB', 'UCP', 'UMI', 'USCI', 'USNO',
       'VATICAN', 'VERSITA', 'WGN', 'WILEY', 'WSPC', 'XMM', 'XTE', 'BLACKWELL',
       'AFOEV', 'ASCL', 'ATNF', 'CJAA', 'CONF', 'EDITOR', 'EGU', 'ELIBRARY', 'IPAP',
@@ -168,7 +179,7 @@ _PRIORITIES_JOURNALS = {
       'PJAB', 'PKAS', 'PLR', 'PNAS', 'POBEO', 'PSRD', 'PTP', 'PZP',
       'QJRAS', 'RMXAA', 'RMXAC', 'ROAJ', 'RSOC', 'RVMA', 'S&T', 'SABER', 'SAI',
       'SAJ', 'SAO', 'SAS', 'SCI', 'SCIENCE', 'SERB', 'SF2A', 'SIF', 'SLO',
-      'SPIE', 'SPIKA', 'SPITZER', 'SPRINGER', 'SPRN', 'STARD', 'STECF',
+      'SOFIA', 'SPIE', 'SPIKA', 'SPITZER', 'SPRINGER', 'SPRN', 'STARD', 'STECF',
       'SerAJ', 'T+F', 'TERRAPUB', 'UCP', 'UMI', 'USCI', 'USNO',
       'VATICAN', 'VERSITA', 'WGN', 'WILEY', 'WSPC', 'XMM', 'XTE', 'BLACKWELL',
       'AFOEV', 'ASCL', 'ATNF', 'CJAA', 'CONF', 'EDITOR', 'EGU', 'ELIBRARY', 'IPAP',
@@ -214,7 +225,7 @@ _PRIORITIES_AUTHORS = {
       'PJAB', 'PKAS', 'PLR', 'PNAS', 'POBEO', 'PSRD', 'PTP', 'PZP',
       'QJRAS', 'RMXAA', 'RMXAC', 'ROAJ',  'RSOC', 'RVMA', 'S&T', 'SABER', 'SAI',
       'SAJ', 'SAO', 'SAS', 'SCI', 'SCIENCE', 'SERB', 'SF2A', 'SIF', 'SLO', 'JACOW', 'SARA',
-      'SPIE', 'SPIKA', 'SPITZER', 'SPRINGER', 'SPRN', 'STARD', 'STECF',
+      'SOFIA', 'SPIE', 'SPIKA', 'SPITZER', 'SPRINGER', 'SPRN', 'STARD', 'STECF',
       'SerAJ', 'T+F', 'TERRAPUB', 'UCP', 'UMI', 'USCI', 'USNO',
       'VATICAN', 'VERSITA', 'WGN', 'WILEY', 'WSPC', 'XMM', 'XTE', 'BLACKWELL',
       'AFOEV', 'ASCL', 'ATNF', 'CJAA', 'CONF', 'EDITOR', 'EGU', 'ELIBRARY', 'IPAP',
@@ -260,7 +271,7 @@ _PRIORITIES_ABSTRACTS = {
       'PJAB', 'PKAS', 'PLR', 'PNAS', 'POBEO', 'PSRD', 'PTP', 'PZP',
       'QJRAS', 'RMXAA', 'RMXAC', 'ROAJ',  'RSOC', 'RVMA', 'S&T', 'SABER', 'SAI',
       'SAJ', 'SAO', 'SAS', 'SCI', 'SCIENCE', 'SERB', 'SF2A', 'SIF', 'SLO',
-      'SPIE', 'SPIKA', 'SPITZER', 'SPRINGER', 'SPRN', 'STARD', 'STECF',
+      'SOFIA', 'SPIE', 'SPIKA', 'SPITZER', 'SPRINGER', 'SPRN', 'STARD', 'STECF',
       'SerAJ', 'T+F', 'TERRAPUB', 'UCP', 'UMI', 'USCI', 'USNO',
       'VATICAN', 'VERSITA', 'WGN', 'WILEY', 'WSPC', 'XMM', 'XTE', 'BLACKWELL',
       'AFOEV', 'ASCL', 'ATNF', 'CJAA', 'CONF', 'EDITOR', 'EGU', 'ELIBRARY', 'IPAP',
@@ -307,7 +318,7 @@ _PRIORITIES_REFERENCES = {
       'QJRAS', 'RMXAA', 'RMXAC', 'ROAJ', 'RSOC', 'RVMA', 'S&T', 'SABER', 'SAI',
       'SAJ', 'SAO', 'SAS', 'SCI', 'SCIENCE', 'SERB', 'SF2A', 'SIF', 'SLO',
       'SPIE', 'SPIKA', 'SPITZER', 'SPRN', 'STARD', 'STECF',
-      'STSCI', 'SERAJ', 'T+F', 'TERRAPUB', 'UCP', 'UMI', 'USCI', 'USNO',
+      'SOFIA', 'STSCI', 'SERAJ', 'T+F', 'TERRAPUB', 'UCP', 'UMI', 'USCI', 'USNO',
       'VATICAN', 'VERSITA', 'WGN', 'WILEY', 'WSPC', 'XMM', 'XTE',
       'ARI', 'KATKAT', 'ARIBIB', 'JSTOR', 'CARL', 'CFA', 'HOLLIS', 'LIBRARY',
       'POS', 'PRINCETON', 'SIMBAD', 'CDS','UTAL', 'STI', 'WEB',

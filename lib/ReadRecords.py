@@ -17,11 +17,13 @@ except ImportError:
   import pickle
 try:
   from ads.ADSCachedExports import ADSRecords, init_lookers_cache
+  from ads.ADSCachedExports import LOGGER as export_logger
   from lib import conversions
 except ImportError:
   sys.path.append('/proj/ads/soft/python/lib/site-packages')
   try:
     from ads.ADSCachedExports import ADSRecords, init_lookers_cache
+    from ads.ADSCachedExports import LOGGER as export_logger
     from lib import conversions
   except ImportError:
     print "Unable to import ads.ADSExports.ADSRecords!"
@@ -35,12 +37,17 @@ formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
 logger = logging.getLogger('ReadRecords')
 if not logger.handlers:
   fn = os.path.join(os.path.dirname(__file__),'..','logs','ReadRecords.log')
-  rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=10,mode='a') #2MB file
+  rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=20971520,backupCount=10,mode='a') #20MB file
   rfh.setFormatter(formatter)
   ch = logging.StreamHandler() #console handler
   ch.setFormatter(formatter)
 #  logger.addHandler(ch)
   logger.addHandler(rfh)
+  try:
+    export_logger.addHandler(rfh)
+  except:
+    pass
+
 logger.setLevel(logging.INFO)
 
 def canonicalize_records(records,targets=None):
