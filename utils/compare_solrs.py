@@ -90,7 +90,7 @@ def compare_fields(result1, result2):
   bibcode = doc1['bibcode']  # needed for log messages
   
   # the following fields can't be expected to match so should not be compared
-  skip = ['id', 'recid', '_version_', 'indexstamp', 'classic_factor']
+  skip = ['id', 'recid', '_version_', 'indexstamp', 'classic_factor', 'update_timestamp']
   error_count = 0
   for key in doc1.keys():
     if key not in skip:
