@@ -72,35 +72,43 @@ def task_read_records(message):
     results = read_records.readRecordsFromADSExports(message)
     if results:
         for r in results:
-            task_update_record.delay(r)
+            task_merge_metadata.delay(r)
 
 
 @app.task(base=MyTask)
-def task_update_record(record):
+def task_merge_metadata(record):
     """Receives the full metadata record (incl all the versions) as read by the ADS 
     extractors. We'll merge the versions and create a close-to-canonical version of
     a metadata record."""
     
-    # TODO: save the mid-cycle representation of the metadata ???
     result = update_records.mergeRecords([record])
     
     if result and len(result) > 0:
-        for r in result:
-            task_ingest_record.delay(r)
+        for r in result: # TODO: save the mid-cycle representation of the metadata ???
+            task_update_record.delay('metadata', r)
 
 
 @app.task(base=MyTask)
-def task_ingest_record(record):
+def task_update_record(type, payload):
     """Receives the canonical version of the metadata.
     
     @param record: JSON metadata
     """
     
+    bibcode = payload['bibcode']
+    
     # save into a database
+    if type == 'metadata':
+        task_update_solr.delay(bibcode, force=True)
+    else:
+        task_update_solr.delay(bibcode)
 
 
 @app.task(base=MyTask)
-def task_update_solr(bibcodes):
-    return sum(numbers)
-
+def task_update_solr(bibcodes, force=False):
+    #TODO: for every bibcode check if we have all parts
+    # if yes, and the time window of last update was long enough
+        # build the record and send it to solr
+    # if not, register a delayed execution
+    pass
 
