@@ -7,13 +7,12 @@ import traceback
 
 from aip.libs.utils import setup_logging
 from aip.libs import enforce_schema
-from aip.app import config
 
-logger = setup_logging('solr_updater.SolrAdapter')
-
+logger = setup_logging('solr_updater.log', 'SolrAdapter')
 
 
-def delete_by_bibcodes(bibcodes, urls=config['SOLR_URLS']):
+
+def delete_by_bibcodes(bibcodes, urls):
     '''Deletes records from SOLR, it returns the databstructure with 
     indicating which bibcodes were deleted.'''
   
@@ -91,7 +90,7 @@ class SolrAdapter(object):
     # 'full': u'', #non-populated field 
     'grant': [u'', ],
     'grant_facet_hier': [u'', ],
-    'id': 0,
+    #'id': 0,
     'identifier': [u'', ],
     'isbn': [u'', ],
     'issn': [u'', ],
@@ -728,65 +727,31 @@ def bibstem_mapper(bibcode):
   return (unicode(short_stem), unicode(long_stem))
 
 
-# HACK: keep the connections (the old code was establishing and closing)
-# the connection on every query; but it used a global MONGO object
-# for the configuration, therefore it was *always* the same database
-_mongo = {}
 
-def solrUpdate(bibcodes, urls=SOLR_URLS, on_dbfailure_retry=True):
-  solrRecords = []
-  logger.debug("Recieved a payload of %s bibcodes" % len(bibcodes))
-  if not bibcodes:
-    logger.warning("solrUpdate did not recieve any bibcodes")
-    return
 
-  # Until we have a proper union of mongos, we need to compile a full record from several DBs
-  # This in-line configuration will be dumped when that happens.
-  if not _mongo:
-    _mongo['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
-    _mongo['adsdata'] = MongoConnection.PipelineMongoConnection(**MONGO_ADSDATA)
-    _mongo['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
-  
-  try:
-    metadata = _mongo['classic'].getRecordsFromBibcodes(bibcodes)
-    adsdata = _mongo['adsdata'].getRecordsFromBibcodes(bibcodes, key="_id")
-    orcid_claims = _mongo['orcid_claims'].getRecordsFromBibcodes(bibcodes, key="_id")
-  except:
-    if on_dbfailure_retry:
-      logger.error('Error connecting to a database, trying to reconnect...\n({0})'
-                   .format(traceback.format_exc()))
-      for k, v in _mongo.iteritems():
-        try:
-          v.close()
-        except:
-          pass
-      _mongo['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
-      _mongo['adsdata'] = MongoConnection.PipelineMongoConnection(**MONGO_ADSDATA)
-      _mongo['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
-      return solrUpdate(bibcodes, urls=urls, on_dbfailure_retry=False)
-    raise
-  
-  # stick the values from other dbs into one rec
-  adsdata_kv = dict((x['_id'], x) for x in adsdata)
-  orcid_kv = dict((x['_id'], x) for x in orcid_claims)
-  
-  for r in metadata:
-    r['adsdata'] = adsdata_kv.get(r['bibcode'], {})
-    r['orcid_claims'] = orcid_kv.get(r['bibcode'], {})
+def update_solr(json_record, solr_urls):
+    record = transform_json_record(json_record)
+    #r = SolrAdapter.adapt(record)
+    #SolrAdapter.validate(r)  # Raises AssertionError if not validated
+    payload = json.dumps([record])
+    for url in solr_urls:
+        r = requests.post(url, data=payload, headers={'content-type': 'application/json'})
+    
 
-  logger.debug("Combined payload has %s records" % len(metadata))
-
-  for record in metadata:
-    r = SolrAdapter.adapt(record)
-    SolrAdapter.validate(r)  # Raises AssertionError if not validated
-    solrRecords.append(r)
-  payload = json.dumps(solrRecords)
-  headers = {'content-type': 'application/json'}
-  logger.debug("Payload: %s" % payload)
-  for url in urls:
-    logger.info("Posting payload of length %s to %s" % (len(solrRecords), url))
-    r = requests.post(url, data=payload, headers=headers)
-    r.connection.close()
+def transform_json_record(db_record):
+    out = {'bibcode': db_record['bibcode']}
+    
+    for f, t in [('bib_data', ''), ('nonbib_data', 'adsdata'), ('orcid_claims', 'orcid_claims')]:
+        if db_record.get(f, None):
+            if t:
+                out[t] = db_record.get(f)
+            else:
+                out.update(db_record.get(f))
+    if db_record.get('fulltext', None):
+        out['body'] = db_record['fulltext']
+    
+    return out
+    
 
 def main():
   parser = argparse.ArgumentParser()

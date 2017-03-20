@@ -8,3 +8,4 @@ coveralls
 timeout-decorator
 librabbitmq
 celery
+pytest

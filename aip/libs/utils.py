@@ -59,10 +59,10 @@ def load_config():
     :return dictionary
     """
     conf = {}
-    PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__), './'))
+    PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
     if PROJECT_HOME not in sys.path:
         sys.path.append(PROJECT_HOME)
-    conf['PROJ_HOME'] = PROJECT_HOME
+    conf['PROJECT_HOME'] = PROJECT_HOME
     
     conf.update(load_module(os.path.join(PROJECT_HOME, 'config.py')))
     conf.update(load_module(os.path.join(PROJECT_HOME, 'local_config.py')))
@@ -104,7 +104,7 @@ def setup_logging(file_, name_, level='WARN'):
     datefmt = u'%m/%d/%Y %H:%M:%S'
     formatter = logging.Formatter(fmt=logfmt, datefmt=datefmt)
     logging_instance = logging.getLogger(name_)
-    fn_path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'logs')
+    fn_path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')), 'logs')
     if not os.path.exists(fn_path):
         os.makedirs(fn_path)
     fn = os.path.join(fn_path, '{0}.log'.format(name_))
