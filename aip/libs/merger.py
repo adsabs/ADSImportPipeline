@@ -1,53 +1,44 @@
 import sys,os
-from settings import (MERGER_RULES,PRIORITIES,REFERENCES_ALWAYS_APPEND)
 import types
 import datetime
 import itertools
-import logging
-import logging.handlers
-from cloghandler import ConcurrentRotatingFileHandler
 import collections
 
-from lib import EnforceSchema
-from lib import author_match
+from aip.libs import enforce_schema, author_match, utils
+_config = utils.load_config()
+
+
 
 class Merger:
-  def __init__(self,blocks=None,logger=None):
+  def __init__(self, 
+               blocks=None, 
+               logger=None, 
+               merger_rules= _config['MERGER_RULES'],
+               priorities = _config['PRIORITIES'],
+               references_always_append = _config['REFERENCES_ALWAYS_APPEND']
+               ):
     self.blocks = blocks
     self.logger=logger
     self.block = {}
     self.altpublications = []
-    self.eL = EnforceSchema.Enforcer().ensureList
+    self.eL = enforce_schema.Enforcer().ensureList
+    self.merger_rules = merger_rules
+    self.priorities = priorities
+    self.references_always_prepend = references_always_append
+    
     if blocks:
       #Assert that there is only block type being merged
       assert len(set([i['tempdata']['type'] for i in blocks]))==1
       self.blocktype = blocks[0]['tempdata']['type']
     if not self.logger:
-      self.initializeLogging()
+      self.logger = utils.setup_logging('merger.log', 'Merger')
 
-  def initializeLogging(self,**kwargs):
-    logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
-    datefmt= '%m/%d/%Y %H:%M:%S'
-    formatter = logging.Formatter(fmt=logfmt,datefmt=datefmt)
-    LOGGER = logging.getLogger("Merger")
-    if not LOGGER.handlers:
-      default_fn = os.path.join(os.path.dirname(__file__),'..','logs','%s.log' % self.__class__.__name__)   
-      fn = kwargs.get('filename',default_fn)
-      rfh = ConcurrentRotatingFileHandler(filename=fn,maxBytes=2097152,backupCount=3,mode='a') #2MB file
-      rfh.setFormatter(formatter)
-      ch = logging.StreamHandler() #console handler
-      ch.setFormatter(formatter)
-      LOGGER.handlers = []
-#      LOGGER.addHandler(ch)
-      LOGGER.addHandler(rfh)
-      LOGGER.setLevel(logging.DEBUG)
-    self.logger = LOGGER
 
-  def _dispatcher(self,field):
-    if field not in MERGER_RULES:
-      self.logger.error("%s not in MERGER_RULES" % field)
-      raise Exception("%s not in MERGER_RULES" % field)
-    return eval('self. '+ MERGER_RULES[field])(field)
+  def _dispatcher(self, field):
+    if field not in self.merger_rules:
+        self.logger.error("%s not in MERGER_RULES" % field)
+        raise Exception("%s not in MERGER_RULES" % field)
+    return eval('self. '+ self.merger_rules[field])(field) #rca: eeeek!
 
 
   def mergeText(self,blocks):
@@ -139,7 +130,7 @@ class Merger:
     #Second pass: append if the origin is in REFERENCES_ALWAYS_APPEND
     data = [ (i[field],i['tempdata']) for i in self.blocks if field in i]
     for f in data:
-      if f[1]['origin'] in REFERENCES_ALWAYS_APPEND:
+      if f[1]['origin'] in self.references_always_append:
         for reference in f[0]:
           if reference not in result:
             result.append(reference)
@@ -210,10 +201,10 @@ class Merger:
     if not all([f1[0],f2[0]]) and any([f1[0],f2[0]]):
       return f1 if f1[0] else f2
 
-    if field not in PRIORITIES:
-      p = PRIORITIES['default']
+    if field not in self.priorities:
+      p = self.priorities['default']
     else:
-      p = PRIORITIES[field]
+      p = self.priorities[field]
     # pick the origin with the highest priority for each record
     origins = f1[1]['origin'].split('; ')
     o1 = origins.pop()

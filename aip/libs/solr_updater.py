@@ -7,13 +7,12 @@ import traceback
 
 from aip.libs.utils import setup_logging
 from aip.libs import enforce_schema
-from aip.app import config
 
-logger = setup_logging('solr_updater.SolrAdapter')
-
+logger = setup_logging('solr_updater.log', 'SolrAdapter')
 
 
-def delete_by_bibcodes(bibcodes, urls=config['SOLR_URLS']):
+
+def delete_by_bibcodes(bibcodes, urls):
     '''Deletes records from SOLR, it returns the databstructure with 
     indicating which bibcodes were deleted.'''
   
@@ -733,7 +732,7 @@ def bibstem_mapper(bibcode):
 # for the configuration, therefore it was *always* the same database
 _mongo = {}
 
-def solrUpdate(bibcodes, urls=SOLR_URLS, on_dbfailure_retry=True):
+def solrUpdate(bibcodes, urls, on_dbfailure_retry=True):
   solrRecords = []
   logger.debug("Recieved a payload of %s bibcodes" % len(bibcodes))
   if not bibcodes:

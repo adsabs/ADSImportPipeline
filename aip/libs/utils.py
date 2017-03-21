@@ -59,10 +59,10 @@ def load_config():
     :return dictionary
     """
     conf = {}
-    PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__), './'))
+    PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
     if PROJECT_HOME not in sys.path:
         sys.path.append(PROJECT_HOME)
-    conf['PROJ_HOME'] = PROJECT_HOME
+    conf['PROJECT_HOME'] = PROJECT_HOME
     
     conf.update(load_module(os.path.join(PROJECT_HOME, 'config.py')))
     conf.update(load_module(os.path.join(PROJECT_HOME, 'local_config.py')))

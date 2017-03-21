@@ -20,9 +20,9 @@ def task_delete_documents(bibcodes):
     
     @param bibcodes: array of bibcodes 
     """
-    deleted, failed = solr_updater.delete_by_bibcodes(bibcodes, app.conf['SOLR_URLS'])
-    for b in deleted:
+    for b in bibcodes:
         update_records.delete_by_bibcode(b)
+    deleted, failed = solr_updater.delete_by_bibcodes(bibcodes, app.conf['SOLR_URLS'])
     task_handle_errors.delay('ads.import-pipeline.delete-documents', failed)
 
 

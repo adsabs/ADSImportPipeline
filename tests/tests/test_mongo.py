@@ -1,10 +1,5 @@
 import sys, os
-PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
-sys.path.append(PROJECT_HOME)
-from settings import MONGO
-from lib import MongoConnection
 import json
-import pymongo
 import logging
 
 import unittest

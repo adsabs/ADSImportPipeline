@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import sys, os
-PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
-sys.path.append(PROJECT_HOME)
 import unittest
-from lib import author_match
+from aip.libs import author_match
 
 class TestAuthorMatch(unittest.TestCase):
 
