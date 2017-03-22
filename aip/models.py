@@ -39,14 +39,17 @@ class Records(Base):
     __tablename__ = 'records'
     id = Column(Integer, primary_key=True)
     bibcode = Column(String(19))
+    
     metadata = Column(Text)
-    metadata_updated = Column(UTCDateTime, default=get_date)
     orcid_claims = Column(Text)
-    orcid_claims_updated = Column(UTCDateTime, default=get_date)
     nonbib_data = Column(Text)
-    nonbib_data_updated = Column(UTCDateTime, default=get_date)
     fulltext = Column(Text)
+
+    metadata_updated = Column(UTCDateTime, default=get_date)
+    orcid_claims_updated = Column(UTCDateTime, default=get_date)
+    nonbib_data_updated = Column(UTCDateTime, default=get_date)
     fulltext_updated = Column(UTCDateTime, default=get_date)
+    
     created = Column(UTCDateTime, default=get_date)
     updated = Column(UTCDateTime, default=get_date)
     processed = Column(UTCDateTime)

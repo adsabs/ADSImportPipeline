@@ -1,15 +1,14 @@
-from aip.libs import mongo_connection, update_records, read_records
+from aip.libs import update_records, read_records, solr_updater
 
-mongo = mongo_connection.PipelineMongoConnection()
 
 _strategies = {
-      'ads.import-pipeline.find-new-records':mongo.findNewRecords, #expects [('bibcode','fingerprint'),...]
-      'ads.import-pipeline.ingest-records':  mongo.formatRecordsforReingestion, #expects ['bibcode',...]
+      'ads.import-pipeline.find-new-records': None, #mongo.findNewRecords, #expects [('bibcode','fingerprint'),...]
+      'ads.import-pipeline.ingest-records':  None, #mongo.formatRecordsforReingestion, #expects ['bibcode',...]
       'ads.import-pipeline.read-records':    read_records.readRecordsFromADSExports, #expects [('bibcode','fingerprint'),...]
       'ads.import-pipeline.update-record':   update_records.mergeRecords, #expects [{record}, ...]
-      'MongoWriteWorker':       self.mongo.upsertRecords, #expects [{records}, ...]
-      'SolrUpdateWorker':       SolrUpdater.solrUpdate, #expects ['bibcode', ...]
-      'DeletionWorker':         SolrUpdater.delete_by_bibcodes, #expects ['bibcode',...]
+      'MongoWriteWorker':       None, #self.mongo.upsertRecords, #expects [{records}, ...]
+      'SolrUpdateWorker':       solr_updater.solrUpdate, #expects ['bibcode', ...]
+      'DeletionWorker':         solr_updater.delete_by_bibcodes, #expects ['bibcode',...]
     }
 
 

@@ -4,6 +4,8 @@ import sys
 SQLALCHEMY_URL = 'sqlite:///'
 SQLALCHEMY_ECHO = False
 
+CELERY_BROKER = 'pyamqp://guest@localhost:6672/new_host'
+
 
 SOLR_URLS=[
   'http://ads1/solr/update',
@@ -20,6 +22,25 @@ BIBCODE_FILES = [
 ]
 
 BIBCODES_PER_JOB = 100
+
+
+# ================= celery/rabbitmq rules============== #
+# ##################################################### #
+
+ACKS_LATE=True
+PREFETCH_MULTIPLIER=1
+CELERYD_TASK_SOFT_TIME_LIMIT = 60
+xCELERY_BROKER_URL='redis://localhost:6379/0'
+xCELERY_RESULT_BACKEND='redis://localhost:6379/0'
+
+CELERY_DEFAULT_EXCHANGE = 'import-pipeline'
+CELERY_DEFAULT_EXCHANGE_TYPE = "topic"
+
+
+
+
+# ================= merger rules ====================== #
+# ##################################################### #
 
 MERGER_RULES = {
   #<metadata type="general">

@@ -7,6 +7,8 @@ from aip.libs import xmltodict
 from aip.libs import enforce_schema
 from aip.libs import utils
 
+INIT_LOOKERS_CACHE = None
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -21,12 +23,12 @@ except ImportError:
         from ads.ADSCachedExports import ADSRecords, init_lookers_cache
         from ads.ADSCachedExports import LOGGER as export_logger
         from lib import conversions
+        INIT_LOOKERS_CACHE = init_lookers_cache
     except ImportError:
         print "Unable to import ads.ADSExports.ADSRecords!"
         print "We will be unable to query ADS-classic for records!"
 
 
-INIT_LOOKERS_CACHE = init_lookers_cache
 logger = utils.setup_logging('read_records.log', 'ReadRecords')
 
 
