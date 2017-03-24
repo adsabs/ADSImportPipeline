@@ -4,9 +4,11 @@ import sys
 PROJECT_HOME = os.path.abspath(os.path.dirname(__file__))
 
 SOLR_URLS=[
-  'http://ads1/solr/update',
-  'http://ads2/solr/update',
+  'http://localhost:9983/solr/BumblebeeETL/update' 
 ]
+#  'http://ads1/solr/update',
+#  'http://ads2/solr/update',
+
 
 MONGO = {
   'HOST': os.environ.get('MONGO_HOST','localhost'),
@@ -17,6 +19,31 @@ MONGO = {
   'COLLECTION': os.environ.get('MONGO_COLLECTION', 'classic')
 }
 
+
+SQL = {
+  'HOST': os.environ.get('SQL_HOST',':memory'),
+  'PORT': os.environ.get('SQL_PORT',''),
+  'DATABASE': os.environ.get('SQL_DATABASE','ads'),
+  'USER': None,    
+  'PASSWD': None,  
+}
+
+SQL_ADSDATA = SQL.copy()
+SQL_ADSDATA['HOST'] = 'localhost'
+SQL_ADSDATA['PORT'] = '5432'
+SQL_ADSDATA['DATABASE'] = 'postgres'
+SQL_ADSDATA['SCHEMA'] = 'nonbib'
+SQL_ADSDATA['USER'] = 'postgres'
+SQL_ADSDATA['PASSWD'] = None
+
+
+MONGO_ORCID = MONGO.copy()
+MONGO_ORCID['DATABASE'] = 'adsdata'
+MONGO_ORCID['PORT'] = '27017'
+MONGO_ORCID['USER'] = 'adsdata'
+MONGO_ORCID['PASSWD'] = 'fake'
+MONGO_ORCID['COLLECTION'] = 'orcid_claims'
+
 # these will be modified by local_settings.py
 MONGO_ADSDATA = MONGO.copy()
 MONGO_ORCID = MONGO_ADSDATA.copy()
@@ -26,12 +53,14 @@ try:
 except ImportError:
     pass
 
+
 #Order matches their priority
 BIBCODE_FILES = [
   '/proj/ads/abstracts/ast/load/current/index.status',
   '/proj/ads/abstracts/phy/load/current/index.status',
   '/proj/ads/abstracts/gen/load/current/index.status',
   '/proj/ads/abstracts/pre/load/current/index.status',
+
 ]
 
 BIBCODES_PER_JOB = 100

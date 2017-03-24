@@ -114,7 +114,7 @@ class PipelineMongoConnection:
     def update(query,r,current):
       try:
         r['_id'] = current['_id']
-        mongo.update(query,r,w=kwargs.get('w',1),multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary)
+        mongo.update(query,r,w=kwargs.get('w',1)) # put in dict? ,multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary)
         updates.append(r['bibcode'])
       except Exception, err:
         self.logger.error("Failure to UPDATE record %s: %s" % (query,err))
@@ -122,7 +122,7 @@ class PipelineMongoConnection:
     def insert(query,r):
       try:
         r['_id'] = self._getNextSequence()
-        mongo.insert(r,w=kwargs.get('w',1),multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary)
+        mongo.insert(r,w=kwargs.get('w',1)) # ,multi=kwargs.get('multi',False)) #w=1 means block all write requests until it has written to the primary)
         inserts.append(r['bibcode'])
       except Exception, err:
         self.logger.error("Failure to INSERT record %s: %s" % (query,err))

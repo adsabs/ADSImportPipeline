@@ -11,8 +11,9 @@ import traceback
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from lib import MongoConnection
+from lib import SqlConnection
 from lib import EnforceSchema
-from settings import MONGO, MONGO_ADSDATA, SOLR_URLS, MONGO_ORCID
+from settings import MONGO, SQL_ADSDATA, SOLR_URLS, MONGO_ORCID
 
 logfmt = '%(levelname)s\t%(process)d [%(asctime)s]:\t%(message)s'
 datefmt= '%m/%d/%Y %H:%M:%S'
@@ -411,15 +412,33 @@ class SolrAdapter(object):
   @staticmethod
   def _grant(ADS_record):
     result = []
-    for grant in ADS_record.get('adsdata',{}).get('grants',{}):
+    grant_dicts = SolrAdapter.convert_grants(ADS_record.get('adsdata', {}).get('grants'))
+    for grant in grant_dicts: # ADS_record.get('adsdata',{}).get('grants',{})
       result.append(grant['agency'])
       result.append(grant['grant'])
     return {'grant': result}
 
   @staticmethod
+  def convert_grants(grants_string):
+    "convert sql string to the dict mongo used so other code can remain unchanged"
+    grant_dicts = []
+    if grants_string is None:
+      return grant_dicts
+    for current in grants_string:
+      current = current.strip()
+      parts = current.split(' ')
+      if len(parts) == 2:
+        d = {'agency': unicode(parts[0]), 'grant': unicode(parts[1])}
+        grant_dicts.append(d)
+      else:
+        print 'warning, band length to grant string {}'.format(current)
+    return grant_dicts
+
+  @staticmethod
   def _grant_facet_hier(ADS_record):
+    grant_dicts = SolrAdapter.convert_grants(ADS_record.get('adsdata', {}).get('grants'))
     result = []
-    for grant in ADS_record.get('adsdata',{}).get('grants',[]):
+    for grant in grant_dicts:  # ADS_record.get('adsdata',{}).get('grants',[]):
       r = u"0/%s" % (grant['agency'],)
       result.append(r)
       r = u"1/%s/%s" % (grant['agency'],grant['grant'])
@@ -559,13 +578,35 @@ class SolrAdapter(object):
 
   @staticmethod
   def _simbid(ADS_record):
-    result = [int(i['id']) for i in ADS_record.get('adsdata',{}).get('simbad_objects',[])]
+    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata',{}).get('simbad_objects',[]))
+    result = [int(i['id']) for i in simbad] # ADS_record.get('adsdata',{}).get('simbad_objects',[])]
     return {'simbid': result}
 
   @staticmethod
+  def convert_simbad(simbad_strings):
+    """convert sql string to the dict mongo used so other code can remain unchanged
+    sql version contains an array of strings: ['1010152 PN', '1010659 PN', '1011325 PN']"""
+    simbad_dicts = []
+    if simbad_strings is None:
+      return simbad_dicts
+    for current in simbad_strings:
+      current = current.strip()
+      parts = current.split(' ')
+      if len(parts) == 2:
+        d = {'type': unicode(parts[1]), 'id': unicode(parts[0])}
+        simbad_dicts.append(d)
+      else:
+        print 'warning, bad length to simbad string {}'.format(current)
+
+    return simbad_dicts
+
+
+
+  @staticmethod
   def _simbtype(ADS_record):
+    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata', {}).get('simbad_objects', []))
     result = []
-    for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
+    for object in simbad: # ADS_record.get('adsdata',{}).get('simbad_objects',[]):
       otype = simbad_type_mapper(object['type'])
       result.append(otype)
     result = list(set(result))
@@ -573,8 +614,9 @@ class SolrAdapter(object):
 
   @staticmethod
   def _simbad_object_facet_hier(ADS_record):
+    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata', {}).get('simbad_objects', []))
     result = []
-    for object in ADS_record.get('adsdata',{}).get('simbad_objects',[]):
+    for object in simbad:  # ADS_record.get('adsdata',{}).get('simbad_objects',[]):
       otype = simbad_type_mapper(object['type'])
       r = u"0/%s" % (otype,)
       result.append(r)
@@ -737,7 +779,7 @@ def bibstem_mapper(bibcode):
 # HACK: keep the connections (the old code was establishing and closing)
 # the connection on every query; but it used a global MONGO object
 # for the configuration, therefore it was *always* the same database
-_mongo = {}
+_dbstore = {}
 
 def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
   solrRecords = []
@@ -748,32 +790,32 @@ def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
 
   #Until we have a proper union of mongos, we need to compile a full record from several DBs
   #This in-line configuration will be dumped when that happens.
-  if not _mongo:
-    _mongo['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
-    _mongo['adsdata'] = MongoConnection.PipelineMongoConnection(**MONGO_ADSDATA)
-    _mongo['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
+  if not _dbstore:
+    _dbstore['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
+    _dbstore['adsdata'] = SqlConnection.PipelineSqlConnection(**SQL_ADSDATA)
+    _dbstore['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
   
   try:
-    metadata = _mongo['classic'].getRecordsFromBibcodes(bibcodes)
-    adsdata = _mongo['adsdata'].getRecordsFromBibcodes(bibcodes,key="_id")
-    orcid_claims = _mongo['orcid_claims'].getRecordsFromBibcodes(bibcodes,key="_id")
+    metadata = _dbstore['classic'].getRecordsFromBibcodes(bibcodes)
+    adsdata = _dbstore['adsdata'].getRecordsFromBibcodes(bibcodes)
+    orcid_claims = _dbstore['orcid_claims'].getRecordsFromBibcodes(bibcodes,key="_id")
   except:
     if on_dbfailure_retry:
       logger.error('Error connecting to a database, trying to reconnect...\n({0})'
                    .format(traceback.format_exc()))
-      for k,v in _mongo.iteritems():
+      for k,v in _dbstore.iteritems():
         try:
           v.close()
         except:
           pass
-      _mongo['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
-      _mongo['adsdata'] = MongoConnection.PipelineMongoConnection(**MONGO_ADSDATA)
-      _mongo['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
+      _dbstore['classic'] = MongoConnection.PipelineMongoConnection(**MONGO)
+      _dbstore['adsdata'] = SqlConnection.PipelineSqlConnection(**SQL_ADSDATA)
+      _dbstore['orcid_claims'] = MongoConnection.PipelineMongoConnection(**MONGO_ORCID)
       return solrUpdate(bibcodes, urls=urls, on_dbfailure_retry=False)
     raise
   
   # stick the values from other dbs into one rec
-  adsdata_kv = dict((x['_id'], x) for x in adsdata)
+  adsdata_kv = dict((x['bibcode'], dict(x)) for x in adsdata)
   orcid_kv = dict((x['_id'], x) for x in orcid_claims)
   
   for r in metadata:

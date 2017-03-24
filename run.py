@@ -229,7 +229,7 @@ def main(MONGO=MONGO,*args):
         json.dump(r,fp,indent=1)
     else:
       bibcodes = mongo.upsertRecords(merged)
-      #SolrUpdater.solrUpdate(bibcodes)
+      SolrUpdater.solrUpdate(bibcodes)
   elif args.async:
     w = RabbitMQWorker()   
     w.connect(psettings.RABBITMQ_URL)
