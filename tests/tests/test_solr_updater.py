@@ -73,7 +73,6 @@ class TestSolrAdapter(unittest.TestCase):
                   u'1/NASA/123456-78',
                   u'0/NSF-AST',
                   u'1/NSF-AST/0618398'],
-             'id': 99999999,
              'identifier': [u'arxiv:1234.5678',
                   u'doi:\xc5\xbd\xc5\xa0\xc4\x8c\xc5\x98\xc4\x8e\xc5\xa4\xc5\x87:123456789',
                   u'ARXIV:hep-ph/1234'],

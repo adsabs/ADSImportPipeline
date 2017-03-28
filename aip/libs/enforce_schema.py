@@ -1,5 +1,4 @@
 import collections
-import settings
 import datetime
 
 class Enforcer:

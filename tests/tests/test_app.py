@@ -11,20 +11,6 @@ from tests.stubdata import stubdata
 
 class TestWorkers(unittest.TestCase):
     
-    def xcreate_app(self):
-        app.init_app({
-            'SQLALCHEMY_URL': 'sqlite:///',
-            'SQLALCHEMY_ECHO': False
-        })
-        Base.metadata.bind = app.session.get_bind()
-        Base.metadata.create_all()
-        return app
-    
-    def xtearDown(self):
-        test_base.TestUnit.tearDown(self)
-        Base.metadata.drop_all()
-        app.close_app()
-
 
     @patch('aip.app.task_read_records.delay', return_value=None)
     @patch('aip.libs.update_records.get_record', 
