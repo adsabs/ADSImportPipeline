@@ -52,9 +52,7 @@ def close_app():
 @contextmanager
 def session_scope():
     """Provides a transactional session - ie. the session for the 
-    current thread/work of unit. The application has to be properly
-    initialized before you use method. See :object: 
-    `ADSOrcid.app.session`
+    current thread/work of unit.
     
     Use as:
     
