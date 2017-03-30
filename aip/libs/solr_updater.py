@@ -419,7 +419,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _id(ADS_record):
-    return {'id': ADS_record['_id']}
+    return {'id': ADS_record['id']}
 
   @staticmethod
   def _identifier(ADS_record):
@@ -741,7 +741,7 @@ def update_solr(json_record, solr_urls):
 def transform_json_record(db_record):
     out = {'bibcode': db_record['bibcode']}
     
-    for f, t in [('bib_data', ''), ('nonbib_data', 'adsdata'), ('orcid_claims', 'orcid_claims')]:
+    for f, t in [('id', 'id'), ('bib_data', ''), ('nonbib_data', 'adsdata'), ('orcid_claims', 'orcid_claims')]:
         if db_record.get(f, None):
             if t:
                 out[t] = db_record.get(f)

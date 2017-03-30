@@ -25,6 +25,7 @@ class TestSolrAdapter(unittest.TestCase):
 
     def test_transform_json_record(self):
         rec = {
+            'id': 1,
             'bibcode': 'abc',
             'bib_data': stubdata.EXPECTED_SOLR_DOC,
             'nonbib_data': {'foo': 'bar'},
@@ -35,7 +36,8 @@ class TestSolrAdapter(unittest.TestCase):
                 }
         }
         out = solr_updater.transform_json_record(rec)
-        self.assertEqual(out, {'abstract': u"all no-skysurvey q'i quotient",
+        self.assertEqual(out, {
+             'abstract': u"all no-skysurvey q'i quotient",
              'adsdata': {'foo': 'bar'},
              'aff': [u'-',
                   u'NASA Kavli space center, Cambridge, MA 02138, USA',
@@ -73,6 +75,7 @@ class TestSolrAdapter(unittest.TestCase):
                   u'1/NASA/123456-78',
                   u'0/NSF-AST',
                   u'1/NSF-AST/0618398'],
+             'id': 1,
              'identifier': [u'arxiv:1234.5678',
                   u'doi:\xc5\xbd\xc5\xa0\xc4\x8c\xc5\x98\xc4\x8e\xc5\xa4\xc5\x87:123456789',
                   u'ARXIV:hep-ph/1234'],
