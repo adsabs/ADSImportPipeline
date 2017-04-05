@@ -101,11 +101,12 @@ def readRecordsFromADSExports(records):
   s = time.time()
   failures = []
   adsrecords = ADSRecords('full','XML',cacheLooker=True)
+  bibcodes = []
   for bibcode in targets.keys():
     try:
       logger.debug('addCompleteRecord: %s (%s/%s)' % (bibcode,targets.keys().index(bibcode)+1,len(targets.keys())))
       adsrecords.addCompleteRecord(bibcode,fulltext=True)
-      #adsrecords.addCompleteRecord(bibcode)
+      bibcodes.append(bibcode)
     except KeyboardInterrupt:
       raise
     except Exception, err:
@@ -121,7 +122,20 @@ def readRecordsFromADSExports(records):
   rate = len(targets)/ttc
 
   e = EnforceSchema.Enforcer()
-  adsrecords = e.ensureList(xml_to_dict(adsrecords)['records']['record'])
+  logger.debug("Calling xml_to_dict")
+  try:
+    json_dict = xml_to_dict(adsrecords)
+    logger.debug("...xml_to_dict returned.")
+    adsrecords = e.ensureList(json_dict['records']['record'])
+  except timeout_decorator.timeout_decorator.TimeoutError:
+    logger.warning("xml_to_dict timed while processing bibcodes: %s" % '|'.join(bibcodes))
+    failures.extend(bibcodes)
+    adsrecords = []
+  except xml.parsers.expat.ExpatError:
+    logger.warning("XML parsing error while processing bibcodes: %s" % '|'.join(bibcodes))
+    failures.extend(bibcodes)
+    adsrecords = []
+
   logger.info("Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" % 
     {
       'num_records': len(records),
