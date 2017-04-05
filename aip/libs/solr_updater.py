@@ -5,6 +5,7 @@ import sys
 import re
 import traceback
 
+
 from aip.libs.utils import setup_logging
 from aip.libs import enforce_schema
 
@@ -18,7 +19,6 @@ def delete_by_bibcodes(bibcodes, urls):
   
     deleted = []
     failed = []
-  
     headers = {"Content-Type":"application/json"}
     for bibcode in bibcodes:
         logger.info("Delete: %s" % bibcode)
@@ -53,15 +53,16 @@ class SolrAdapter(object):
   SCHEMA = {
     'abstract': u'',
     'ack': u'',
-    'aff': [u'', ],
-    'alternate_bibcode': [u'', ],
-    'alternate_title': [u'', ],
-    'arxiv_class': [u'', ],
-    'author': [u'', ],
-    'author_facet': [u'', ],
-    # 'author_native': [u'',], Waiting for montysolr
-    'author_facet_hier': [u'', ],  # ???
-    'author_norm': [u'', ],
+    'aff': [u'',],
+    'alternate_bibcode': [u'',],
+    'alternate_title': [u'',],
+    'arxiv_class': [u'',],
+    'author': [u'',],
+    'author_count': 0,
+    'author_facet': [u'',],
+    #'author_native': [u'',], Waiting for montysolr
+    'author_facet_hier': [u'',],
+    'author_norm': [u'',],
     'bibcode': u'',
     'bibgroup': [u'', ],
     'bibgroup_facet': [u'', ],
@@ -72,28 +73,27 @@ class SolrAdapter(object):
     'citation_count': 0,
     'cite_read_boost': 0.0,
     'classic_factor': 0,
-    'comment': [u'', ],
-    # 'comment': u'',
-    'copyright': [u'', ],
-    'database': [u'', ],
+    'comment': [u'',],
+    'copyright': [u'',],
+    'database': [u'',],
     'date': u'YYYY-MM[-DD]',
     'data':[u''],
     'data_facet': [u''],
     'doctype': u'',
-    'doi':[u'', ],
+    'doctype_facet_hier': [u''],
+    'doi':[u'',],
     'eid':u'',
     'email': [u'', ],
     'facility': [u'', ],
     'first_author': u'',
-    'first_author_facet_hier': [u'', ],
-    'first_author_norm':u'',
-    # 'full': u'', #non-populated field 
-    'grant': [u'', ],
-    'grant_facet_hier': [u'', ],
-    #'id': 0,
-    'identifier': [u'', ],
-    'isbn': [u'', ],
-    'issn': [u'', ],
+    'first_author_facet_hier': [u'',],
+    'first_author_norm':u'', 
+    'grant': [u'',],
+    'grant_facet_hier': [u'',],
+    'id': 0,
+    'identifier': [u'',],
+    'isbn': [u'',],
+    'issn': [u'',],
     'issue': u'',
     'keyword': [u'', ],
     'keyword_facet': [u'', ],
@@ -108,6 +108,7 @@ class SolrAdapter(object):
     'page': [u''],
     'property': [u'', ],
     'pub': u'',
+    'pubnote': [u'',],
     'pub_raw': u'',
     'pubdate': u'',
     'read_count': 0,
@@ -124,6 +125,7 @@ class SolrAdapter(object):
     'volume': u'',
     'year': u'',
   }
+
 
   #------------------------------------------------
   # Private methods; responsible for translating schema: ADS->Solr
@@ -176,6 +178,12 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = [i['name']['western'] for i in authors if i['name']['western']]
     return {'author': result}  
+
+  @staticmethod
+  def _author_count(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    result = len([i['name']['western'] for i in authors if i['name']['western']])
+    return {'author_count': result}
 
   @staticmethod
   def _author_norm(ADS_record):
@@ -341,6 +349,16 @@ class SolrAdapter(object):
     return {'doctype': result}
 
   @staticmethod
+  def _doctype_facet_hier(ADS_record):
+    doctype = ADS_record['metadata']['properties']\
+        .get('doctype', {})\
+        .get('content')\
+        .lower()
+    (top,type) = doctype_mapper(doctype)
+    result = [ u"0/%s" % top, u"1/%s/%s" % (top, type) ]
+    return {'doctype_facet_hier': result}
+
+  @staticmethod
   def _doi(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('doi', [])]
     return {'doi': result}
@@ -395,8 +413,13 @@ class SolrAdapter(object):
 
   @staticmethod
   def _links_data(ADS_record):
-    result = ['''{"title":"%s", "type":"%s", "instances":"%s", "access":"%s"}''' % (i['title'], i['type'], i['count'], i['access']) for i in ADS_record['metadata']['relations'].get('links', [])]
-    result = [unicode(r.replace('None', '')) for r in result]
+    result = [json.dumps({"title": i['title'] or "", 
+                          "type": i['type'] or "", 
+                          "instances": i['count'] or "", 
+                          "access": i['access'] or ""},
+                         sort_keys=True) \
+                for i in ADS_record['metadata']['relations'].get('links',[])]
+    result = [unicode(i) for i in result] # steve: i.replace('None', '')
     return {'links_data':result}
 
   @staticmethod
@@ -479,7 +502,7 @@ class SolrAdapter(object):
     for f in fields:
       if ADS_record['metadata']['properties'][f]:
         result.append(unicode(f.upper()))
-    if ADS_record['metadata']['properties']['doctype']['content'] in ['eprint', 'article', 'inproceedings', 'inbook']:
+    if ADS_record['metadata']['properties']['doctype']['content'] in ARTICLE_TYPES:
       result.append(u"ARTICLE")
     else:
       result.append(u"NONARTICLE")
@@ -499,6 +522,11 @@ class SolrAdapter(object):
   def _pubdate(ADS_record):
     result = get_date_by_datetype(ADS_record)
     return {'pubdate':result}
+
+  @staticmethod
+  def _pubnote(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['general'].get('pubnote',[])]
+    return {'pubnote':result}
 
   @staticmethod
   def _keyword(ADS_record):
@@ -687,7 +715,39 @@ def unroll_unique_list(array):
     else:
       result.append(i)
   return list(set(result))
-  
+
+doctype_dict = {
+  'article':       'Journal Article',
+  'proceedings':   'Proceedings',
+  'inproceedings': 'Proceedings Article',
+  'book':          'Book',
+  'inbook':        'Book Chapter',
+  'techreport':    'Tech Report',
+  'intechreport':  'In Tech Report',
+  'eprint':        'e-print',
+  'abstract':      'Abstract',
+  'mastersthesis': 'Masters Thesis',
+  'phdthesis':     'PhD Thesis',
+  'talk':          'Talk',
+  'software':      'Software',
+  'proposal':      'Proposal',
+  'pressrelease':  'Press Release',
+  'circular':      'Circular',
+  'newsletter':    'Newsletter',
+  'catalog':       'Catalog',
+  'misc':          'Other'
+}
+
+def doctype_mapper(doctype):
+  """
+  Maps a document type to pair of hierarchical entries
+  which include the top-level type and the type used for
+  facets
+  """
+  htype = 'Article' if doctype in ARTICLE_TYPES else 'Non-Article'
+  stype = doctype_dict.get(doctype, 'Other')
+  return (htype, stype)
+    
 
 def simbad_type_mapper(otype):
   """
