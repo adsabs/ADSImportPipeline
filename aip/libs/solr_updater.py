@@ -793,8 +793,6 @@ def transform_json_record(db_record):
     return out
 
 
-
-
 def main():
   parser = argparse.ArgumentParser()
 
