@@ -24,8 +24,11 @@ class PipelineMongoConnection:
       auth =  '%s@' % (':'.join([self.user,self.password]))
     self.uri = 'mongodb://%s%s:%s/%s' % (auth,self.host,self.port,self.database)
 
+    self.logger.info("mongo uri = {}".format(self.uri))
     self.conn = pymongo.MongoClient(host=self.uri)
+    self.logger.info("mongo connection = {}".format(self.conn))
     self.db = self.conn[self.database]
+    self.logger.info("mongo database = {}".format(self.db))
 
     if self.collection not in self.db.collection_names():
       self.initializeCollection()
@@ -42,8 +45,10 @@ class PipelineMongoConnection:
   def getRecordsFromBibcodes(self,bibcodes,key="bibcode",op="$in",query_limiter=None,iterate=False):
     if not iterate:
       results = self.db[self.collection].find({key: {op: bibcodes}},query_limiter)
+      self.logger.info("in getRecordsFromBibcode, query results {}".format(results))
       return list(results)
     cur = self.db[self.collection].find({key: {op: bibcodes}},query_limiter)
+    self.logger.info("in getRecordsFromBibcode, query returned cur {}".format(cur))
     results = deque()
     while 1:
       try:

@@ -18,7 +18,7 @@ class PipelineSqlConnection:
         self.database = kwargs.get('DATABASE',None)
         self.user = kwargs.get('USER','SpacemanSteve')
         self.password = kwargs.get('PASSWD',None)
-        self.schema = kwargs.get('SCHEMA',None)
+        self.schema = kwargs.get('SCHEMA','nonbib')
         self.meta = MetaData()
 
         auth = ''

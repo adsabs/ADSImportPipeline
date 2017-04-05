@@ -783,7 +783,7 @@ _dbstore = {}
 
 def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
   solrRecords = []
-  logger.debug("Recieved a payload of %s bibcodes" % len(bibcodes))
+  logger.info("Received a payload of {} bibcodes".format(len(bibcodes)))
   if not bibcodes:
     logger.warning("solrUpdate did not recieve any bibcodes")
     return
@@ -797,8 +797,11 @@ def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
   
   try:
     metadata = _dbstore['classic'].getRecordsFromBibcodes(bibcodes)
+    logger.info("for bibcodes {}, the len metadata = {}".format(bibcodes, len(metadata)))
     adsdata = _dbstore['adsdata'].getRecordsFromBibcodes(bibcodes)
+    logger.info("for bibcodes {}, the len adsdata = {}".format(bibcodes, len(adsdata)))
     orcid_claims = _dbstore['orcid_claims'].getRecordsFromBibcodes(bibcodes,key="_id")
+    logger.info("for bibcodes {}, the len orcid_claims = {}".format(bibcodes, (orcid_claims)))
   except:
     if on_dbfailure_retry:
       logger.error('Error connecting to a database, trying to reconnect...\n({0})'
@@ -822,7 +825,7 @@ def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
     r['adsdata'] = adsdata_kv.get(r['bibcode'], {})
     r['orcid_claims'] = orcid_kv.get(r['bibcode'], {})
 
-  logger.debug("Combined payload has %s records" % len(metadata))
+  logger.info("Combined payload has %s records" % len(metadata))
 
   for record in metadata:
     r = SolrAdapter.adapt(record)
@@ -830,7 +833,7 @@ def solrUpdate(bibcodes,urls=SOLR_URLS, on_dbfailure_retry=True):
     solrRecords.append(r)
   payload = json.dumps(solrRecords)
   headers = {'content-type': 'application/json'}
-  logger.debug("Payload: %s" % payload)
+
   for url in urls:
     logger.info("Posting payload of length %s to %s" % (len(solrRecords),url))
     r = requests.post(url,data=payload,headers=headers)

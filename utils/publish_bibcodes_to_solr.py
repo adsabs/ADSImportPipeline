@@ -14,6 +14,7 @@ def publish(bibcodes,url=psettings.RABBITMQ_URL,exchange='MergerPipelineExchange
   w.connect(psettings.RABBITMQ_URL)
   
   payload = json.dumps(bibcodes)
+  print 'publishing {} bibcodes'.format(len(bibcodes))
   w.channel.basic_publish(exchange,routing_key,payload)
   w.connection.close()
 
