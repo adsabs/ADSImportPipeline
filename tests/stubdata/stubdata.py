@@ -266,10 +266,7 @@ INPUT_DOC1={
         "pubnote" : [
             {
                 "origin" : u"ARXIV",
-                "content" : {
-                    "@origin" : u"ARXIV",
-                    "#text" : u"19 pages, 22 figures; Astron.Astrophys.Suppl.Ser. 143 (2000) 41-59; doi:10.1051/aas:2000170"
-                    }
+                "content" : u"19 pages, 22 figures; Astron.Astrophys.Suppl.Ser. 143 (2000) 41-59; doi:10.1051/aas:2000170"
                 }
             ],
         "altpublications" : [
@@ -358,6 +355,7 @@ EXPECTED_SOLR_DOC1={
     "author":
         [u"Kurtz, Michael J.", u"Eichhorn, Guenther", u"Accomazzi, Alberto",
          u"Grant, Carolyn S.", u"Murray, Stephen S.", u"Watson, Joyce M."],
+    "author_count": 6,
     "citation_count": 0, 
     "pub_raw": u"Astronomy and Astrophysics Supplement, v.143, p.41-59", 
 #    "cite_read_boost": 0.45,
@@ -369,6 +367,8 @@ EXPECTED_SOLR_DOC1={
     'vizier_facet':[u'tab1',u'tab2'],
     "read_count": 0,
     'doctype': u'article',
+    'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
+    'pubnote': [u'19 pages, 22 figures; Astron.Astrophys.Suppl.Ser. 143 (2000) 41-59; doi:10.1051/aas:2000170']
 }
 
 INPUT_DOC2={
@@ -437,6 +437,8 @@ EXPECTED_SOLR_DOC2={
     'first_author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X"],
     'first_author_norm': u'T Hooft, V',
     'orcid_pub': [u'-', u'-', u'-'],
-    'orcid_user': [u'-', u'1111-2222-3333-4444', u'-']
+    'orcid_user': [u'-', u'1111-2222-3333-4444', u'-'],
+    'author_count': 3,
+    'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
 }
 
