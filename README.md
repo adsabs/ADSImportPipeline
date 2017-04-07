@@ -66,10 +66,11 @@ http://solrInstance:8983/solr/collection1/select?q=*:*&rows=20000000&fl=bibcode&
 
 The canonical list of bibcodes is available as a column/flat file (sorted case-insensitively)
 from the ingest pipeline.  Comparing these two files requires sorting the new file
-and then using unix's join command:
+and then using unix's join command to print bibcodes which only appear in the canonical list
+but not in the solr list:
 
 ```
-sort -f solrBibcodes.txt | join -i bibcodes.list.can - > notInSolr_20161122.txt
+sort -f solrBibcodes.txt | join -i -v1 $ADS_ABSCONFIG/bibcodes.list.can - > notInSolr_20161122.txt
 ```
 
 This creates a file with bibcodes that were in canonical but not
@@ -86,4 +87,6 @@ to have it become active in the ingest process:
 1. deploy code in the proper location: `git pull`
 
 1. restart running processes so that new code is loaded and executed: `supervisorctl restart ADSimportpipeline`
+(if running under supervisord).
+
 
