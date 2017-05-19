@@ -9,7 +9,7 @@ Coordinates ingest of a full ADS record. The workflow is as follows.
 
 1. Read bibcodes from file
 1. Query mongo for changed records. A changed record is one whose `record.JSON_fingerprint` is different than that parsed from disk
-1. Call ads.ADSExports.ADSRecords to consolidate each record's data (ADS-classic)
+1. Call ads.ADSCachedExports.ADSRecords to consolidate each record's data (ADS-classic)
 1. Parses resulting xmlobject to a native python structure via `xmltodict.py`
 1. Enforces a set schema that is documented in `schema.json`
 1. Merges any repeated metadata blocks
@@ -78,6 +78,13 @@ solr.  This list can be injected into the pipeline with:
 ```
 python/bin/python2.7 utils/publish_bibcodes_to_solr.py --from-file reindex/notInSolr_20161122.txt
 ```
+
+## Developing
+Since the code makes use of ads.ADSCachedExports for data ingest, you will have to clone the adsabs/adspy
+repo to test the code locally.  Until we properly write tests that mock that input, follow the
+directions given in adsabs/adspy/DEVELOP.txt for setting up adspy to read the required files from ADS Classic.
+
+A useful script that helps you see how the documents are transformed is found in tests/tests/readrecords.py
 
 ## Updating the code
 
