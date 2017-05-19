@@ -70,7 +70,7 @@ and then using unix's join command to print bibcodes which only appear in the ca
 but not in the solr list:
 
 ```
-sort -f solrBibcodes.txt | join -i -v1 $ADS_ABSCONFIG/bibcodes.list.can - > notInSolr_20161122.txt
+env LC_ALL=C sort -f solrBibcodes.txt | join -i -v1 $ADS_ABSCONFIG/bibcodes.list.can - > notInSolr_20161122.txt
 ```
 
 This creates a file with bibcodes that were in canonical but not
