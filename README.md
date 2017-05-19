@@ -49,6 +49,13 @@ solr.  This list can be injected into the pipeline with:
 python/bin/python2.7 utils/publish_bibcodes_to_solr.py --from-file reindex/notInSolr_20161122.txt
 ```
 
+## Developing
+Since the code makes use of ads.ADSCachedExports for data ingest, you will have to clone the adsabs/adspy
+repo to test the code locally.  Until we properly write tests that mock that input, follow the
+directions given in adsabs/adspy/DEVELOP.txt for setting up adspy to read the required files from ADS Classic.
+
+A useful script that helps you see how the documents are transformed is found in tests/tests/readrecords.py
+
 ## Updating the code
 
 When new code for the pipeline (or any of the libraries it uses) is released, it takes two steps
