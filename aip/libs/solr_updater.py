@@ -395,7 +395,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _links_data(ADS_record):
-    result = ['''{"title":"%s", "type":"%s", "instances":"%s", "access":"%s"}''' % (i['title'], i['type'], i['count'], i['access']) for i in ADS_record['metadata']['relations'].get('links', [])]
+    result = ['''{"title":"%s", "type":"%s", "instances":"%s", "access":"%s", "url":"%s"}''' % (i['title'], i['type'], i['count'], i['access'], i['url']) for i in ADS_record['metadata']['relations'].get('links', [])]
     result = [unicode(r.replace('None', '')) for r in result]
     return {'links_data':result}
 
