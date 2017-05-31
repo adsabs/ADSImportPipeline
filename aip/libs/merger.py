@@ -255,7 +255,8 @@ class Merger:
     if isinstance(obj,datetime.date):
       return obj
     date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-    if obj[-1] != 'Z':  # hack, Z seems is often missing
+    obj_str = str(obj) 
+    if obj_str[-1] != 'Z':  # hack, Z seems is often missing
       date_format = '%Y-%m-%dT%H:%M:%S'
     try:
       try:
