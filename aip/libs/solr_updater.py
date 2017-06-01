@@ -11,7 +11,7 @@ from aip.libs import enforce_schema
 
 logger = setup_logging('solr_updater.log', 'SolrAdapter')
 
-
+ARTICLE_TYPES = set(['eprint', 'article', 'inproceedings', 'inbook'])
 
 def delete_by_bibcodes(bibcodes, urls):
     '''Deletes records from SOLR, it returns the databstructure with 
@@ -435,6 +435,13 @@ class SolrAdapter(object):
   @staticmethod
   def convert_grants(grants_string):
     "convert sql string to the dict mongo used so other code can remain unchanged"
+    # first, check to see if conversion is needed
+    # if passed an array of dicts, simply return it
+    if (isinstance(grants_string, list) and len(grants_string) > 0
+        and isinstance(grants_string[0], dict)):
+        return grants_string
+
+    # otherwise, process
     grant_dicts = []
     if grants_string is None:
       return grant_dicts
@@ -605,6 +612,13 @@ class SolrAdapter(object):
   def convert_simbad(simbad_strings):
     """convert sql string to the dict mongo used so other code can remain unchanged
     sql version contains an array of strings: ['1010152 PN', '1010659 PN', '1011325 PN']"""
+    # first, check to see if conversion is needed
+    # if passed an array of dicts, simply return it
+    if (isinstance(simbad_strings, list) and len(simbad_strings) > 0 
+        and isinstance(simbad_strings[0], dict)):
+        return simbad_strings
+
+    #otherwise, process
     simbad_dicts = []
     if simbad_strings is None:
       return simbad_dicts
