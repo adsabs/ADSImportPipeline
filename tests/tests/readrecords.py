@@ -28,7 +28,7 @@ import argparse
 PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
 sys.path.insert(0, PROJECT_HOME)
 
-from lib import ReadRecords
+from aip.libs import read_records
 from lib import UpdateRecords
 from lib import SolrUpdater
 
@@ -69,12 +69,12 @@ if __name__ == "__main__":
         sys.exit(1)
 
     sys.stderr.write("initializing cache...")
-    ReadRecords.INIT_LOOKERS_CACHE()
+    read_records.INIT_LOOKERS_CACHE()
     sys.stderr.write("done\n")
 
     # expected input is [(bibcode,json_fingerprint), ...]
     records = [(b,'fake') for b in args.bibcodes]
-    exported = ReadRecords.readRecordsFromADSExports(records)
+    exported = read_records.readRecordsFromADSExports(records)
     if args.exported:
         print json.dumps(exported, indent=2)
 

@@ -14,22 +14,9 @@ SOLR_URLS=[
 #  'http://ads2/solr/update',
 
 
-
-SQL = {
-  'HOST': os.environ.get('SQL_HOST',':memory'),
-  'PORT': os.environ.get('SQL_PORT',''),
-  'DATABASE': os.environ.get('SQL_DATABASE','ads'),
-  'USER': None,    
-  'PASSWD': None,  
-}
-
-SQL_ADSDATA = SQL.copy()
-SQL_ADSDATA['HOST'] = 'localhost'
-SQL_ADSDATA['PORT'] = '5432'
-SQL_ADSDATA['DATABASE'] = 'postgres'
-SQL_ADSDATA['SCHEMA'] = 'rowview'
-SQL_ADSDATA['USER'] = 'postgres'
-SQL_ADSDATA['PASSWD'] = None
+# database for nonbibliographic data (the row view with read counts, refereed flag, etc.)
+# it contains about a dozen fields
+NONBIB_SQL= 'postgresql:postgres@localhost:5432/postgres'
 
 
 

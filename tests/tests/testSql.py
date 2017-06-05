@@ -13,6 +13,11 @@ import unittest
 
 
 class TestSql(unittest.TestCase):
+    """due to an improper file name, these tests are not currently found
+    
+    these sqlite tests will not run because arrays are not supported.
+    the tests should be changed to use an external Postgres instance"""
+
     def setUp(self):
         SQL_ADSDATA['DATABASE'] = 'unittests_'
         SQL_ADSDATA['SCHEMA'] = ''
