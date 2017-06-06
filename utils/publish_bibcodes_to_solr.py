@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import argparse
+
 from aip import app
 from aip.db import session_scope
 from aip.models import Records

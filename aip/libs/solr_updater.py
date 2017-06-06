@@ -5,12 +5,13 @@ import sys
 import re
 import traceback
 
+
 from aip.libs.utils import setup_logging
 from aip.libs import enforce_schema
 
 logger = setup_logging('solr_updater.log', 'SolrAdapter')
 
-
+ARTICLE_TYPES = set(['eprint', 'article', 'inproceedings', 'inbook'])
 
 def delete_by_bibcodes(bibcodes, urls):
     '''Deletes records from SOLR, it returns the databstructure with 
@@ -18,7 +19,6 @@ def delete_by_bibcodes(bibcodes, urls):
   
     deleted = []
     failed = []
-  
     headers = {"Content-Type":"application/json"}
     for bibcode in bibcodes:
         logger.info("Delete: %s" % bibcode)
@@ -53,15 +53,16 @@ class SolrAdapter(object):
   SCHEMA = {
     'abstract': u'',
     'ack': u'',
-    'aff': [u'', ],
-    'alternate_bibcode': [u'', ],
-    'alternate_title': [u'', ],
-    'arxiv_class': [u'', ],
-    'author': [u'', ],
-    'author_facet': [u'', ],
-    # 'author_native': [u'',], Waiting for montysolr
-    'author_facet_hier': [u'', ],  # ???
-    'author_norm': [u'', ],
+    'aff': [u'',],
+    'alternate_bibcode': [u'',],
+    'alternate_title': [u'',],
+    'arxiv_class': [u'',],
+    'author': [u'',],
+    'author_count': 0,
+    'author_facet': [u'',],
+    #'author_native': [u'',], Waiting for montysolr
+    'author_facet_hier': [u'',],
+    'author_norm': [u'',],
     'bibcode': u'',
     'bibgroup': [u'', ],
     'bibgroup_facet': [u'', ],
@@ -72,28 +73,27 @@ class SolrAdapter(object):
     'citation_count': 0,
     'cite_read_boost': 0.0,
     'classic_factor': 0,
-    'comment': [u'', ],
-    # 'comment': u'',
-    'copyright': [u'', ],
-    'database': [u'', ],
+    'comment': [u'',],
+    'copyright': [u'',],
+    'database': [u'',],
     'date': u'YYYY-MM[-DD]',
     'data':[u''],
     'data_facet': [u''],
     'doctype': u'',
-    'doi':[u'', ],
+    'doctype_facet_hier': [u''],
+    'doi':[u'',],
     'eid':u'',
     'email': [u'', ],
     'facility': [u'', ],
     'first_author': u'',
-    'first_author_facet_hier': [u'', ],
-    'first_author_norm':u'',
-    # 'full': u'', #non-populated field 
-    'grant': [u'', ],
-    'grant_facet_hier': [u'', ],
-    #'id': 0,
-    'identifier': [u'', ],
-    'isbn': [u'', ],
-    'issn': [u'', ],
+    'first_author_facet_hier': [u'',],
+    'first_author_norm':u'', 
+    'grant': [u'',],
+    'grant_facet_hier': [u'',],
+    'id': 0,
+    'identifier': [u'',],
+    'isbn': [u'',],
+    'issn': [u'',],
     'issue': u'',
     'keyword': [u'', ],
     'keyword_facet': [u'', ],
@@ -108,6 +108,7 @@ class SolrAdapter(object):
     'page': [u''],
     'property': [u'', ],
     'pub': u'',
+    'pubnote': [u'',],
     'pub_raw': u'',
     'pubdate': u'',
     'read_count': 0,
@@ -124,6 +125,7 @@ class SolrAdapter(object):
     'volume': u'',
     'year': u'',
   }
+
 
   #------------------------------------------------
   # Private methods; responsible for translating schema: ADS->Solr
@@ -176,6 +178,12 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = [i['name']['western'] for i in authors if i['name']['western']]
     return {'author': result}  
+
+  @staticmethod
+  def _author_count(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors',[])
+    result = len([i['name']['western'] for i in authors if i['name']['western']])
+    return {'author_count': result}
 
   @staticmethod
   def _author_norm(ADS_record):
@@ -341,6 +349,16 @@ class SolrAdapter(object):
     return {'doctype': result}
 
   @staticmethod
+  def _doctype_facet_hier(ADS_record):
+    doctype = ADS_record['metadata']['properties']\
+        .get('doctype', {})\
+        .get('content')\
+        .lower()
+    (top,type) = doctype_mapper(doctype)
+    result = [ u"0/%s" % top, u"1/%s/%s" % (top, type) ]
+    return {'doctype_facet_hier': result}
+
+  @staticmethod
   def _doi(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('doi', [])]
     return {'doi': result}
@@ -395,22 +413,53 @@ class SolrAdapter(object):
 
   @staticmethod
   def _links_data(ADS_record):
-    result = ['''{"title":"%s", "type":"%s", "instances":"%s", "access":"%s"}''' % (i['title'], i['type'], i['count'], i['access']) for i in ADS_record['metadata']['relations'].get('links', [])]
-    result = [unicode(r.replace('None', '')) for r in result]
+    result = [json.dumps({"title": i['title'] or "", 
+                          "type": i['type'] or "", 
+                          "instances": i['count'] or "", 
+                          "access": i['access'] or ""},
+                         sort_keys=True) \
+                for i in ADS_record['metadata']['relations'].get('links',[])]
+    result = [unicode(i) for i in result] # steve: i.replace('None', '')
     return {'links_data':result}
 
   @staticmethod
   def _grant(ADS_record):
     result = []
-    for grant in ADS_record.get('adsdata', {}).get('grants', {}):
+
+    grant_dicts = SolrAdapter.convert_grants(ADS_record.get('adsdata', {}).get('grants'))
+    for grant in grant_dicts: # ADS_record.get('adsdata',{}).get('grants',{})
       result.append(grant['agency'])
       result.append(grant['grant'])
     return {'grant': result}
 
   @staticmethod
+  def convert_grants(grants_string):
+    "convert sql string to the dict mongo used so other code can remain unchanged"
+    # first, check to see if conversion is needed
+    # if passed an array of dicts, simply return it
+    if (isinstance(grants_string, list) and len(grants_string) > 0
+        and isinstance(grants_string[0], dict)):
+        return grants_string
+
+    # otherwise, process
+    grant_dicts = []
+    if grants_string is None:
+      return grant_dicts
+    for current in grants_string:
+      current = current.strip()
+      parts = current.split(' ')
+      if len(parts) == 2:
+        d = {'agency': unicode(parts[0]), 'grant': unicode(parts[1])}
+        grant_dicts.append(d)
+      else:
+        print 'warning, band length to grant string {}'.format(current)
+    return grant_dicts
+
+  @staticmethod
   def _grant_facet_hier(ADS_record):
+    grant_dicts = SolrAdapter.convert_grants(ADS_record.get('adsdata', {}).get('grants'))
     result = []
-    for grant in ADS_record.get('adsdata', {}).get('grants', []):
+    for grant in grant_dicts:  # ADS_record.get('adsdata',{}).get('grants',[]):
       r = u"0/%s" % (grant['agency'],)
       result.append(r)
       r = u"1/%s/%s" % (grant['agency'], grant['grant'])
@@ -460,7 +509,7 @@ class SolrAdapter(object):
     for f in fields:
       if ADS_record['metadata']['properties'][f]:
         result.append(unicode(f.upper()))
-    if ADS_record['metadata']['properties']['doctype']['content'] in ['eprint', 'article', 'inproceedings', 'inbook']:
+    if ADS_record['metadata']['properties']['doctype']['content'] in ARTICLE_TYPES:
       result.append(u"ARTICLE")
     else:
       result.append(u"NONARTICLE")
@@ -480,6 +529,11 @@ class SolrAdapter(object):
   def _pubdate(ADS_record):
     result = get_date_by_datetype(ADS_record)
     return {'pubdate':result}
+
+  @staticmethod
+  def _pubnote(ADS_record):
+    result = [i['content'] for i in ADS_record['metadata']['general'].get('pubnote',[])]
+    return {'pubnote':result}
 
   @staticmethod
   def _keyword(ADS_record):
@@ -550,13 +604,42 @@ class SolrAdapter(object):
 
   @staticmethod
   def _simbid(ADS_record):
-    result = [int(i['id']) for i in ADS_record.get('adsdata', {}).get('simbad_objects', [])]
+    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata',{}).get('simbad_objects',[]))
+    result = [int(i['id']) for i in simbad] # ADS_record.get('adsdata',{}).get('simbad_objects',[])]
     return {'simbid': result}
 
   @staticmethod
+  def convert_simbad(simbad_strings):
+    """convert sql string to the dict mongo used so other code can remain unchanged
+    sql version contains an array of strings: ['1010152 PN', '1010659 PN', '1011325 PN']"""
+    # first, check to see if conversion is needed
+    # if passed an array of dicts, simply return it
+    if (isinstance(simbad_strings, list) and len(simbad_strings) > 0 
+        and isinstance(simbad_strings[0], dict)):
+        return simbad_strings
+
+    #otherwise, process
+    simbad_dicts = []
+    if simbad_strings is None:
+      return simbad_dicts
+    for current in simbad_strings:
+      current = current.strip()
+      parts = current.split(' ')
+      if len(parts) == 2:
+        d = {'type': unicode(parts[1]), 'id': unicode(parts[0])}
+        simbad_dicts.append(d)
+      else:
+        print 'warning, bad length to simbad string {}'.format(current)
+
+    return simbad_dicts
+
+
+
+  @staticmethod
   def _simbtype(ADS_record):
+    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata', {}).get('simbad_objects', []))
     result = []
-    for object in ADS_record.get('adsdata', {}).get('simbad_objects', []):
+    for object in simbad: # ADS_record.get('adsdata',{}).get('simbad_objects',[]):
       otype = simbad_type_mapper(object['type'])
       result.append(otype)
     result = list(set(result))
@@ -564,8 +647,9 @@ class SolrAdapter(object):
 
   @staticmethod
   def _simbad_object_facet_hier(ADS_record):
+    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata', {}).get('simbad_objects', []))
     result = []
-    for object in ADS_record.get('adsdata', {}).get('simbad_objects', []):
+    for object in simbad:  # ADS_record.get('adsdata',{}).get('simbad_objects',[]):
       otype = simbad_type_mapper(object['type'])
       r = u"0/%s" % (otype,)
       result.append(r)
@@ -645,7 +729,39 @@ def unroll_unique_list(array):
     else:
       result.append(i)
   return list(set(result))
-  
+
+doctype_dict = {
+  'article':       'Journal Article',
+  'proceedings':   'Proceedings',
+  'inproceedings': 'Proceedings Article',
+  'book':          'Book',
+  'inbook':        'Book Chapter',
+  'techreport':    'Tech Report',
+  'intechreport':  'In Tech Report',
+  'eprint':        'e-print',
+  'abstract':      'Abstract',
+  'mastersthesis': 'Masters Thesis',
+  'phdthesis':     'PhD Thesis',
+  'talk':          'Talk',
+  'software':      'Software',
+  'proposal':      'Proposal',
+  'pressrelease':  'Press Release',
+  'circular':      'Circular',
+  'newsletter':    'Newsletter',
+  'catalog':       'Catalog',
+  'misc':          'Other'
+}
+
+def doctype_mapper(doctype):
+  """
+  Maps a document type to pair of hierarchical entries
+  which include the top-level type and the type used for
+  facets
+  """
+  htype = 'Article' if doctype in ARTICLE_TYPES else 'Non-Article'
+  stype = doctype_dict.get(doctype, 'Other')
+  return (htype, stype)
+    
 
 def simbad_type_mapper(otype):
   """
@@ -727,12 +843,10 @@ def bibstem_mapper(bibcode):
   return (unicode(short_stem), unicode(long_stem))
 
 
-
-
 def update_solr(json_record, solr_urls):
     record = transform_json_record(json_record)
-    #r = SolrAdapter.adapt(record)
-    #SolrAdapter.validate(r)  # Raises AssertionError if not validated
+    r = SolrAdapter.adapt(record)
+    SolrAdapter.validate(r)  # Raises AssertionError if not validated
     payload = json.dumps([record])
     for url in solr_urls:
         r = requests.post(url, data=payload, headers={'content-type': 'application/json'})
@@ -751,7 +865,7 @@ def transform_json_record(db_record):
         out['body'] = db_record['fulltext']
     
     return out
-    
+
 
 def main():
   parser = argparse.ArgumentParser()

@@ -254,11 +254,15 @@ class Merger:
   def want_datetime(self,obj):
     if isinstance(obj,datetime.date):
       return obj
+    date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+    obj_str = str(obj) 
+    if obj_str[-1] != 'Z':  # hack, Z seems is often missing
+      date_format = '%Y-%m-%dT%H:%M:%S'
     try:
       try:
         return datetime.datetime.fromtimestamp(int(obj))
       except ValueError:
-        return datetime.datetime.strptime(obj,'%Y-%m-%dT%H:%M:%S.%fZ')
+        return datetime.datetime.strptime(obj, date_format)
     except Exception as e:
       self.logger.warning('Error coercing {0} to a datetime. Returning datetime.now(): {1}'.format(obj,e))
       return datetime.datetime.now() # Should return something that has __cmp__ defined

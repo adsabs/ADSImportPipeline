@@ -8,9 +8,16 @@ CELERY_BROKER = 'pyamqp://guest@localhost:6672/new_host'
 
 
 SOLR_URLS=[
-  'http://ads1/solr/update',
-  'http://ads2/solr/update',
+  'http://localhost:9983/solr/BumblebeeETL/update' 
 ]
+#  'http://ads1/solr/update',
+#  'http://ads2/solr/update',
+
+
+# database for nonbibliographic data (the row view with read counts, refereed flag, etc.)
+# it contains about a dozen fields
+NONBIB_SQL= 'postgresql:postgres@localhost:5432/postgres'
+
 
 
 #Order matches their priority
@@ -19,6 +26,7 @@ BIBCODE_FILES = [
   '/proj/ads/abstracts/phy/load/current/index.status',
   '/proj/ads/abstracts/gen/load/current/index.status',
   '/proj/ads/abstracts/pre/load/current/index.status',
+
 ]
 
 BIBCODES_PER_JOB = 100
