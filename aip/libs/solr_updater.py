@@ -413,14 +413,16 @@ class SolrAdapter(object):
 
   @staticmethod
   def _links_data(ADS_record):
-    result = [json.dumps({"title": i['title'] or "", 
-                          "type": i['type'] or "", 
-                          "instances": i['count'] or "", 
-                          "access": i['access'] or ""},
+    result = [json.dumps({"title": i.get('title', ""), 
+                          "type": i.get('type', ""), 
+                          "instances": i.get('count', ""), 
+                          "access": i.get('access', ""),
+                          "url": i.get("url", "")},
                          sort_keys=True) \
                 for i in ADS_record['metadata']['relations'].get('links',[])]
     result = [unicode(i) for i in result] # steve: i.replace('None', '')
-    return {'links_data':result}
+
+    return {'links_data': result}
 
   @staticmethod
   def _grant(ADS_record):
@@ -684,7 +686,7 @@ class SolrAdapter(object):
     result = {}
     for k in cls.SCHEMA:
       try:
-        D = eval('cls._%s' % k)(ADS_record)
+        D = getattr(cls, '_%s' % k)(ADS_record)
         v = D.values()
         if not v or (len(v) == 1 and not isinstance(v[0], int) and not isinstance(v[0], float) and not v[0]):
           D = {}
