@@ -413,14 +413,18 @@ class SolrAdapter(object):
 
   @staticmethod
   def _links_data(ADS_record):
-    result = [json.dumps({"title": i['title'] or "", 
-                          "type": i['type'] or "", 
-                          "instances": i['count'] or "", 
-                          "access": i['access'] or ""},
+    """rca: it is my understanding that this function is not producing a valid
+    JSON; the 'null' gets turned into '' - and I can't tell whether that is
+    by design"""
+    result = [json.dumps({"title": i.get('title', "") or "", 
+                          "type": i.get('type', "") or "", 
+                          "instances": i.get('count', "") or "", 
+                          "access": i.get('access', "") or "",
+                          "url": i.get("url", "") or ""},
                          sort_keys=True) \
                 for i in ADS_record['metadata']['relations'].get('links',[])]
-    result = [unicode(i) for i in result] # steve: i.replace('None', '')
-    return {'links_data':result}
+    result = [unicode(i) for i in result]
+    return {'links_data': result}
 
   @staticmethod
   def _grant(ADS_record):
@@ -684,7 +688,7 @@ class SolrAdapter(object):
     result = {}
     for k in cls.SCHEMA:
       try:
-        D = eval('cls._%s' % k)(ADS_record)
+        D = getattr(cls, '_%s' % k)(ADS_record)
         v = D.values()
         if not v or (len(v) == 1 and not isinstance(v[0], int) and not isinstance(v[0], float) and not v[0]):
           D = {}
