@@ -413,15 +413,17 @@ class SolrAdapter(object):
 
   @staticmethod
   def _links_data(ADS_record):
-    result = [json.dumps({"title": i.get('title', ""), 
-                          "type": i.get('type', ""), 
-                          "instances": i.get('count', ""), 
-                          "access": i.get('access', ""),
-                          "url": i.get("url", "")},
+    """rca: it is my understanding that this function is not producing a valid
+    JSON; the 'null' gets turned into '' - and I can't tell whether that is
+    by design"""
+    result = [json.dumps({"title": i.get('title', "") or "", 
+                          "type": i.get('type', "") or "", 
+                          "instances": i.get('count', "") or "", 
+                          "access": i.get('access', "") or "",
+                          "url": i.get("url", "") or ""},
                          sort_keys=True) \
                 for i in ADS_record['metadata']['relations'].get('links',[])]
-    result = [unicode(i) for i in result] # steve: i.replace('None', '')
-
+    result = [unicode(i) for i in result]
     return {'links_data': result}
 
   @staticmethod
