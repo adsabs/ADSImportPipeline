@@ -4,7 +4,7 @@ ConcurrentLogHandler==0.9.1
 DateTime==4.1.1
 librabbitmq==1.6.1
 numpy
-psycopg2==2.6.1
+psycopg2==2.7.1
 python-dateutil==2.6.0
 python-Levenshtein==0.12.0
 requests==2.13.0
