@@ -39,26 +39,15 @@ class Records(Base):
     __tablename__ = 'records'
     id = Column(Integer, primary_key=True)
     bibcode = Column(String(19))
-    
-    bib_data = Column(Text) # 'metadata' is reserved by SQLAlchemy
-    orcid_claims = Column(Text)
-    nonbib_data = Column(Text)
-    fulltext = Column(Text)
+    fingerprint = Column(Text)
 
-    bib_data_updated = Column(UTCDateTime, default=get_date)
-    orcid_claims_updated = Column(UTCDateTime, default=get_date)
-    nonbib_data_updated = Column(UTCDateTime, default=get_date)
-    fulltext_updated = Column(UTCDateTime, default=get_date)
-    
     created = Column(UTCDateTime, default=get_date)
     updated = Column(UTCDateTime, default=get_date)
     processed = Column(UTCDateTime)
     
-    _date_fields = ['created', 'updated', 'processed',  # dates
-                      'bib_data_updated', 'orcid_claims_updated', 'nonbib_data_updated',
-                      'fulltext_updated']
-    _text_fields = ['id', 'bibcode', 'fulltext']
-    _json_fields = ['bib_data', 'orcid_claims', 'nonbib_data']
+    _date_fields = ['created', 'updated', 'processed']
+    _text_fields = ['id', 'bibcode', 'fingerprint']
+    _json_fields = []
     
     def toJSON(self, for_solr=False, load_only=None):
         if for_solr:

@@ -1,209 +1,148 @@
-from __future__ import absolute_import, unicode_literals
+"""
+The main application object (it has to be loaded by any worker/script)
+in order to initialize the database and get a working configuration.
+"""
+
+
+from .models import KeyValue, Records, ChangeLog
+from aip.libs import utils
 from celery import Celery
-from celery.utils.log import get_task_logger
-from celery import Task
-from aip import error_handler, db
-from aip.libs import solr_updater, update_records, utils, read_records
-import traceback
-from kombu import Exchange, Queue
-import math
+from contextlib import contextmanager
+from sqlalchemy import create_engine
+from sqlalchemy.orm import load_only as _load_only
+from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import sessionmaker
 
 
+def create_app(app_name='ADSImportPipeline',
+               local_config=None):
+    """Builds and initializes the Celery application."""
+    
+    conf = utils.load_config()
+    if local_config:
+        conf.update(local_config)
 
-logger = get_task_logger('ADSimportpipeline')
-conf = utils.load_config()
-app = Celery('ADSimportpipeline',
+    app = ADSImportPipelineCelery(app_name,
              broker=conf.get('CELERY_BROKER', 'pyamqp://'),
-             include=['aip.app'])
+             include=conf.get('CELERY_INCLUDE', ['aip.tasks']))
+
+    app.init_app(conf)
+    return app
 
 
-exch = Exchange(conf.get('CELERY_DEFAULT_EXCHANGE', 'import-pipeline'), type=conf.get('CELERY_DEFAULT_EXCHANGE_TYPE', 'topic'))
 
-app.conf.CELERY_QUEUES = (
-    Queue('errors', exch, routing_key='errors', durable=False, message_ttl=24*3600*5),
-    Queue('delete-documents', exch, routing_key='delete-documents'),
-    Queue('find-new-records', exch, routing_key='find-new-records'),
-    Queue('merge-metadata', exch, routing_key='merge-metadata'),
-    Queue('update-record', exch, routing_key='update-record'),
-    Queue('update-solr', exch, routing_key='update-solr'),
-)
-
-app.conf.update(conf)
-db.init_app()
-
-class MyTask(Task):
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        logger.error('{0!r} failed: {1!r}'.format(task_id, exc))
-
-
-@app.task(base=MyTask, queue='foo')
-def task_foo(a, b):
-    print a, b, a+b
-    return a+b
+class ADSImportPipelineCelery(Celery):
+    
+    def __init__(self, app_name, *args, **kwargs):
+        Celery.__init__(self, *args, **kwargs)
+        self._config = utils.load_config()
+        self._session = None
+        self._engine = None
+        self.logger = utils.setup_logging(app_name, app_name) #default logger
         
+    
 
-@app.task(base=MyTask, queue='find-new-records')
-def task_find_new_records(fingerprints):
-    """Finds bibcodes that are in need of updating. It will do so by comparing
-    the json_fingerprint against exosting db record.
-    
-    Inputs to this task are submitted by the run.py process; which reads/submits
-    contents of the BIBFILES
-    
-    @param fingerprints: [(bibcode, json_fingerprint),....]
-    """
-    fps = {}
-    for k, v in fingerprints:
-        fps[k] = v
+    def init_app(self, config=None):
+        """This function must be called before you start working with the application
+        (or worker, script etc)
         
-    bibcodes = [x[0] for x in fingerprints]
-    results = update_records.get_record(bibcodes, load_only=['bibcode', 'bib_data'])
-    found = set()
-    for r in results:
-        found.add(r['bibcode'])
-        if r['bib_data'].get('JSON_fingerprint', None) != fps[r['bibcode']]:
-            task_read_records.delay(r['bibcode'])
-    # submit bibcodes that we don't have in the database
-    for b in set(fps.keys()) - found:
-        task_read_records.delay(b)
-
-
-
-@app.task(base=MyTask, queue='read-records')
-def task_read_records(fingerprints):
-    """
-    Read ADS records from disk; and inserts them into the queue that ingests them.
-    
-    @param bibcodes: [(bibcode, json_fingerprint),.....]
-    """
-    results = read_records.readRecordsFromADSExports(fingerprints)
-    if results:
-        for r in results:
-            task_merge_metadata.delay(r)
-
-
-@app.task(base=MyTask, queue='merge-metadata')
-def task_merge_metadata(record):
-    """Receives the full metadata record (incl all the versions) as read by the ADS 
-    extractors. We'll merge the versions and create a close-to-canonical version of
-    a metadata record."""
-    
-    result = update_records.mergeRecords([record])
-    
-    if result and len(result) > 0:
-        for r in result: # TODO: save the mid-cycle representation of the metadata ???
-            r = solr_updater.SolrAdapter.adapt(r)
-            solr_updater.SolrAdapter.validate(r)  # Raises AssertionError if not validated
-            task_update_record.delay(r['bibcode'], 'metadata', r)
-
-
-@app.task(base=MyTask, queue='update-record')
-def task_update_record(bibcode, type, payload):
-    """Receives the canonical version of the metadata.
-    
-    @param record: JSON metadata
-    """
-    if type not in ('metadata', 'orcid_claims', 'nonbib_data', 'fulltext'):
-        raise Exception('Unkwnown type {0} submitted for update'.format(type))
-    
-    # save into a database
-    update_records.update_storage(bibcode, type, payload)
-    task_update_solr.delay(bibcode)
-
-
-@app.task(base=MyTask, queue='update-solr')
-def task_update_solr(bibcode, force=False, delayed=1):
-    """Receives bibcodes and checks the database if we have all the 
-    necessary pieces to push to solr. If not, then postpone and 
-    push later.
-    
-    We consider a record to be 'ready' if those pieces of were updated
-    (and were updated later than the last 'processed' timestamp):
-    
-        - bib_data
-        - nonbib_data
-        - orcid_claims
+        :return None
+        """
         
-    'fulltext' is not considered essential; but updates to fulltext will
-    trigger a solr_update (so it might happen that a document will get
-    indexed twice; first with only metadata and later on incl fulltext) 
-    
-    """
-    #check if we have complete record
-    r = update_records.get_record(bibcode)
-    if r is None:
-        raise Exception('The bibcode {0} doesn\'t exist!'.format(bibcode))
-    
-    bib_data_updated = r.get('bib_data_updated', None) 
-    orcid_claims_updated = r.get('orcid_claims_updated', None)
-    nonbib_data_updated = r.get('nonbib_data_updated', None)
-    fulltext_updated = r.get('fulltext_updated', None)
-    processed = r.get('processed', utils.get_date('1800'))
-     
-    is_complete = all([bib_data_updated, orcid_claims_updated, nonbib_data_updated])
-    
-    
-    if is_complete:
-        if force is False and all([bib_data_updated and bib_data_updated < processed,
-               orcid_claims_updated and orcid_claims_updated < processed,
-               nonbib_data_updated and nonbib_data_updated < processed]):
-            return # nothing to do, it was already indexed/processed
-        else:
-            # build the record and send it to solr
-            solr_updater.update_solr(r, app.conf.get('SOLR_URLS'))
-            update_records.update_processed_timestamp(bibcode)
-    else:
-        # if we have at least the bib data, index it
-        if force is True and bib_data_updated:
-            logger.warn('Forced indexing of: %s (metadata=%s, orcid=%s, nonbib=%s, fulltext=%s)' % \
-                        (bibcode, bib_data_updated, orcid_claims_updated, nonbib_data_updated, fulltext_updated))
-            # build the record and send it to solr
-            solr_updater.update_solr(r, app.conf.get('SOLR_URLS'))
-            update_records.update_processed_timestamp(bibcode)
-        else:
-            # if not complete, register a delayed execution
-            c = min(app.conf.get('MAX_DELAY', 24*3600*2), # two days 
-                                math.pow(app.conf.get('DELAY_BASE', 10), delayed))
-            logger.warn('{bibcode} is not yet complete, registering delayed execution in {time}s'.format(
-                            bibcode=bibcode, time=c))
-            task_update_solr.apply_async((bibcode, delayed+1), countdown = c)
+        if self._session is not None: # the app was already instantiated
             return
         
+        if config:
+            self._config.update(config) #our config
+            self.conf.update(config) #celery's config (devs should be careful to avoid clashes)
         
-@app.task(base=MyTask, queue='delete-documents')
-def task_delete_documents(bibcode):
-    """Delete document from SOLR and from our storage.
-    @param bibcode: string 
-    """
-    update_records.delete_by_bibcode(bibcode)
-    deleted, failed = solr_updater.delete_by_bibcodes([bibcode], app.conf['SOLR_URLS'])
-    if len(failed):
-        task_handle_errors.delay('ads.import-pipeline.delete-documents', failed)
-
-
-@app.task(base=MyTask, queue='errors')
-def task_handle_errors(producer, message, redelivered=False):
-    """
-    @param producer: string, the name of the queue where the error originated
-    @param body: 
-    """
+        self.logger = utils.setup_logging(__file__, 'app', self._config.get('LOGGING_LEVEL', 'INFO'))
+        self._engine = create_engine(config.get('SQLALCHEMY_URL', 'sqlite:///'),
+                               echo=config.get('SQLALCHEMY_ECHO', False))
+        self._session_factory = sessionmaker()
+        self._session = scoped_session(self._session_factory)
+        self._session.configure(bind=self._engine)
     
-    if redelivered:
-        logger.error("Fail: %s" % message)
-        return
-  
-    #Iterate over each element of the batch, log and discard the failure(s)
-    for content in message:
+    
+    def close_app(self):
+        """Closes the app"""
+        self._session = self._engine = self._session_factory = None
+        self.logger = None
+    
+        
+    @contextmanager
+    def session_scope(self):
+        """Provides a transactional session - ie. the session for the 
+        current thread/work of unit.
+        
+        Use as:
+        
+            with session_scope() as session:
+                o = ModelObject(...)
+                session.add(o)
+        """
+    
+        if self._session is None:
+            raise Exception('init_app() must be called before you can use the session')
+        
+        # create local session (optional step)
+        s = self._session()
+        
         try:
-            logger.info('Trying to recover: %s' % producer)
-            error_handler.handle(producer, content)
-        except Exception, e:
-            logger.error('%s: %s' % (content, traceback.format_exc()))
+            yield s
+            s.commit()
+        except:
+            s.rollback()
+            raise
+        finally:
+            s.close()
+            
+    def delete_by_bibcode(self, bibcode):
+        with self.session_scope() as session:
+            r = session.query(Records).filter_by(bibcode=bibcode).first()
+            if r is not None:
+                session.delete(r)
+                session.commit()
     
-
-
-
-
-
-if __name__ == '__main__':
-    app.start()
+    
+    def update_storage(self, bibcode, fingerprint):
+        with self.session_scope() as session:
+            r = session.query(Records).filter_by(bibcode=bibcode).first()
+            if r is None:
+                r = Records(bibcode=bibcode)
+                session.add(r)
+            now = utils.get_date()
+            r.fingerprint = fingerprint
+            r.updated = now
+            session.commit()
+    
+    
+    def get_record(self, bibcode, load_only=None):
+        if isinstance(bibcode, list):
+            out = []
+            with self.session_scope() as session:
+                q = session.query(Records).filter(Records.bibcode.in_(bibcode))
+                if load_only:
+                    q = q.options(_load_only(*load_only))
+                for r in q.all():
+                    out.append(r.toJSON(load_only=load_only))
+            return out
+        else:
+            with self.session_scope() as session:
+                q = session.query(Records).filter_by(bibcode=bibcode)
+                if load_only:
+                    q = q.options(_load_only(*load_only))
+                r = q.first()
+                if r is None:
+                    return None
+                return r.toJSON(load_only=load_only)
+       
+    
+    def update_processed_timestamp(self, bibcode):
+        with self.session_scope() as session:
+            r = session.query(Records).filter_by(bibcode=bibcode).first()
+            if r is None:
+                raise Exception('Cant find bibcode {0} to update timestamp'.format(bibcode))
+            r.processed = utils.get_date()
+            session.commit()
+    
