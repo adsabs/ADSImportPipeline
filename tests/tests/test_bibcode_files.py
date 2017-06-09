@@ -1,6 +1,6 @@
 import sys, os
 import unittest
-from aip.app import app
+from aip.tasks import app
 
 
 

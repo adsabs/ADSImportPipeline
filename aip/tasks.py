@@ -54,7 +54,7 @@ def task_find_new_records(fingerprints):
     found = set()
     for r in results:
         found.add(r['bibcode'])
-        if r.bibcode != fps[r['bibcode']]:
+        if r['bibcode'] != fps[r['bibcode']]:
             task_read_records.delay(r['bibcode'])
     # submit bibcodes that we don't have in the database
     for b in set(fps.keys()) - found:
@@ -89,7 +89,7 @@ def task_merge_metadata(record):
             r = solr_adapter.SolrAdapter.adapt(r)
             solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
             
-            app.update_storage(r['bibcode'], r['JSON_fingerprint']) #TODO: is this available
+            app.update_storage(r['bibcode'], record['JSON_fingerprint']) #TODO: is this available
             task_output_results.delay(r)
     else:
         logger.debug('Strangely, the result of merge is empty: %s', record)
