@@ -3,14 +3,14 @@ from celery import Celery
 from celery.utils.log import get_task_logger
 from celery import Task
 from aip import error_handler, db
-from aip.libs import solr_updater, update_records, utils, read_records
+from aip.libs import solr_updater, update_records, utils, read_records, utils
 import traceback
 from kombu import Exchange, Queue
 import math
 
 
-
-logger = get_task_logger('ADSimportpipeline')
+logger = utils.setup_logging('app', 'celeryTasks')
+#logger = get_task_logger('ADSimportpipeline')
 conf = utils.load_config()
 app = Celery('ADSimportpipeline',
              broker=conf.get('CELERY_BROKER', 'pyamqp://'),
@@ -23,6 +23,7 @@ app.conf.CELERY_QUEUES = (
     Queue('errors', exch, routing_key='errors', durable=False, message_ttl=24*3600*5),
     Queue('delete-documents', exch, routing_key='delete-documents'),
     Queue('find-new-records', exch, routing_key='find-new-records'),
+    Queue('read-records', exch, routing_key='read-records'),
     Queue('merge-metadata', exch, routing_key='merge-metadata'),
     Queue('update-record', exch, routing_key='update-record'),
     Queue('update-solr', exch, routing_key='update-solr'),

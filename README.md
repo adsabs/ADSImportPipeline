@@ -21,7 +21,7 @@ For details see: ./documentation.md
 ## Deployment
 
 Follow the typical `eb-deploy` procedure for `backoffice` deployments.  
-
+The workers are started automatically and controlled with sv, use "sv start app" to start
 
 
 ## Updating Solr
