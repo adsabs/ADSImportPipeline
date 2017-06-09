@@ -3,14 +3,14 @@ from celery import Celery
 from celery.utils.log import get_task_logger
 from celery import Task
 from aip import error_handler, db
-from aip.libs import solr_updater, update_records, utils, read_records
+from aip.libs import solr_updater, update_records, utils, read_records, utils
 import traceback
 from kombu import Exchange, Queue
 import math
 
 
-
-logger = get_task_logger('ADSimportpipeline')
+logger = utils.setup_logging('app', 'celeryTasks')
+#logger = get_task_logger('ADSimportpipeline')
 conf = utils.load_config()
 app = Celery('ADSimportpipeline',
              broker=conf.get('CELERY_BROKER', 'pyamqp://'),
