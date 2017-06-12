@@ -9,30 +9,9 @@ import traceback
 from aip.libs.utils import setup_logging
 from aip.libs import enforce_schema
 
-logger = setup_logging('solr_updater.log', 'SolrAdapter')
+logger = setup_logging('solr_adapter.log', 'SolrAdapter')
 
 ARTICLE_TYPES = set(['eprint', 'article', 'inproceedings', 'inbook'])
-
-def delete_by_bibcodes(bibcodes, urls):
-    '''Deletes records from SOLR, it returns the databstructure with 
-    indicating which bibcodes were deleted.'''
-  
-    deleted = []
-    failed = []
-    headers = {"Content-Type":"application/json"}
-    for bibcode in bibcodes:
-        logger.info("Delete: %s" % bibcode)
-        data = json.dumps({'delete':{"query":'bibcode:"%s"' % bibcode}})
-        i = 0
-        for url in urls:
-            r = requests.post(url, headers=headers, data=data)
-            if r.status_code == 200:
-                i += 1
-        if i == len(urls):
-            deleted.append(bibcode)
-        else:
-            failed.append(bibcode)
-    return (deleted, failed)
         
 
 def get_date_by_datetype(ADS_record):
@@ -847,14 +826,6 @@ def bibstem_mapper(bibcode):
   return (unicode(short_stem), unicode(long_stem))
 
 
-def update_solr(json_record, solr_urls):
-    record = transform_json_record(json_record)
-    r = SolrAdapter.adapt(record)
-    SolrAdapter.validate(r)  # Raises AssertionError if not validated
-    payload = json.dumps([record])
-    for url in solr_urls:
-        r = requests.post(url, data=payload, headers={'content-type': 'application/json'})
-    
 
 def transform_json_record(db_record):
     out = {'bibcode': db_record['bibcode']}
@@ -870,29 +841,3 @@ def transform_json_record(db_record):
     
     return out
 
-
-def main():
-  parser = argparse.ArgumentParser()
-
-  # todo; make this into bibcodes, connect to mongo to get those records
-  parser.add_argument(
-    '--records',
-    nargs='*',
-    default=None,
-    dest='records',
-    help='Records'
-    )
-
-  parser.add_argument(
-    '--solr_urls',
-    default=SOLR_URLS,
-    nargs='*',
-    dest='urls',
-    help='solr update endpoints'
-    )
-
-  args = parser.parse_args()
-  solrUpdate(args.records, urls=args.urls)
-
-if __name__ == '__main__':
-  main()

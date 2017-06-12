@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from aip.libs import solr_updater
+from aip.libs import solr_adapter
 from tests.stubdata import stubdata
 
 
@@ -10,16 +10,16 @@ class TestSolrAdapter(unittest.TestCase):
         self.maxDiff = None
 
     def test_SolrAdapter(self):
-        r = solr_updater.SolrAdapter.adapt(stubdata.INPUT_DOC)
-        solr_updater.SolrAdapter.validate(r) #Raises AssertionError if not validated
+        r = solr_adapter.SolrAdapter.adapt(stubdata.INPUT_DOC)
+        solr_adapter.SolrAdapter.validate(r) #Raises AssertionError if not validated
         self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC)
     
-        r = solr_updater.SolrAdapter.adapt(stubdata.INPUT_DOC1)
-        solr_updater.SolrAdapter.validate(r) #Raises AssertionError if not validated
+        r = solr_adapter.SolrAdapter.adapt(stubdata.INPUT_DOC1)
+        solr_adapter.SolrAdapter.validate(r) #Raises AssertionError if not validated
         self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC1)
     
-        r = solr_updater.SolrAdapter.adapt(stubdata.INPUT_DOC2)
-        solr_updater.SolrAdapter.validate(r) #Raises AssertionError if not validated
+        r = solr_adapter.SolrAdapter.adapt(stubdata.INPUT_DOC2)
+        solr_adapter.SolrAdapter.validate(r) #Raises AssertionError if not validated
         self.assertEquals(r,stubdata.EXPECTED_SOLR_DOC2)
 
 
@@ -35,7 +35,7 @@ class TestSolrAdapter(unittest.TestCase):
                     'verified': ['-', 'orcid', '-']
                 }
         }
-        out = solr_updater.transform_json_record(rec)
+        out = solr_adapter.transform_json_record(rec)
         self.assertEqual(out, {
              'abstract': u"all no-skysurvey q'i quotient",
              'adsdata': {'foo': 'bar'},
@@ -134,7 +134,7 @@ class TestBibstemMapper(unittest.TestCase):
             'bibstems': [ 'rmtm.', 'rmtm.book' ] }
           ]
         for t in test_cases:
-            s, l = solr_updater.bibstem_mapper(t['bibcode'])
+            s, l = solr_adapter.bibstem_mapper(t['bibcode'])
             self.assertEquals([s,l],t['bibstems'])
 
     def tearDown(self):
