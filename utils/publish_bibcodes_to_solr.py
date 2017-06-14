@@ -2,19 +2,15 @@
 # -*- coding: utf-8 -*-
 import argparse
 
+from aip import app, tasks
 import sys, os
-PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../'))
-sys.path.append(PROJECT_HOME)
-
-from aip import app
-from aip.db import session_scope
 from aip.models import Records
 from sqlalchemy.orm import load_only
 
 
 def get_all_bibcodes():
     store = set()
-    with session_scope() as session:
+    with app.session_scope() as session:
         for r in session.query(Records).options(load_only(['bibcode'])).all():
             store.add(r.bibcode)
     return store
@@ -62,7 +58,7 @@ def main():
             bibcodes = [i for i in args.bibcodes]
     
     for b in bibcodes:
-        app.task_update_solr.delay(b) 
+        tasks.task_output_results.delay(b) 
         
 
 

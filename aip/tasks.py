@@ -21,6 +21,7 @@ app.conf.CELERY_QUEUES = (
     Queue('errors', exch, routing_key='errors', durable=False, message_ttl=24*3600*5),
     Queue('delete-documents', exch, routing_key='delete-documents'),
     Queue('find-new-records', exch, routing_key='find-new-records'),
+    Queue('read-records', exch, routing_key='read-records'),
     Queue('merge-metadata', exch, routing_key='merge-metadata'),
 )
 

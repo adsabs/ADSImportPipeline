@@ -5,6 +5,7 @@ import timeout_decorator
 
 from aip.libs import xmltodict
 from aip.libs import enforce_schema
+
 import adsputils as utils
 
 INIT_LOOKERS_CACHE = None
@@ -16,13 +17,13 @@ except ImportError:
 try:
     from ads.ADSCachedExports import ADSRecords, init_lookers_cache
     from ads.ADSCachedExports import LOGGER as export_logger
-    from lib import conversions
+    from aip.libs import conversions
 except ImportError:
     sys.path.append('/proj/ads/soft/python/lib/site-packages') #TODO: make it configurable
     try:
         from ads.ADSCachedExports import ADSRecords, init_lookers_cache
         from ads.ADSCachedExports import LOGGER as export_logger
-        from lib import conversions
+        from aip.libs import conversions
         INIT_LOOKERS_CACHE = init_lookers_cache
     except ImportError:
         print "Unable to import ads.ADSExports.ADSRecords!"
