@@ -57,10 +57,10 @@ def task_find_new_records(fingerprints):
     for r in results:
         found.add(r['bibcode'])
         if r['bibcode'] != fps[r['bibcode']]:
-            task_read_records.delay(r['bibcode'])
+            task_read_records.delay([(r['bibcode'], fps[r['bibcode']])])
     # submit bibcodes that we don't have in the database
     for b in set(fps.keys()) - found:
-        task_read_records.delay(b)
+        task_read_records.delay([(b, fps[b])])
 
 
 
