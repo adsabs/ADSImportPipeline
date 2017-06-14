@@ -3,7 +3,7 @@
 import os
 import sys
 from aip.libs import utils, read_records
-from aip.db import session_scope
+from aip.tasks import task_find_new_records
 from aip.models import Records
 from aip import app
 
@@ -110,24 +110,17 @@ def main(*args):
                         fp.readlines() if L and not L.startswith('#')]
         else:
             targetBibcodes = args.targetBibcodes
-        targets = {bibcode:records[bibcode] for bibcode in targetBibcodes}
-    records = read_records.canonicalize_records(records, targets)
-
-    # we can force updates
-    if args.ignore_json_fingerprints:
-        records = [(r[0], 'ignore') for r in records]
-        
-    # get all bibcodes from the storage (into memory)
-    store = set()
-    with session_scope() as session:
-        for r in session.query(Records).options(load_only(['bibcode'])).all():
-            store.add(r.bibcode)
-    
-    # discover differences
-    canonical_bibcodes = set([x[0] for x in records])
-    orphaned = store.difference(canonical_bibcodes)
+        pairs = []  # holds (bibcode, fingerprint) pairs
+        for bib in targetBibcodes:
+            pairs.append((bib, None))
+        task_find_new_records.delay(pairs)
+        return  # return will be cleaned up later
     
     # submit orphaned docs (to be deleted)
+    # discover differences
+    # this will not work because it relies on the store which no longer is available
+    canonical_bibcodes = set([x[0] for x in records])
+    orphaned = store.difference(canonical_bibcodes)
     if args.process_deletions:
         if len(orphaned) > args.max_deletions:
             logger.critical('|'.join(orphaned)) #rca: hmm...
