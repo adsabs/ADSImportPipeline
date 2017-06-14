@@ -6,7 +6,9 @@ import os
 import sys
 import types
 
-from aip.libs import enforce_schema, author_match, utils
+from aip.libs import enforce_schema, author_match
+import adsputils as utils
+
 _config = utils.load_config()
 
 def mergeRecords(records):
@@ -64,7 +66,7 @@ class Merger:
       assert len(set([i['tempdata']['type'] for i in blocks]))==1
       self.blocktype = blocks[0]['tempdata']['type']
     if not self.logger:
-      self.logger = utils.setup_logging('merger.log', 'Merger')
+      self.logger = utils.setup_logging('merger')
 
 
   def _dispatcher(self, field):

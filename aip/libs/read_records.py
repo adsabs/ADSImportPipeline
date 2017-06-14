@@ -5,7 +5,7 @@ import timeout_decorator
 
 from aip.libs import xmltodict
 from aip.libs import enforce_schema
-from aip.libs import utils
+import adsputils as utils
 
 INIT_LOOKERS_CACHE = None
 
@@ -29,7 +29,7 @@ except ImportError:
         print "We will be unable to query ADS-classic for records!"
 
 
-logger = utils.setup_logging('read_records.log', 'ReadRecords')
+logger = utils.setup_logging('read_records')
 
 
 def canonicalize_records(records,targets=None):

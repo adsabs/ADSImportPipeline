@@ -3,14 +3,15 @@ from celery import Celery
 from celery.utils.log import get_task_logger
 from celery import Task
 from aip import app as app_module
-from aip.libs import solr_adapter, merger, utils, read_records
+from aip.libs import solr_adapter, merger, read_records
+import adsputils as utils
 from kombu import Exchange, Queue, BrokerConnection
 
 
 
 app = app_module.create_app()
-logger = utils.setup_logging('import-pipeline.log', 'aip', 
-                             app.conf.get('LOGGING_LEVEL', 'INFO'))
+logger = utils.setup_logging('import-pipeline', 
+                             level=app.conf.get('LOGGING_LEVEL', 'INFO'))
 
 
 exch = Exchange(app.conf.get('CELERY_DEFAULT_EXCHANGE', 'import-pipeline'), 
@@ -113,7 +114,7 @@ def task_output_results(msg):
     """
     logger.debug('Forwarding results out %s', forwarding_connection)
     _forward_message.apply_async(
-        (msg['bibcode'], 'metadata', msg), 
+        (msg), 
         connection=forwarding_connection)
     app.update_processed_timestamp(msg['bibcode'])
 

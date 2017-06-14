@@ -8,7 +8,7 @@ class TestBibcodeFiles(unittest.TestCase):
     #rca: not clear to me what the purpose was here
     def setUp(self):
         self.content = []
-        filename = os.path.join(app.conf['PROJECT_HOME'],'tests/stubdata','merge_test_cases.txt')
+        filename = os.path.join(app.conf['PROJ_HOME'],'tests/stubdata','merge_test_cases.txt')
         with open(os.path.abspath(filename)) as fp:
             results = []
             for line in fp:
