@@ -3,7 +3,7 @@ The main application object (it has to be loaded by any worker/script)
 in order to initialize the database and get a working configuration.
 """
 
-
+from __future__ import absolute_import, unicode_literals
 from .models import KeyValue, Records, ChangeLog
 import adsputils as utils
 from celery import Celery
