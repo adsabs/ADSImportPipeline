@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-import unittest
 
-import os
-from tests.stubdata import stubdata
 from aip import models, tasks, app as app_module
-from aip.libs import utils
-import json
-import time
 from aip.models import Base
+from tests.stubdata import stubdata
+import adsputils as utils
+import json
+import os
+import time
+import unittest
 
 
 class TestUpdateRecords(unittest.TestCase):

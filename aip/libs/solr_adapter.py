@@ -6,10 +6,10 @@ import re
 import traceback
 
 
-from aip.libs.utils import setup_logging
+from adsputils import setup_logging
 from aip.libs import enforce_schema
 
-logger = setup_logging('solr_adapter.log', 'SolrAdapter')
+logger = setup_logging('solr_adapter')
 
 ARTICLE_TYPES = set(['eprint', 'article', 'inproceedings', 'inbook'])
         

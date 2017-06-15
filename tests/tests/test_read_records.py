@@ -1,27 +1,22 @@
 import unittest
-import random
 import sys
-import os
 from collections import OrderedDict
+
+if '/proj/ads/soft/python/lib/site-packages' not in sys.path:
+    sys.path.append('/proj/ads/soft/python/lib/site-packages')
+
+try:
+    from ads.ADSCachedExports import ADSRecords
+except ImportError:
+    ADSRecords = None
+    print "Warning: Fallback to explicit path declaration for import"
+
 
 class TestADSExports(unittest.TestCase):
 
-    @unittest.skipIf(not os.path.exists('/proj/ads/soft/'),"Skipping because /proj/ads/soft/ is unavailable")
-    def setUp(self):
-        try:
-            from ads.ADSCachedExports import ADSRecords
-        except ImportError:
-            sys.path.append('/proj/ads/soft/python/lib/site-packages')
-            from ads.ADSCachedExports import ADSRecords
-            print "Warning: Fallback to explicit path declaration for import"
-    
-    @unittest.skip("Skipping testing of ADSRecords instantiation")
-    def test_ADSRecords_instantiation(self):
-        self.adsRecords = ADSRecords('full','XML')
-        self.assertIsInstance(self.adsRecords,ADSRecords)
-    
+    @unittest.skipIf(not ADSRecords, "ads.ADSCachedExports not available")
     def test_canonicalize_records(self):
-        from lib import ReadRecords
+        from aip.libs import read_records
     
         records = OrderedDict([
             ('2014arXiv1401.2993T','b'), #This is an alternate to 'f'
@@ -48,8 +43,9 @@ class TestADSExports(unittest.TestCase):
             ('2014PhRvD..90d4013F','h;k'),
           ]
       
-        results = ReadRecords.canonicalize_records(OrderedDict((k,v) for k,v in records.iteritems()))
+        results = read_records.canonicalize_records(OrderedDict((k,v) for k,v in records.iteritems()))
         self.assertEqual(results, expected)
+
 
 if __name__ == '__main__':
     unittest.main()

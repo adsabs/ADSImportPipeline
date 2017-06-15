@@ -28,9 +28,9 @@ import argparse
 PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
 sys.path.insert(0, PROJECT_HOME)
 
-from aip.libs import read_records
-from lib import UpdateRecords
-from lib import SolrUpdater
+from aip.libs import read_records, solr_adapter, merger
+
+
 
 if __name__ == "__main__":
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     if args.exported:
         print json.dumps(exported, indent=2)
 
-    merged = UpdateRecords.mergeRecords(exported)
+    merged = merger.mergeRecords(exported)
     if args.merged:
         print json.dumps(merged, indent=2)
         
@@ -89,8 +89,8 @@ if __name__ == "__main__":
             sys.stderr.write("processing document:\n%s\n" % json.dumps(r, indent=2))
         i = i + 1
         r['_id'] = i
-        s = SolrUpdater.SolrAdapter.adapt(r)
-        SolrUpdater.SolrAdapter.validate(s)
+        s = solr_adapter.SolrAdapter.adapt(r)
+        solr_adapter.SolrAdapter.validate(s)
         results.append(s)
 
     if args.solr:

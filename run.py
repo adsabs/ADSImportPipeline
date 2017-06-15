@@ -14,7 +14,7 @@ from collections import OrderedDict
 from sqlalchemy.orm import load_only
 
 config = utils.load_config()
-logger = utils.setup_logging('run.log', 'script')
+logger = utils.setup_logging('run.py')
 
 
 

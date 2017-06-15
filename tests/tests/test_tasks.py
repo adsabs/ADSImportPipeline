@@ -5,7 +5,7 @@ from collections import OrderedDict
 import mock
 from mock import patch
 from aip import tasks, app as app_module
-from aip.libs.utils import get_date
+from adsputils import get_date
 from aip.models import Base
 import unittest
 from tests.stubdata import stubdata
@@ -76,7 +76,7 @@ class TestWorkers(unittest.TestCase):
             self.assertFalse(next_task.called)
             tasks.task_output_results(stubdata.MERGEDRECS['2015ApJ...815..133S'])
             self.assertTrue(next_task.called)
-            self.assertEqual(next_task.call_args[0][0], ((u'2015ApJ...815..133S', u'metadata', stubdata.MERGEDRECS['2015ApJ...815..133S'])))
+            self.assertEqual(next_task.call_args[0][0], (stubdata.MERGEDRECS['2015ApJ...815..133S']))
             self.assertTrue(update_timestamp.called)
         
     
