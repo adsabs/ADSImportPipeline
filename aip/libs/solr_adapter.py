@@ -677,6 +677,12 @@ class SolrAdapter(object):
         if "type object 'SolrAdapter'" not in e.message:
           raise
         # raise NotImplementedError
+      except KeyError, e:
+        if 'id' in e.message:
+          logger.debug('in adapt, ignoring key error for id field')
+        else:
+          logger.info('in adapt, key error: {} {}'.format(e, e.message))
+          raise e
     return result
 
   @classmethod
