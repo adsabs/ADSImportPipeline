@@ -23,6 +23,7 @@ app.conf.CELERY_QUEUES = (
     Queue('find-new-records', exch, routing_key='find-new-records'),
     Queue('read-records', exch, routing_key='read-records'),
     Queue('merge-metadata', exch, routing_key='merge-metadata'),
+    Queue('output-results', exch, routing_key='output-results'),
 )
 
 forwarding_connection = BrokerConnection(app.conf.get('OUTPUT_CELERY_BROKER',
@@ -57,7 +58,7 @@ def task_find_new_records(fingerprints):
     for r in results:
         found.add(r['bibcode'])
         if r['bibcode'] != fps[r['bibcode']]:
-            task_read_records.delay(r['bibcode'])
+            task_read_records.delay([(r['bibcode'], fps[r['bibcode']])])
     # submit bibcodes that we don't have in the database
     for b in set(fps.keys()) - found:
         task_read_records.delay(b)
@@ -124,7 +125,7 @@ def task_output_results(msg):
                      exchange=app.conf.get('OUTPUT_EXCHANGE', 'import_pipeline'),
                      queue=app.conf.get('OUTPUT_QUEUE', 'update-record'),
                      routing_key=app.conf.get('OUTPUT_QUEUE', 'update-record'))
-def _forward_message(bibcode, key, msg):
+def _forward_message(msg):
     """A handler that can be used to forward stuff out of our
     queue. It does nothing (it doesn't process data)"""
     logger.error('We should have never been called directly! %s' % (repr((bibcode, key, msg)))) 

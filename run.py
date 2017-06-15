@@ -5,7 +5,7 @@ import sys
 from aip.libs import utils, read_records
 from aip.db import session_scope
 from aip.models import Records
-from aip import app
+from aip import app, tasks
 
 import time
 import mmap
@@ -119,7 +119,7 @@ def main(*args):
         
     # get all bibcodes from the storage (into memory)
     store = set()
-    with session_scope() as session:
+    with app.session_scope() as session:
         for r in session.query(Records).options(load_only(['bibcode'])).all():
             store.add(r.bibcode)
     
@@ -135,7 +135,7 @@ def main(*args):
                             args.max_deletions))
             sys.exit(1)
         for x in orphaned:
-            app.task_delete_documents.delay(x)
+            tasks.task_delete_documents.delay(x)
     
     # submit others (to be compared and updated if necessary)
     bpj = config.get('BIBCODES_PER_JOB', 100)
@@ -144,7 +144,7 @@ def main(*args):
     j = 0
     while i < len(records):
         payload = records[i:i+bpj]
-        app.task_find_new_records.delay(payload)
+        tasks.task_find_new_records.delay(payload)
         if i / step > j: 
             logger.info('There are %s records left (%0.1f%% completed)'
                              % (len(records)-i, ((len(records)-i) / 100.0)))
