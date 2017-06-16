@@ -2,7 +2,7 @@ import sys
 import os
 
 from collections import OrderedDict
-import mock
+import mock, copy
 from mock import patch
 from aip import tasks, app as app_module
 from adsputils import get_date
@@ -36,19 +36,21 @@ class TestWorkers(unittest.TestCase):
     def test_task_find_new_records(self):
         with patch('aip.tasks.task_read_records.delay', return_value=None) as next_task, \
             patch.object(self.app, 'get_record', return_value = \
-                  [{'bibcode': 'foo', 'bib_data': {'JSON_fingerprint': 'bar'}},
-                   {'bibcode': 'baz', 'bib_data': {'JSON_fingerprint': 'bard'}},
+                  [{'bibcode': 'foo', 'fingerprint': {'JSON_fingerprint': 'fp_bar'}},
+                   {'bibcode': 'baz', 'fingerprint': {'JSON_fingerprint': 'fp_bard'}},
                          ]) as read_recs:
             
             
             self.assertFalse(next_task.called)
-            tasks.task_find_new_records([('foo', 'bar'), 
-                                       ('baz', 'bar'),
-                                       ('hey', 'hoo')])
+            tasks.task_find_new_records([
+                                       ('hey', 'fp_hoo'),
+                                       ('foo', 'fp_bar'), 
+                                       ('baz', {'JSON_fingerprint': 'fp_bard'}),
+                                       ])
             self.assertTrue(next_task.called)
-            self.assertEqual(next_task.call_count, 3)
+            self.assertEqual(next_task.call_count, 2)
             # notice the different order; first we index the differnet fingerprints, the last bibcode was missing...
-            self.assertEqual(str(next_task.call_args_list), "[call('foo'), call('baz'), call('hey')]")
+            self.assertEqual(str(next_task.call_args_list), "[call([('foo', 'fp_bar')]), call(('hey', 'fp_hoo'))]")
 
 
     def test_task_read_records(self):
@@ -62,11 +64,16 @@ class TestWorkers(unittest.TestCase):
     
     
     def test_task_merge_metadata(self):
+        self.maxDiff = None
         with patch('aip.tasks.task_output_results.delay', return_value=None) as next_task: 
             self.assertFalse(next_task.called)
+            
+            out = copy.deepcopy(stubdata.MERGEDRECS['2015ApJ...815..133S'])
+            out['id'] = 1
+            
             tasks.task_merge_metadata(stubdata.ADSRECORDS['2015ApJ...815..133S'])
             self.assertTrue(next_task.called)
-            next_task.assert_called_with(stubdata.MERGEDRECS['2015ApJ...815..133S'])
+            self.assertEqual(out, next_task.call_args_list[0][0][0])
         
     
     def test_task_output_results(self):

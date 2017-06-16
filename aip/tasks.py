@@ -48,20 +48,20 @@ def task_find_new_records(fingerprints):
     
     @param fingerprints: [(bibcode, json_fingerprint),....]
     """
-    fps = {}
+    fingers = {}
     for k, v in fingerprints:
-        fps[k] = v
+        fingers[k] = v
         
     bibcodes = [x[0] for x in fingerprints]
     results = app.get_record(bibcodes, load_only=['bibcode', 'fingerprint'])
     found = set()
     for r in results:
         found.add(r['bibcode'])
-        if r['bibcode'] != fps[r['bibcode']]:
-            task_read_records.delay([(r['bibcode'], fps[r['bibcode']])])
+        if r['fingerprint'] != fingers[r['bibcode']]:
+            task_read_records.delay([(r['bibcode'], fingers[r['bibcode']])])
     # submit bibcodes that we don't have in the database
-    for b in set(fps.keys()) - found:
-        task_read_records.delay(b)
+    for b in set(fingers.keys()) - found:
+        task_read_records.delay((b, fingers[b]))
 
 
 
@@ -89,10 +89,11 @@ def task_merge_metadata(record):
     
     if result and len(result) > 0:
         for r in result: # TODO: save the mid-cycle representation of the metadata ???
+            record = app.update_storage(r['bibcode'], record['JSON_fingerprint'])
+            r['id'] = record['id']
             r = solr_adapter.SolrAdapter.adapt(r)
             solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
             
-            app.update_storage(r['bibcode'], record['JSON_fingerprint']) #TODO: is this available
             task_output_results.delay(r)
     else:
         logger.debug('Strangely, the result of merge is empty: %s', record)

@@ -47,11 +47,10 @@ def get_app_config(key):
     if opath not in sys.path:
         sys.path.insert(0, opath)
         
-    from aip.libs import utils
-    config = utils.load_config()
+    from aip.tasks import app
     
-    print 'Getting actual config for', key, config.get(key)
-    return config.get(key)
+    print 'Getting actual config for', key, app.conf.get(key)
+    return app.conf.get(key)
 
 def run_migrations_online():
     """Run migrations in 'online' mode.
