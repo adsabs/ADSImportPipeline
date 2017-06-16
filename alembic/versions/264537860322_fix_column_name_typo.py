@@ -17,11 +17,18 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    #with app.app_context() as c:
-    #   db.session.add(Model())
-    #   db.session.commit()
-    op.alter_column('records', 'fingerprints', new_column_name='fingerprint')
+    cx = op.get_context()
+    if 'sqlite' in cx.connection.engine.name:
+        with op.batch_alter_table("records") as batch_op:
+            batch_op.alter_column('fingerprints', new_column_name='fingerprint')
+    else:
+        op.alter_column('records', 'fingerprints', new_column_name='fingerprint')
 
 
 def downgrade():
-    op.alter_column('records', 'fingerprint', new_column_name='fingerprints')    
+    cx = op.get_context()
+    if 'sqlite' in cx.connection.engine.name:
+        with op.batch_alter_table("records") as batch_op:
+            batch_op.alter_column('fingerprint', new_column_name='fingerprints')
+    else:
+        op.alter_column('records', 'fingerprint', new_column_name='fingerprints')    
