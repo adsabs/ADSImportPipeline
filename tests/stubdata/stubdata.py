@@ -697,7 +697,6 @@ MERGEDRECS['2015ApJ...815..133S'] = {'abstract': u'In order to examine their rel
  'first_author': u'Shinn, Jong-Ho',
  'first_author_facet_hier': [u'0/Shinn, J', u'1/Shinn, J/Shinn, Jong-Ho'],
  'first_author_norm': u'Shinn, J',
- 'id': 2,
  'identifier': [u'1511.03789',
   u'10.1088/0004-637X/815/2/133',
   u'2015arXiv151103789S'],

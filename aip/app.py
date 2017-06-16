@@ -115,6 +115,7 @@ class ADSImportPipelineCelery(Celery):
             r.fingerprint = fingerprint
             r.updated = now
             session.commit()
+            return r.toJSON()
     
     
     def get_record(self, bibcode, load_only=None):
