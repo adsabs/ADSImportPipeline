@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-from aip.libs import utils, read_records
+from aip.libs import read_records
+from adsputils import setup_logging, load_config
 from aip.db import session_scope
 from aip.models import Records
 from aip import app, tasks
@@ -13,8 +14,8 @@ import argparse
 from collections import OrderedDict
 from sqlalchemy.orm import load_only
 
-config = utils.load_config()
-logger = utils.setup_logging('run.py')
+config = load_config()
+logger = setup_logging('run.py')
 
 
 
