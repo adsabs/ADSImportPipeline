@@ -1,14 +1,14 @@
-import sys
-import os
 
-from collections import OrderedDict
-import mock, copy
-from mock import patch
-from aip import tasks, app as app_module
 from adsputils import get_date
+from aip import tasks, app as app_module
 from aip.models import Base
-import unittest
+from collections import OrderedDict
+from mock import patch
 from tests.stubdata import stubdata
+import mock, copy
+import os
+import sys
+import unittest
 
 class TestWorkers(unittest.TestCase):
     
@@ -16,8 +16,7 @@ class TestWorkers(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.proj_home = os.path.join(os.path.dirname(__file__), '../..')
         self._app = tasks.app
-        self.app = app_module.create_app('test',
-            {
+        self.app = app_module.ADSImportPipelineCelery('test',local_config={
             'SQLALCHEMY_URL': 'sqlite:///',
             'SQLALCHEMY_ECHO': False
             })
@@ -78,7 +77,7 @@ class TestWorkers(unittest.TestCase):
     
     def test_task_output_results(self):
         with patch.object(self.app, 'update_processed_timestamp', return_value=None) as update_timestamp, \
-            patch.object(tasks._forward_message, 'apply_async', return_value=None) as next_task:
+            patch.object(self.app, 'forward_message', return_value=None) as next_task:
             
             self.assertFalse(next_task.called)
             tasks.task_output_results(stubdata.MERGEDRECS['2015ApJ...815..133S'])

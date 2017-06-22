@@ -16,8 +16,7 @@ class TestUpdateRecords(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.proj_home = os.path.join(os.path.dirname(__file__), '../..')
         self._app = tasks.app
-        self.app = app_module.create_app('test',
-            {
+        self.app = app_module.ADSImportPipelineCelery('test',local_config={
             'SQLALCHEMY_URL': 'sqlite:///',
             'SQLALCHEMY_ECHO': False
             })
