@@ -1,4 +1,4 @@
-git+https://github.com/adsabs/ADSPipelineUtils.git@v0.0.2
+git+https://github.com/adsabs/ADSPipelineUtils.git@master
 alembic==0.9.1
 celery==4.0.2
 ConcurrentLogHandler==0.9.1
