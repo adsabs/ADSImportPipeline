@@ -1,7 +1,7 @@
 
 from adsputils import get_date
 from aip import tasks, app as app_module
-from aip.models import Base
+from aip.models import Base, Records
 from collections import OrderedDict
 from mock import patch
 from tests.stubdata import stubdata
@@ -9,6 +9,7 @@ import mock, copy
 import os
 import sys
 import unittest
+from adsmsg import BibRecord
 
 class TestWorkers(unittest.TestCase):
     
@@ -82,9 +83,12 @@ class TestWorkers(unittest.TestCase):
             self.assertFalse(next_task.called)
             tasks.task_output_results(stubdata.MERGEDRECS['2015ApJ...815..133S'])
             self.assertTrue(next_task.called)
-            self.assertEqual(next_task.call_args[0][0], (stubdata.MERGEDRECS['2015ApJ...815..133S']))
+            expected = stubdata.MERGEDRECS['2015ApJ...815..133S'].copy()
+            expected.pop('read_count')
+            expected.pop('citation_count')
+            self.assertEqual(next_task.call_args[0][0].toJSON(), (expected))
             self.assertTrue(update_timestamp.called)
-        
+            
     
 
 if __name__ == '__main__':

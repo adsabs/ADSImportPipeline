@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 from aip import app as app_module
 from aip.libs import solr_adapter, merger, read_records
 from kombu import Queue
-
+from adsmsg import BibRecord, DenormalizedRecord
 
 
 app = app_module.ADSImportPipelineCelery('import-pipeline')
@@ -10,7 +10,6 @@ logger = app.logger
 
 
 app.conf.CELERY_QUEUES = (
-    Queue('errors', app.exchange, routing_key='errors', durable=False, message_ttl=24*3600*5),
     Queue('delete-documents', app.exchange, routing_key='delete-documents'),
     Queue('find-new-records', app.exchange, routing_key='find-new-records'),
     Queue('read-records', app.exchange, routing_key='read-records'),
@@ -96,8 +95,10 @@ def task_output_results(msg):
             }
     :return: no return
     """
-    app.forward_message(msg)
-    app.update_processed_timestamp(msg['bibcode'])
+    logger.debug('Will forward this record: %s', msg)
+    rec = DenormalizedRecord(**msg)
+    app.forward_message(rec)
+    app.update_processed_timestamp(rec.bibcode)
 
 
 
