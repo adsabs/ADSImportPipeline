@@ -4,7 +4,6 @@ import os
 import sys
 from aip.libs import read_records
 from adsputils import setup_logging, load_config
-from aip.db import session_scope
 from aip.models import Records
 from aip import app, tasks
 
