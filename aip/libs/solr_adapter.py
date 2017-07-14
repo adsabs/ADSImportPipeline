@@ -80,6 +80,9 @@ class SolrAdapter(object):
     'keyword_schema': [u'', ],
     'lang': u'',
     'links_data': [u'', ],
+    'nedid': [u'', ],
+    'nedtype': [u'', ],
+    'ned_object_facet_hier': [u'', ],
     'orcid': [u''],
     'orcid_pub': [u''],
     'orcid_user': [u''],
@@ -641,6 +644,61 @@ class SolrAdapter(object):
     return {'simbad_object_facet_hier': result}
 
   @staticmethod
+  def _nedid(ADS_record):
+    ned = SolrAdapter.convert_ned(ADS_record.get('adsdata',{}).get('ned_objects',[]))
+    result = [u"%s" % i['id'] for i in ned] # ADS_record.get('adsdata',{}).get('ned_objects',[])]
+    return {'nedid': result}
+
+  @staticmethod
+  def convert_ned(ned_strings):
+    """convert sql string to the dict mongo used so other code can remain unchanged
+    sql version contains an array of strings: ['1010152 PN', '1010659 PN', '1011325 PN']"""
+    # first, check to see if conversion is needed
+    # if passed an array of dicts, simply return it
+    if (isinstance(ned_strings, list) and len(ned_strings) > 0 
+        and isinstance(ned_strings[0], dict)):
+        return ned_strings
+
+    #otherwise, process
+    ned_dicts = []
+    if ned_strings is None:
+      return ned_dicts
+    for current in ned_strings:
+      current = current.strip()
+      parts = current.split(' ')
+      if len(parts) == 2:
+        d = {'type': unicode(parts[1]), 'id': unicode(parts[0])}
+        ned_dicts.append(d)
+      else:
+        print 'warning, bad length to ned string {}'.format(current)
+
+    return ned_dicts
+
+
+
+  @staticmethod
+  def _nedtype(ADS_record):
+    ned = SolrAdapter.convert_ned(ADS_record.get('adsdata', {}).get('ned_objects', []))
+    result = []
+    for object in ned: # ADS_record.get('adsdata',{}).get('ned_objects',[]):
+      otype = ned_type_mapper(object['type'])
+      result.append(otype)
+    result = list(set(result))
+    return {'nedtype': result}
+
+  @staticmethod
+  def _ned_object_facet_hier(ADS_record):
+    ned = SolrAdapter.convert_ned(ADS_record.get('adsdata', {}).get('ned_objects', []))
+    result = []
+    for object in ned:  # ADS_record.get('adsdata',{}).get('ned_objects',[]):
+      otype = ned_type_mapper(object['type'])
+      r = u"0/%s" % (otype,)
+      result.append(r)
+      r = u"1/%s/%s" % (otype, object['id'])
+      result.append(r)
+    return {'ned_object_facet_hier': result}
+
+  @staticmethod
   def _title(ADS_record):
     result = [i['text'] for i in ADS_record['metadata']['general'].get('titles', [])]
     return {'title':result}
@@ -767,6 +825,32 @@ def simbad_type_mapper(otype):
   elif otype == 'IR' or otype.startswith('Red'):
     return u'Infrared'
   elif otype == 'UV':
+    return u'UV'
+  else:
+    return u'Other'
+
+def ned_type_mapper(otype):
+  """
+  Maps a native NED object type to a subset of basic classes
+  used for searching and faceting.
+  """
+  if otype.startswith('!'):
+    return u'Galactic Object'
+  elif otype in ["G","GClstr","GGroup","GPair","GTrpl","G_Lens","PofG"]:
+    return u'Galaxy'
+  elif otype in ['Neb','PN','RfN']:
+    return u'Nebula'
+  elif otype == 'HII':
+    return u'HII Region'
+  elif otype == 'X':
+    return u'X-ray'
+  elif otype.startswith('*') or otype in ['Blue*','C*','exG*','Flare*','Nova','Psr','Red*','SN','SNR','V*','VisS','WD*','WR*']:
+    return u'Star'
+  elif otype.startswith('Radio') or otype == 'Maser' or otype == 'HI':
+    return u'Radio'
+  elif otype == 'IrS':
+    return u'Infrared'
+  elif otype.startswith('Uv'):
     return u'UV'
   else:
     return u'Other'
