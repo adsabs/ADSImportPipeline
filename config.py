@@ -1,17 +1,22 @@
 import os
 import sys
 
-SQLALCHEMY_URL = 'sqlite:///'
-SQLALCHEMY_ECHO = False
-
-CELERY_BROKER = 'pyamqp://guest@localhost:6672/new_host'
-
-
 SOLR_URLS=[
   'http://localhost:9983/solr/BumblebeeETL/update' 
 ]
-#  'http://ads1/solr/update',
-#  'http://ads2/solr/update',
+
+#SQLALCHEMY_URL = 'sqlite:///'
+SQLALCHEMY_URL = 'postgres://user:password@localhost:15432/import_pipeline'
+SQLALCHEMY_ECHO = False
+
+CELERY_BROKER = 'pyamqp://user:password@localhost:6672/import_pipeline'
+OUTPUT_CELERY_BROKER = 'pyamqp://user:password@localhost:5682/master_pipeline'
+OUTPUT_TASKNAME = 'adsmp.tasks.task_update_record'
+
+# when running locally
+# SQLALCHEMY_URL = 'postgres://docker:docker@localhost:6432/docker' #'sqlite:///test.db'
+# CELERY_BROKER = 'pyamqp://guest:guest@localhost:6672/import_pipeline'
+
 
 
 # database for nonbibliographic data (the row view with read counts, refereed flag, etc.)
