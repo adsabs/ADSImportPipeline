@@ -33,7 +33,7 @@ except ImportError:
 logger = utils.setup_logging('read_records')
 
 
-def canonicalize_records(records,targets=None):
+def canonicalize_records(records, targets=None, ignore_fingerprints=False):
     '''
     Takes a dict of {bibcode:fingerprint} and resolves each bibcode to its canonical.
     
@@ -43,6 +43,7 @@ def canonicalize_records(records,targets=None):
     Note: Pops from the input dict with no attempt to copy/deepcopy it.
     '''
     
+    #TODO(rca): getAlternates is called multiple times unnecessarily
     start = time.time()
     results = []
     
@@ -55,10 +56,14 @@ def canonicalize_records(records,targets=None):
         canonical=Converter.Canonicalize([bibcode])[0]
         #If we are operating on the canonical, aggregate all of its alternates to form the "full" fingerprint
         if canonical == bibcode:
-            for b in Converter.getAlternates(canonical):
-                if b in records:
-                    fingerprints.append( records.pop(b) )
-            results.append( (canonical,';'.join(sorted(fingerprints))) )
+            # TODO(rca): decide what to do with canonical != bibcode
+            if ignore_fingerprints:
+                results.append((canonical, 'ignore'))
+            else:
+                for b in Converter.getAlternates(canonical):
+                    if b in records:
+                        fingerprints.append( records.pop(b) )
+                results.append( (canonical,';'.join(sorted(fingerprints))) )
 
     logger.info("Canonicalized/Resolved in %0.1f seconds" % (time.time()-start))
     return results

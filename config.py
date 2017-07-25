@@ -14,11 +14,6 @@ SOLR_URLS=[
 #  'http://ads2/solr/update',
 
 
-# database for nonbibliographic data (the row view with read counts, refereed flag, etc.)
-# it contains about a dozen fields
-NONBIB_SQL= 'postgresql:postgres@localhost:5432/postgres'
-
-
 
 #Order matches their priority
 BIBCODE_FILES = [

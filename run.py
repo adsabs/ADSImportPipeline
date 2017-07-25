@@ -64,9 +64,13 @@ def main(*args):
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--target-bibcodes', nargs='*', default=[],
-                        dest='targetBibcodes',
-                        help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Only works when --async=False. Use the syntax @filename.txt to read these from file (1 bibcode per line)'
+    parser.add_argument('-b', 
+                        '--bibcodes', 
+                        nargs='*', 
+                        default=[],
+                        dest='bibcodes',
+                        help='Only analyze the specified bibcodes, and ignore their JSON fingerprints.' + 
+                        ' Use the syntax @filename.txt to read these from file (1 bibcode per line)'
                         )
 
     parser.add_argument('--dont-init-lookers-cache', default=False,
@@ -90,7 +94,19 @@ def main(*args):
                         dest='max_deletions',
                         help='Maximum number of deletions to attempt; If over this limit, exit and log an error'
                         )
+    
+    parser.add_argument('-d', 
+                        '--diagnose', 
+                        dest='diagnose', 
+                        action='store_true',
+                        default=False,
+                        help='Show me what you would do with bibcodes')
+    
+        
     args = parser.parse_args()
+
+    if args.bibcodes:
+        args.bibcodes = [x.strip() for x in args.bibcodes.split(',')]
 
     # initialize cache (to read ADS records)
     if not args.dont_init_lookers_cache and read_records.INIT_LOOKERS_CACHE:
@@ -102,16 +118,18 @@ def main(*args):
 
     # read bibcodes:json_fingerprints into memory
     records = readBibcodesFromFile(config.get('BIBCODE_FILES'))
-    targets = None
-    if args.targetBibcodes:
-        if args.targetBibcodes[0].startswith('@'):
-            with open(args.targetBibcodes[0].replace('@', '')) as fp:
-                targetBibcodes = [L.strip() for L in
-                        fp.readlines() if L and not L.startswith('#')]
-        else:
-            targetBibcodes = args.targetBibcodes
+    targets = []
+    if args.bibcodes:
+        for t in args.bibcodes:
+            if t.startswith('@'):
+                with open(t.replace('@', '')) as fp:
+                    targets.extend([L.strip() for L in
+                            fp.readlines() if L and not L.startswith('#')])
+            else:
+                targetBibcodes = args.targetBibcodes
         targets = {bibcode:records[bibcode] for bibcode in targetBibcodes}
-    records = read_records.canonicalize_records(records, targets)
+    
+    records = read_records.canonicalize_records(records, targets or records)
 
     # we can force updates
     if args.ignore_json_fingerprints:

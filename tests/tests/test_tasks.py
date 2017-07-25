@@ -86,7 +86,8 @@ class TestWorkers(unittest.TestCase):
             expected = stubdata.MERGEDRECS['2015ApJ...815..133S'].copy()
             expected.pop('read_count')
             expected.pop('citation_count')
-            self.assertEqual(next_task.call_args[0][0].toJSON(), (expected))
+            self.maxDiff = None
+            self.assertDictEqual(next_task.call_args[0][0].toJSON(), expected)
             self.assertTrue(update_timestamp.called)
             
     
