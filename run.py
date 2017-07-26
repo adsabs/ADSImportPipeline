@@ -75,7 +75,8 @@ def do_the_work(records, orphaned, max_deletions=-1):
 
 
 def show_api_diagnostics(records, orphaned, max_deletions=-1):
-    print 'We would be processing %s' % len(records)
+    print 'We would be processing %s records' % len(records)
+    print 'Showing the first 3', records[0:3]
     print 'max_deletions=%s' % max_deletions
     print 'And we found %s orphaned records (those would be deleted)' % len(orphaned)
     
@@ -92,37 +93,42 @@ def show_api_diagnostics(records, orphaned, max_deletions=-1):
             print x, tasks.task_delete_documents(x)
     
     submitted = []
-    to_be_processed = records[0:3]
     if len(records):
         print 'I am submitting first 3 record for processing'
         for x in records[0:3]:
-            orig = app.get_record(x['bibcode'])
+            print x
+            orig = app.get_record(x[0])
             if orig:
                 orig = orig.toJSON()
+            else:
+                orig = x[0]
             submitted.append(orig)
 
-        print to_be_processed, tasks.task_find_new_records(records[0:3])
+        print tasks.task_find_new_records(records[0:3])
         
     print 'Sleeping for 15secs'
     time.sleep(15)
     
-    print 'Now checking if the deleted docs were deleted'
-    for x in to_be_deleted:
-        if isinstance(x, basestring): # we had no prior record
-            rec = app.get_record(x)
-            print x, 'We had no db record originally, do we have one now?', rec
-        else:
-            rec = app.get_record(x['bibcode'])
-            print x, 'We had db record originally, do we have one now?', rec and rec.toJSON() or None
+    if len(to_be_deleted):
+        print 'Now checking if the deleted docs were deleted'
+        for x in to_be_deleted:
+            print x
+            if isinstance(x, basestring): # we had no prior record
+                rec = app.get_record(x)
+                print x, 'We had no db record originally, do we have one now?', rec
+            else:
+                rec = app.get_record(x['bibcode'])
+                print x, 'We had db record originally, do we have one now?', rec and rec.toJSON() or None
             
     print 'Checking what happened to the submitted records (only inside our own database)'
     for x in submitted:
+        print x
         if isinstance(x, basestring):
             rec = app.get_record(x)
             print x, 'We had no db record originally, do we have one now?', rec and rec.toJSON() or None
         else:
-            rec = app.get_record(x['bibcode'])
-            print x, 'We had db record originally, \noriginal=%s\ncurrent=%s?' % (x, rec.toJSON())
+            rec = app.get_record(x[0])
+            print x, 'We had db record originally, \noriginal=%s\ncurrent=%s?' % (x, rec and rec.toJSON() or None)
             
 
 def main(*args):
@@ -205,7 +211,7 @@ def main(*args):
     # get all bibcodes from the storage (into memory)
     store = set()
     with app.session_scope() as session:
-        for r in session.query(Records).options(load_only(['bibcode'])).all():
+        for r in session.query(Records).options(load_only('bibcode')).all():
             store.add(r.bibcode)
     
     # discover differences
