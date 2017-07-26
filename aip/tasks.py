@@ -102,6 +102,17 @@ def task_output_results(msg):
 
 
 
+@app.task(queue='delete-documents')
+def task_delete_documents(bibcode):
+    """Delete document from SOLR and from our storage.
+    @param bibcode: string 
+    """
+    logger.debug('To delete: %s', bibcode)
+    app.delete_by_bibcode(bibcode)
+    rec = DenormalizedRecord(bibcode=bibcode, status='deleted')
+    app.forward_message(rec)
+
+
 
 if __name__ == '__main__':
     app.start()
