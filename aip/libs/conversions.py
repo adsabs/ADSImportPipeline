@@ -19,7 +19,7 @@ class ConvertBibcodes:
         """
 	Returns a list of alternate bibcodes for a record.
         """
-	if isinstance(bbc, list):
+        if isinstance(bbc, list):
             bibcode = bbc[0].strip()
         else:
             bibcode = bbc.strip()
@@ -38,12 +38,12 @@ class ConvertBibcodes:
 
     def Canonicalize(self,biblist,remove_matches=False):
         """
-	Convert a list of bibcodes into a list of canonical
+	    Convert a list of bibcodes into a list of canonical
         bibcodes (canonical bibcodes remain unchanged).
         Setting 'remove_matches' to True will remove e-print
         bibcodes that have been matched
         """
-	if isinstance(biblist, str):
+        if isinstance(biblist, str):
             biblist = [biblist]
         newlist = []
         for bibcode in biblist:

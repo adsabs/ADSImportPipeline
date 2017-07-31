@@ -22,26 +22,28 @@ app.conf.CELERY_QUEUES = (
 def task_find_new_records(fingerprints):
     """Finds bibcodes that are in need of updating. It will do so by comparing
     the json_fingerprint against existing db record.
-    
+
     Inputs to this task are submitted by the run.py process; which reads/submits
     contents of the BIBFILES
-    
+
     @param fingerprints: [(bibcode, json_fingerprint),....]
     """
     fingers = {}
     for k, v in fingerprints:
         fingers[k] = v
-        
+
     bibcodes = [x[0] for x in fingerprints]
     results = app.get_record(bibcodes, load_only=['bibcode', 'fingerprint'])
     found = set()
     for r in results:
         found.add(r['bibcode'])
         if r['fingerprint'] != fingers[r['bibcode']]:
+            logger.debug("Calling 'task_read_records' with '%s' and '%s'", r['bibcode'], fingers[r['bibcode']])
             task_read_records.delay([(r['bibcode'], fingers[r['bibcode']])])
     # submit bibcodes that we don't have in the database
     for b in set(fingers.keys()) - found:
-        task_read_records.delay((b, fingers[b]))
+        logger.debug("Calling 'task_read_records' with '%s' and '%s'", b, fingers[b])
+        task_read_records.delay([(b, fingers[b])])
 
 
 
@@ -49,31 +51,33 @@ def task_find_new_records(fingerprints):
 def task_read_records(fingerprints):
     """
     Read ADS records from disk; and inserts them into the queue that ingests them.
-    
+
     @param bibcodes: [(bibcode, json_fingerprint),.....]
     """
     results = read_records.readRecordsFromADSExports(fingerprints)
     if results:
         for r in results:
+            logger.debug("Calling 'task_merge_metadata' with '%s'", r)
             task_merge_metadata.delay(r)
 
 
 @app.task(queue='merge-metadata')
 def task_merge_metadata(record):
-    """Receives the full metadata record (incl all the versions) as read by the ADS 
+    """Receives the full metadata record (incl all the versions) as read by the ADS
     extractors. We'll merge the versions and create a close-to-canonical version of
     a metadata record."""
-    
+
     logger.debug('About to merge data')
     result = merger.mergeRecords([record])
-    
+
     if result and len(result) > 0:
         for r in result: # TODO: save the mid-cycle representation of the metadata ???
             record = app.update_storage(r['bibcode'], record['JSON_fingerprint'])
             r['id'] = record['id']
             r = solr_adapter.SolrAdapter.adapt(r)
             solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
-            
+
+            logger.debug("Calling 'task_output_results' with '%s'", r)
             task_output_results.delay(r)
     else:
         logger.debug('Strangely, the result of merge is empty: %s', record)
@@ -82,12 +86,12 @@ def task_merge_metadata(record):
 @app.task(queue='output-results')
 def task_output_results(msg):
     """
-    This worker will forward results to the outside 
+    This worker will forward results to the outside
     exchange (typically an ADSMasterPipeline) to be
     incorporated into the storage
-    
+
     :param msg: contains the bibliographic metadata
-            
+
             {'bibcode': '....',
              'authors': [....],
              'title': '.....',
@@ -100,6 +104,17 @@ def task_output_results(msg):
     app.forward_message(rec)
     app.update_processed_timestamp(rec.bibcode)
 
+
+
+@app.task(queue='delete-documents')
+def task_delete_documents(bibcode):
+    """Delete document from SOLR and from our storage.
+    @param bibcode: string
+    """
+    logger.debug('To delete: %s', bibcode)
+    app.delete_by_bibcode(bibcode)
+    rec = DenormalizedRecord(bibcode=bibcode, status='deleted')
+    app.forward_message(rec)
 
 
 

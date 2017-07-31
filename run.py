@@ -5,46 +5,36 @@ import sys
 from aip.libs import read_records
 from adsputils import setup_logging, load_config
 from aip.models import Records
-from aip import app, tasks
+from aip import tasks
 
 import time
-import mmap
 import argparse
 from collections import OrderedDict
 from sqlalchemy.orm import load_only
 
-config = load_config()
+app = tasks.app
 logger = setup_logging('run.py')
 
 
 
-def readBibcodesFromFile(files): #rca: all here is old code, i don't see why mmap was used
+def read_bibcodes(files):
     """Reads contents of the BIBFILES into memory; basically bibcode:json_fingerprint
     pairs.
-    
+
     @param files: list of files to read from
     @return: OrderedDict instance
     """
     start = time.time()
     records = OrderedDict()
-    
+
     for f in files:
+        logger.debug('...loading %s' % f)
         with open(f) as fp:
-            logger.debug('...loading %s' % f)
-
-            # Size 0 will read the ENTIRE file into memory!
-            m = mmap.mmap(fp.fileno(), 0, prot=mmap.PROT_READ)  # File is open read-only
-            if m.size() < 1 or os.path.getsize(f) < 1:
-                logger.error('%s is seemingly an empty file; Exit!')
-                sys.exit(1)
-
-            # note the file is already in memory
-            line = 'init'
-            while line:
-                line = m.readline()
+            for line in fp:
+                line = line.strip()
                 if not line or line.startswith('#'):
-                    continue
-                r = tuple(line.strip().split('\t'))
+                        continue
+                r = line.split('\t')
                 if len(r) != 2:
                     msg = \
                         'A bibcode entry should be "bibcode<tab>JSON_fingerprint". Skipping: %s' \
@@ -53,9 +43,88 @@ def readBibcodesFromFile(files): #rca: all here is old code, i don't see why mma
                     continue
                 if r[0] not in records:
                     records[r[0]] = r[1]
-            m.close()
+
     logger.info('Loaded data in %0.1f seconds' % (time.time() - start))
     return records
+
+
+def do_the_work(records, orphaned, max_deletions=-1):
+    # submit orphaned docs (to be deleted)
+    if len(orphaned):
+        if max_deletions > 0 and len(orphaned) > max_deletions:
+            logger.critical('Too many deletions: {} > {}'.format(len(orphaned),
+                            max_deletions))
+            logger.critical('%s...%s'.join(', '.join(orphaned[0:5], ', '.join(orphaned[-5:])))) #rca: yes, i know - when len(orphaned) < 10, we'll have duplicates...but i don't care
+            sys.exit(1)
+        for x in orphaned:
+            tasks.task_delete_documents.delay(x)
+
+    # submit others (to be compared and updated if necessary)
+    bpj = app.conf.get('BIBCODES_PER_JOB', 100)
+    step = len(records) / 100
+    i = 0
+    j = 0
+    while i < len(records):
+        payload = records[i:i+bpj]
+        tasks.task_find_new_records.delay(payload)
+        if i / step > j:
+            logger.info('There are %s records left (%0.1f%% completed)'
+                             % (len(records)-i, ((len(records)-i) / 100.0)))
+            j = i / step
+        i += bpj
+
+
+def show_api_diagnostics(records, orphaned, max_deletions=-1):
+    print 'We would be processing %s records' % len(records)
+    print 'Showing the first 3', records[0:3]
+    print 'max_deletions=%s' % max_deletions
+    print 'And we found %s orphaned records (those would be deleted)' % len(orphaned)
+
+    to_be_deleted = []
+    if len(orphaned):
+        print 'I am submitting the first 3 records to be deleted'
+        for x in list(orphaned)[0:3]:
+            orig = app.get_record(x)
+            if orig is None:
+                orig = x
+            to_be_deleted.append(orig)
+            print x, tasks.task_delete_documents(x)
+
+    submitted = []
+    if len(records):
+        print 'I am submitting first 3 record for processing'
+        for x in records[0:3]:
+            print x
+            orig = app.get_record(x[0])
+            if orig is None:
+                orig = x[0]
+            submitted.append(orig)
+
+        print tasks.task_find_new_records(records[0:3])
+
+    print 'Sleeping for 15secs'
+    time.sleep(15)
+
+    if len(to_be_deleted):
+        print 'Now checking if the deleted docs were deleted'
+        for x in to_be_deleted:
+            print x
+            if isinstance(x, basestring): # we had no prior record
+                rec = app.get_record(x)
+                print x, 'We had no db record originally, do we have one now?', rec
+            else:
+                rec = app.get_record(x['bibcode'])
+                print x, 'We had db record originally, do we have one now?', rec and rec.toJSON() or None
+
+    print 'Checking what happened to the submitted records (only inside our own database)'
+    for x in submitted:
+        print x
+        if isinstance(x, basestring):
+            rec = app.get_record(x)
+            print x, 'We had no db record originally, do we have one now?', rec or rec.toJSON() or None
+        else:
+            rec = app.get_record(x['bibcode'])
+            print x, 'We had db record originally, \noriginal=%s\ncurrent=%s?' % (x, rec or rec.toJSON() or None)
 
 
 def main(*args):
@@ -64,9 +133,13 @@ def main(*args):
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--target-bibcodes', nargs='*', default=[],
-                        dest='targetBibcodes',
-                        help='Only analyze the specified bibcodes, and ignore their JSON fingerprints. Only works when --async=False. Use the syntax @filename.txt to read these from file (1 bibcode per line)'
+    parser.add_argument('-b',
+                        '--bibcodes',
+                        nargs='*',
+                        default=[],
+                        dest='bibcodes',
+                        help='Only analyze the specified bibcodes, and ignore their JSON fingerprints.' +
+                        ' Use the syntax @filename.txt to read these from file (1 bibcode per line)'
                         )
 
     parser.add_argument('--dont-init-lookers-cache', default=False,
@@ -90,7 +163,19 @@ def main(*args):
                         dest='max_deletions',
                         help='Maximum number of deletions to attempt; If over this limit, exit and log an error'
                         )
+
+    parser.add_argument('-d',
+                        '--diagnose',
+                        dest='diagnose',
+                        action='store_true',
+                        default=False,
+                        help='Show me what you would do with bibcodes')
+
+
     args = parser.parse_args()
+
+    if args.bibcodes:
+        args.bibcodes = [x.strip() for x in args.bibcodes.split(',')]
 
     # initialize cache (to read ADS records)
     if not args.dont_init_lookers_cache and read_records.INIT_LOOKERS_CACHE:
@@ -101,61 +186,44 @@ def main(*args):
                     % (time.time() - start))
 
     # read bibcodes:json_fingerprints into memory
-    records = readBibcodesFromFile(config.get('BIBCODE_FILES'))
-    targets = None
-    if args.targetBibcodes:
-        if args.targetBibcodes[0].startswith('@'):
-            with open(args.targetBibcodes[0].replace('@', '')) as fp:
-                targetBibcodes = [L.strip() for L in
-                        fp.readlines() if L and not L.startswith('#')]
-        else:
-            targetBibcodes = args.targetBibcodes
-        targets = {bibcode:records[bibcode] for bibcode in targetBibcodes}
-    records = read_records.canonicalize_records(records, targets)
+    records = read_bibcodes(app.conf.get('BIBCODE_FILES'))
+    targets = []
+    if args.bibcodes:
+        for t in args.bibcodes:
+            if t.startswith('@'):
+                with open(t.replace('@', '')) as fp:
+                    for line in fp:
+                        if line.startswith('#'):
+                            continue
+                        b = line.strip()
+                        targets.append({b: records[b]})
+            else:
+                targets.append({t:records[t]})
 
-    # we can force updates
-    if args.ignore_json_fingerprints:
-        records = [(r[0], 'ignore') for r in records]
-        
+    #TODO(rca): getAlternates is called multiple times unnecessarily
+    records = read_records.canonicalize_records(records, targets or records, ignore_fingerprints=args.ignore_json_fingerprints)
+
+
     # get all bibcodes from the storage (into memory)
     store = set()
     with app.session_scope() as session:
-        for r in session.query(Records).options(load_only(['bibcode'])).all():
+        for r in session.query(Records).options(load_only('bibcode')).all():
             store.add(r.bibcode)
-    
+
     # discover differences
-    canonical_bibcodes = set([x[0] for x in records])
-    orphaned = store.difference(canonical_bibcodes)
-    
-    # submit orphaned docs (to be deleted)
+    orphaned = set()
     if args.process_deletions:
-        if len(orphaned) > args.max_deletions:
-            logger.critical('|'.join(orphaned)) #rca: hmm...
-            logger.critical('Too many deletions: {} > {}'.format(len(orphaned),
-                            args.max_deletions))
-            sys.exit(1)
-        for x in orphaned:
-            tasks.task_delete_documents.delay(x)
-    
-    # submit others (to be compared and updated if necessary)
-    bpj = config.get('BIBCODES_PER_JOB', 100)
-    step = len(records) / 100
-    i = 0
-    j = 0
-    while i < len(records):
-        payload = records[i:i+bpj]
-        tasks.task_find_new_records.delay(payload)
-        if i / step > j: 
-            logger.info('There are %s records left (%0.1f%% completed)'
-                             % (len(records)-i, ((len(records)-i) / 100.0)))
-            j = i / step
-        i += bpj
-        
+        canonical_bibcodes = set([x[0] for x in records])
+        orphaned = store.difference(canonical_bibcodes)
+
+
+    if args.diagnose:
+        show_api_diagnostics(records, orphaned)
+    else:
+        do_the_work(records, orphaned)
+
+
+
 
 if __name__ == '__main__':
-    try:
-        main()
-    except SystemExit:
-        pass  # this exception is raised by argparse if -h or wrong args given; we will ignore.
-    except:
-        raise    
+    main()
