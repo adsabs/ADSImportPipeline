@@ -174,9 +174,6 @@ def main(*args):
 
     args = parser.parse_args()
 
-    if args.bibcodes:
-        args.bibcodes = [x.strip() for x in args.bibcodes.split(',')]
-
     # initialize cache (to read ADS records)
     if not args.dont_init_lookers_cache and read_records.INIT_LOOKERS_CACHE:
         start = time.time()
@@ -196,7 +193,8 @@ def main(*args):
                         if line.startswith('#'):
                             continue
                         b = line.strip()
-                        targets.append({b: records[b]})
+                        if b:
+                            targets.append({b: records[b]})
             else:
                 targets.append({t:records[t]})
 
