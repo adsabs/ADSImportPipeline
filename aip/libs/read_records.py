@@ -113,18 +113,19 @@ def readRecordsFromADSExports(records):
     
     e = enforce_schema.Enforcer()
     logger.debug("Calling xml_to_dict")
+    export = []
     try:
         json_dict = xml_to_dict(adsrecords)
         logger.debug("...xml_to_dict returned.")
-        adsrecords = e.ensureList(json_dict['records']['record'])
+        export = e.ensureList(json_dict['records']['record'])
     except timeout_decorator.timeout_decorator.TimeoutError:
         logger.warning("xml_to_dict timed while processing bibcodes: %s" % '|'.join(bibcodes))
         failures.extend(bibcodes)
-        adsrecords = []
     except xml.parsers.expat.ExpatError:
         logger.warning("XML parsing error while processing bibcodes: %s" % '|'.join(bibcodes))
         failures.extend(bibcodes)
-        adsrecords = []
+    finally:
+        adsrecords.reset() #always release memory
 
     logger.info("Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" % 
       {
@@ -136,8 +137,8 @@ def readRecordsFromADSExports(records):
         logger.warning("ADSExports failed to retrieve %s/%s records" % (len(failures),len(records)))
     
     results = []
-    for r in adsrecords:
-        r = e.enforceTopLevelSchema(record=r,JSON_fingerprint=targets[r['@bibcode']])
+    for r in export:
+        r = e.enforceTopLevelSchema(record=r, JSON_fingerprint=targets[r['@bibcode']])
         r['metadata'] = e.enforceMetadataSchema(r['metadata'])
         results.append(r)
     return results
