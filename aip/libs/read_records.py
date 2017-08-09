@@ -125,7 +125,7 @@ def readRecordsFromADSExports(records):
         logger.warning("XML parsing error while processing bibcodes: %s" % '|'.join(bibcodes))
         failures.extend(bibcodes)
     finally:
-        adsrecords.reset() #always release memory
+        adsrecords.freeDoc() #always release memory
 
     logger.info("Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" % 
       {

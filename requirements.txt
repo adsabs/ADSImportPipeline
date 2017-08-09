@@ -1,6 +1,6 @@
 git+https://github.com/adsabs/ADSPipelineUtils.git@master
 alembic==0.9.1
-celery==4.0.2
+celery==4.1.0
 ConcurrentLogHandler==0.9.1
 DateTime==4.1.1
 librabbitmq==1.6.1
