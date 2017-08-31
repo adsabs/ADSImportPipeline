@@ -289,7 +289,7 @@ class Merger:
   def want_datetime(self,obj):
     if isinstance(obj,datetime.date):
       return obj
-    date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+    date_format = '%Y-%m-%dT%H:%M:%SZ'
     obj_str = str(obj) 
     if obj_str[-1] != 'Z':  # hack, Z seems is often missing
       date_format = '%Y-%m-%dT%H:%M:%S'
