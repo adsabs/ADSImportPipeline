@@ -116,7 +116,7 @@ queue. There the workers take over.
 
 To force an update of a list of bibcodes use the following:
 ```
-python run.py --ignore-json-fingerprints --target-bibcodes @reindex/reingest_20161122.txt
+python run.py --ignore-json-fingerprints --bibcodes @reindex/reingest_20161122.txt
 ```
 
 ## Updating Solr
