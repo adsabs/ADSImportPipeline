@@ -66,6 +66,7 @@ def task_merge_metadata(record):
     
     logger.debug('About to merge data')
     result = merger.mergeRecords([record])
+    logger.debug('Result of the merge: %s', result)
     
     if result and len(result) > 0:
         for r in result: # TODO: save the mid-cycle representation of the metadata ???
