@@ -212,11 +212,10 @@ _PRIORITIES_AUTHORS = {
   0.45: ['ARI', 'ARIBIB', 'JSTOR', 'KATKAT', 'AAA', ],
   0.4: ['CARL', 'CFA', 'HOLLIS', 'LIBRARY', 'POS', 'PRINCETON', 'SIMBAD', 'CDS',
       'STSCI', 'UTAL',],
-  0.375: ['WEB',],
-  0.35: ['AP', 'CROSSREF', 'GCPD', 'GONG', 'KNUDSEN', 'METBASE',],
+  0.375: ['AP', 'METBASE', 'STI', 'WEB',],
+  0.35: ['CROSSREF', 'GCPD', 'GONG', 'KNUDSEN'],
   0.3: ['OCR',],
   0.25: ['NED',],
-  0.225: ['STI',],
   0.2: ['ARXIV',],
 }
 

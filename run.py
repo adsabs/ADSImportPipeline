@@ -20,13 +20,13 @@ logger = setup_logging('run.py')
 def read_bibcodes(files):
     """Reads contents of the BIBFILES into memory; basically bibcode:json_fingerprint
     pairs.
-    
+
     @param files: list of files to read from
     @return: OrderedDict instance
     """
     start = time.time()
     records = OrderedDict()
-    
+
     for f in files:
         logger.debug('...loading %s' % f)
         with open(f) as fp:
@@ -43,7 +43,7 @@ def read_bibcodes(files):
                     continue
                 if r[0] not in records:
                     records[r[0]] = r[1]
-                    
+
     logger.info('Loaded data in %0.1f seconds' % (time.time() - start))
     return records
 
@@ -58,7 +58,7 @@ def do_the_work(records, orphaned, max_deletions=-1):
             sys.exit(1)
         for x in orphaned:
             tasks.task_delete_documents.delay(x)
-    
+
     # submit others (to be compared and updated if necessary)
     bpj = app.conf.get('BIBCODES_PER_JOB', 100)
     step = len(records) / 100
@@ -67,7 +67,7 @@ def do_the_work(records, orphaned, max_deletions=-1):
     while i < len(records):
         payload = records[i:i+bpj]
         tasks.task_find_new_records.delay(payload)
-        if i / step > j: 
+        if i / step > j:
             logger.info('There are %s records left (%0.1f%% completed)'
                              % (len(records)-i, ((len(records)-i) / 100.0)))
             j = i / step
@@ -79,36 +79,32 @@ def show_api_diagnostics(records, orphaned, max_deletions=-1):
     print 'Showing the first 3', records[0:3]
     print 'max_deletions=%s' % max_deletions
     print 'And we found %s orphaned records (those would be deleted)' % len(orphaned)
-    
+
     to_be_deleted = []
     if len(orphaned):
         print 'I am submitting the first 3 records to be deleted'
         for x in list(orphaned)[0:3]:
             orig = app.get_record(x)
-            if orig:
-                orig = orig.toJSON()
-            else:
+            if orig is None:
                 orig = x
             to_be_deleted.append(orig)
             print x, tasks.task_delete_documents(x)
-    
+
     submitted = []
     if len(records):
         print 'I am submitting first 3 record for processing'
         for x in records[0:3]:
             print x
             orig = app.get_record(x[0])
-            if orig:
-                orig = orig.toJSON()
-            else:
+            if orig is None:
                 orig = x[0]
             submitted.append(orig)
 
         print tasks.task_find_new_records(records[0:3])
-        
+
     print 'Sleeping for 15secs'
     time.sleep(15)
-    
+
     if len(to_be_deleted):
         print 'Now checking if the deleted docs were deleted'
         for x in to_be_deleted:
@@ -119,17 +115,17 @@ def show_api_diagnostics(records, orphaned, max_deletions=-1):
             else:
                 rec = app.get_record(x['bibcode'])
                 print x, 'We had db record originally, do we have one now?', rec and rec.toJSON() or None
-            
+
     print 'Checking what happened to the submitted records (only inside our own database)'
     for x in submitted:
         print x
         if isinstance(x, basestring):
             rec = app.get_record(x)
-            print x, 'We had no db record originally, do we have one now?', rec and rec.toJSON() or None
+            print x, 'We had no db record originally, do we have one now?', rec or rec.toJSON() or None
         else:
-            rec = app.get_record(x[0])
-            print x, 'We had db record originally, \noriginal=%s\ncurrent=%s?' % (x, rec and rec.toJSON() or None)
-            
+            rec = app.get_record(x['bibcode'])
+            print x, 'We had db record originally, \noriginal=%s\ncurrent=%s?' % (x, rec or rec.toJSON() or None)
+
 
 def main(*args):
     if args:
@@ -137,12 +133,12 @@ def main(*args):
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-b', 
-                        '--bibcodes', 
-                        nargs='*', 
+    parser.add_argument('-b',
+                        '--bibcodes',
+                        nargs='*',
                         default=[],
                         dest='bibcodes',
-                        help='Only analyze the specified bibcodes, and ignore their JSON fingerprints.' + 
+                        help='Only analyze the specified bibcodes, and ignore their JSON fingerprints.' +
                         ' Use the syntax @filename.txt to read these from file (1 bibcode per line)'
                         )
 
@@ -167,15 +163,15 @@ def main(*args):
                         dest='max_deletions',
                         help='Maximum number of deletions to attempt; If over this limit, exit and log an error'
                         )
-    
-    parser.add_argument('-d', 
-                        '--diagnose', 
-                        dest='diagnose', 
+
+    parser.add_argument('-d',
+                        '--diagnose',
+                        dest='diagnose',
                         action='store_true',
                         default=False,
                         help='Show me what you would do with bibcodes')
-    
-        
+
+
     args = parser.parse_args()
 
     if args.bibcodes:
@@ -203,31 +199,31 @@ def main(*args):
                         targets.append({b: records[b]})
             else:
                 targets.append({t:records[t]})
-    
+
     #TODO(rca): getAlternates is called multiple times unnecessarily
     records = read_records.canonicalize_records(records, targets or records, ignore_fingerprints=args.ignore_json_fingerprints)
 
-        
+
     # get all bibcodes from the storage (into memory)
     store = set()
     with app.session_scope() as session:
         for r in session.query(Records).options(load_only('bibcode')).all():
             store.add(r.bibcode)
-    
+
     # discover differences
     orphaned = set()
     if args.process_deletions:
         canonical_bibcodes = set([x[0] for x in records])
         orphaned = store.difference(canonical_bibcodes)
-    
-    
+
+
     if args.diagnose:
         show_api_diagnostics(records, orphaned)
     else:
         do_the_work(records, orphaned)
-        
-    
-        
+
+
+
 
 if __name__ == '__main__':
-    main()  
+    main()
