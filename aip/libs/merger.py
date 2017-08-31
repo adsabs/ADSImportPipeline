@@ -293,6 +293,8 @@ class Merger:
     obj_str = str(obj) 
     if obj_str[-1] != 'Z':  # hack, Z seems is often missing
       date_format = '%Y-%m-%dT%H:%M:%S'
+    elif '.' in obj_str:
+      date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
     try:
       try:
         return datetime.datetime.fromtimestamp(int(obj))
