@@ -196,7 +196,8 @@ def main(*args):
                         if line.startswith('#'):
                             continue
                         b = line.strip()
-                        targets.append({b: records[b]})
+                        if b:
+                            targets.append({b: records[b]})
             else:
                 targets.append({t:records[t]})
 
