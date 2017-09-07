@@ -35,15 +35,23 @@ def task_find_new_records(fingerprints):
     bibcodes = [x[0] for x in fingerprints]
     results = app.get_record(bibcodes, load_only=['bibcode', 'fingerprint'])
     found = set()
+    bpj = app.conf.get('BIBCODES_PER_JOB', 100)
+
+    batch = []
     for r in results:
         found.add(r['bibcode'])
         if r['fingerprint'] != fingers[r['bibcode']]:
-            logger.debug("Calling 'task_read_records' with '%s' and '%s'", r['bibcode'], fingers[r['bibcode']])
-            task_read_records.delay([(r['bibcode'], fingers[r['bibcode']])])
+            batch.append((r['bibcode'], fingers[r['bibcode']]))
+            if len(batch) >= bpj:
+                logger.debug("Calling 'task_read_records' with '%s'", batch)
+                task_read_records.delay(batch)
+                batch = []
+    if len(batch):
+        logger.debug("Calling 'task_read_records' with '%s'", batch)
+        task_read_records.delay(batch)
     
     # submit bibcodes that we don't have in the database
     to_do = list(set(fingers.keys()) - found)
-    bpj = app.conf.get('BIBCODES_PER_JOB', 100)
     i = 0
     while i < len(to_do):
         batch = [(b, fingers[b]) for b in to_do[i:i+bpj]]
