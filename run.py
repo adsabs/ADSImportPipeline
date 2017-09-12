@@ -66,7 +66,10 @@ def do_the_work(records, orphaned, max_deletions=-1):
     j = 0
     while i < len(records):
         payload = records[i:i+bpj]
-        tasks.task_find_new_records.delay(payload)
+        if payload[0][1] == 'ignore':
+            tasks.task_read_records.delay(payload)
+        else:
+            tasks.task_find_new_records.delay(payload)
         if i / step > j:
             logger.info('There are %s records left (%0.1f%% completed)'
                              % (len(records)-i, ((len(records)-i) / 100.0)))

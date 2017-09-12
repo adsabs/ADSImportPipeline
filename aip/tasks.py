@@ -31,7 +31,7 @@ def task_find_new_records(fingerprints):
     fingers = {}
     for k, v in fingerprints:
         fingers[k] = v
-
+    
     bibcodes = [x[0] for x in fingerprints]
     results = app.get_record(bibcodes, load_only=['bibcode', 'fingerprint'])
     found = set()
