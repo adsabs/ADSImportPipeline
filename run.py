@@ -205,15 +205,14 @@ def main(*args):
     records = read_records.canonicalize_records(records, targets or records, ignore_fingerprints=args.ignore_json_fingerprints)
 
 
-    # get all bibcodes from the storage (into memory)
-    store = set()
-    with app.session_scope() as session:
-        for r in session.query(Records).options(load_only('bibcode')).all():
-            store.add(r.bibcode)
-
     # discover differences
     orphaned = set()
     if args.process_deletions:
+        # get all bibcodes from the storage (into memory)
+        store = set()
+        with app.session_scope() as session:
+            for r in session.query(Records).options(load_only('bibcode')).yield_per(1000):
+                store.add(r.bibcode)
         canonical_bibcodes = set([x[0] for x in records])
         orphaned = store.difference(canonical_bibcodes)
 
