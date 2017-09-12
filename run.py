@@ -187,6 +187,7 @@ def main(*args):
 
     # read bibcodes:json_fingerprints into memory
     records = read_bibcodes(app.conf.get('BIBCODE_FILES'))
+    logger.info('Read %s records', len(records))
     targets = []
     if args.bibcodes:
         for t in args.bibcodes:
@@ -203,23 +204,28 @@ def main(*args):
 
     #TODO(rca): getAlternates is called multiple times unnecessarily
     records = read_records.canonicalize_records(records, targets or records, ignore_fingerprints=args.ignore_json_fingerprints)
-
+    logger.info('Canonicalize %s records', len(records))
 
     # discover differences
     orphaned = set()
     if args.process_deletions:
+        logger.info('Will discover orphans')
         # get all bibcodes from the storage (into memory)
         store = set()
         with app.session_scope() as session:
             for r in session.query(Records).options(load_only('bibcode')).yield_per(1000):
                 store.add(r.bibcode)
+        logger.info('Loaded %s bibcodes from the database', len(store))
         canonical_bibcodes = set([x[0] for x in records])
         orphaned = store.difference(canonical_bibcodes)
+        logger.info('Discovered %s orphans', len(orphaned))
 
 
     if args.diagnose:
+        logger.info('Running diagnostics on %s records (orphaned=%s)', len(records), len(orphaned))
         show_api_diagnostics(records, orphaned)
     else:
+        logger.info('Running %s records (orphaned=%s)', len(records), len(orphaned))
         do_the_work(records, orphaned)
 
 
