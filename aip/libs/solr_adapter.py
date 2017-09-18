@@ -829,6 +829,14 @@ def simbad_type_mapper(otype):
   else:
     return u'Other'
 
+_o_types = {}
+[_o_types.__setitem__(x, u'Galaxy') for x in ["G","GClstr","GGroup","GPair","GTrpl","G_Lens","PofG"]]
+[_o_types.__setitem__(x, u'Nebula') for x in ['Neb','PN','RfN']]
+[_o_types.__setitem__(x, u'HII Region') for x in ['HII']]
+[_o_types.__setitem__(x, u'X-ray') for x in ['X']]
+[_o_types.__setitem__(x, u'Radio') for x in ['Maser', 'HI']]
+[_o_types.__setitem__(x, u'Infrared') for x in ['IrS']]
+[_o_types.__setitem__(x, u'Star') for x in ['Blue*','C*','exG*','Flare*','Nova','Psr','Red*','SN','SNR','V*','VisS','WD*','WR*']]
 def ned_type_mapper(otype):
   """
   Maps a native NED object type to a subset of basic classes
@@ -836,24 +844,15 @@ def ned_type_mapper(otype):
   """
   if otype.startswith('!'):
     return u'Galactic Object'
-  elif otype in ["G","GClstr","GGroup","GPair","GTrpl","G_Lens","PofG"]:
-    return u'Galaxy'
-  elif otype in ['Neb','PN','RfN']:
-    return u'Nebula'
-  elif otype == 'HII':
-    return u'HII Region'
-  elif otype == 'X':
-    return u'X-ray'
-  elif otype.startswith('*') or otype in ['Blue*','C*','exG*','Flare*','Nova','Psr','Red*','SN','SNR','V*','VisS','WD*','WR*']:
+  elif otype.startswith('*'):
     return u'Star'
-  elif otype.startswith('Radio') or otype == 'Maser' or otype == 'HI':
-    return u'Radio'
-  elif otype == 'IrS':
-    return u'Infrared'
   elif otype.startswith('Uv'):
     return u'UV'
+  elif otype.startswith('Radio'):
+    return u'Radio'
   else:
-    return u'Other'
+    return _o_types.get(otype, u'Other')
+
 
 arxiv_categories = set(["acc.phys.",
                         "adap.org.",
