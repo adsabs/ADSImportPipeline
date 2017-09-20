@@ -226,7 +226,7 @@ class Enforcer:
     r['publication']['page'] =          g('page')
     r['publication']['page_last'] =     g('lastpage')
     r['publication']['page_range'] =    g('page_range')
-    r['publication']['page_count'] =    g('pagenumber')
+    r['publication']['page_count'] =    g('number_pages')
     r['publication']['electronic_id'] = g('electronic_id')
     r['publication']['altbibcode'] =    g('bibcode')
     r['publication']['name'] = {

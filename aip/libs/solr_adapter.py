@@ -88,6 +88,8 @@ class SolrAdapter(object):
     'orcid_user': [u''],
     'orcid_other': [u''],
     'page': [u''],
+    'page_range': u'',
+    'page_count': 0,
     'property': [u'', ],
     'pub': u'',
     'pubnote': [u'',],
@@ -487,6 +489,21 @@ class SolrAdapter(object):
     if ADS_record['metadata']['general']['publication'].get('electronic_id'):
       result.append(ADS_record['metadata']['general']['publication']['electronic_id'])
     return {'page': filter(None, result)}
+
+  @staticmethod
+  # return page range only if found in source record
+  def _page_range(ADS_record):
+      result =  ADS_record['metadata']['general']['publication'].get('page_range', u'')
+      return {'page_range':result}
+
+  @staticmethod
+  def _page_count(ADS_record):
+      result = ADS_record['metadata']['general']['publication'].get('page_count',0)
+      try:
+          result = int(result)
+      except TypeError:
+          result = 0
+      return {'page_count':result}
 
   @staticmethod
   def _property(ADS_record):

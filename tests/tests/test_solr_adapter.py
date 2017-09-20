@@ -101,6 +101,7 @@ class TestSolrAdapter(unittest.TestCase):
               'verified': ['-', 'orcid', '-']},
              'orcid_pub': [u'-', u'-', u'-'],
              'page': [u'2056-2078'],
+             'page_count': 0,
              'property': [u'OPENACCESS',
                   u'OCRABSTRACT',
                   u'ADS_OPENACCESS',
