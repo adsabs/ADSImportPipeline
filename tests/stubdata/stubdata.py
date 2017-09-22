@@ -2,6 +2,8 @@
 from collections import OrderedDict
 import os
 
+# TODO(rca): remove the unnecessary tests; it is bloody confusing what is what in here
+
 GENERAL = OrderedDict([(u'@origin', u'AAS'),
              (u'@type', u'general'),
              (u'@primary', u'True'),
@@ -671,7 +673,7 @@ for x in os.listdir(_path):
     if not os.path.isfile(x):
         continue
     f = eval(open(x, 'r').read())
-    ADSRECORDS[f['bibcode']] = f
+    ADSRECORDS[os.path.basename(x)] = f
 
 MERGEDRECS = OrderedDict()
 MERGEDRECS['2015ApJ...815..133S'] = {'abstract': u'In order to examine their relation to the host galaxy, the extraplanar dusts of six nearby galaxies are modeled, employing a three-dimensional Monte Carlo radiative transfer code. The targets are from the highly inclined galaxies that show dust-scattered ultraviolet halos, and the archival Galaxy Evolution Explorer FUV band images were fitted with the model. The observed images are generally well-reproduced by two dust layers and one light source layer, whose vertical and radial distributions have exponential profiles. We obtained several important physical parameters, such as star formation rate (SFR<SUB>UV</SUB>), face-on optical depth, and scale-heights. Three galaxies (NGC 891, NGC 3628, and UGC 11794) show clear evidence for the existence of an extraplanar dust layer. However, it is found that the remaining three targets (IC 5249, NGC 24, and NGC 4173) do not necessarily need a thick dust disk to model the ultraviolet (UV) halo, because its contribution is too small and the UV halo may be caused by the wing part of the GALEX point spread function. This indicates that the galaxy samples reported to have UV halos may be contaminated by galaxies with negligible extraplanar (halo) dust. The galaxies showing evidence of an extraplanar dust layer fall within a narrow range on the scatter plots between physical parameters such as SFR<SUB>UV</SUB> and extraplanar dust mass. Several mechanisms that could possibly produce the extraplanar dust are discussed. We also found a hint that the extraplanar dust scale-height might not be much different from the polycyclic aromatic hydrocarbon emission characteristic height.',

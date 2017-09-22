@@ -129,6 +129,7 @@ class Enforcer:
     r = {}
     r['JSON_fingerprint'] = JSON_fingerprint
     r['bibcode'] = record['@bibcode']
+    r['entry_date'] = record.get('@entry_date', None)
     r['modtime'] = datetime.datetime.now().strftime(datefmt)
     r['text'] = {}
     r['text']['body'] = []
@@ -150,7 +151,7 @@ class Enforcer:
         })
 
 
-    r['metadata'] = record['metadata']
+    r['metadata'] = self.enforceMetadataSchema(record['metadata'])
     return r
 
   def enforceMetadataSchema(self,blocks):
