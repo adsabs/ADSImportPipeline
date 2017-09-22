@@ -169,7 +169,7 @@ class TestADSExports(unittest.TestCase):
                                  'origin': u'ADS metadata',
                                  'primary': False,
                                  'type': u'relations'}}],
-                              'text': {'acknowledgement': [], 'body': []}},
+                              'text': {'acknowledgement': []}},
                         results[0])
 
 

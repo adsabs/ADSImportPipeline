@@ -47,7 +47,6 @@ class SolrAdapter(object):
     'bibgroup_facet': [u'', ],
     'bibstem': [u'', ],
     'bibstem_facet': u'',
-    'body': u'',
     'citation': [u'', ],
     'citation_count': 0,
     'cite_read_boost': 0.0,
@@ -238,10 +237,6 @@ class SolrAdapter(object):
       result = re.sub(r'\.+$', '', long)
     return {'bibstem_facet':unicode(result)}
 
-  @staticmethod
-  def _body(ADS_record):
-    result = ADS_record['text'].get('body', {}).get('content')
-    return {'body': result}
 
   @staticmethod
   def _copyright(ADS_record):
@@ -391,7 +386,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _lang(ADS_record):
-    return {'lang': ADS_record['text'].get('body', {}).get('language', '')}
+    return {'lang': ADS_record['metadata'].get('language', '')}
 
   @staticmethod
   def _links_data(ADS_record):
@@ -908,19 +903,4 @@ def bibstem_mapper(bibcode):
   long_stem = short_stem + vol_field
   return (unicode(short_stem), unicode(long_stem))
 
-
-
-def transform_json_record(db_record):
-    out = {'bibcode': db_record['bibcode']}
-    
-    for f, t in [('id', 'id'), ('bib_data', ''), ('nonbib_data', 'adsdata'), ('orcid_claims', 'orcid_claims')]:
-        if db_record.get(f, None):
-            if t:
-                out[t] = db_record.get(f)
-            else:
-                out.update(db_record.get(f))
-    if db_record.get('fulltext', None):
-        out['body'] = db_record['fulltext']
-    
-    return out
 

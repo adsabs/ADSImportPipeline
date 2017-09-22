@@ -94,7 +94,7 @@ def readRecordsFromADSExports(records):
     for bibcode in targets.keys():
         try:
             logger.debug('addCompleteRecord: %s (%s/%s)' % (bibcode,targets.keys().index(bibcode)+1,len(targets.keys())))
-            adsrecords.addCompleteRecord(bibcode,fulltext=True)
+            adsrecords.addCompleteRecord(bibcode,fulltext=False)
             bibcodes.append(bibcode)
         except KeyboardInterrupt:
             raise
