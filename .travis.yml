@@ -3,8 +3,8 @@ python:
   - "2.7"
 install:
   - "pip install --upgrade setuptools pip"
-  - "pip install -r requirements.txt"
-  - "pip install -r dev-requirements.txt"
+  - "pip install -r -U requirements.txt"
+  - "pip install -r -U dev-requirements.txt"
 script:
   - "py.test"
 after_success:
