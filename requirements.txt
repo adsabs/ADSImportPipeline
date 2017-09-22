@@ -11,5 +11,5 @@ python-dateutil==2.6.0
 python-Levenshtein==0.12.0
 requests==2.13.0
 six==1.10.0
-SQLAlchemy==1.1.6
+SQLAlchemy==1.1.13
 timeout-decorator==0.3.3
