@@ -1,6 +1,4 @@
 *pyc
 logs/*
 test*txt
-.cache
-.coverage*
-venv
+

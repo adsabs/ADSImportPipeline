@@ -94,7 +94,7 @@ class Enforcer:
       if i in record:
         del record[i]
 
-    record['text']['body']['language'] = record['metadata']['general']['language']
+    record['metadata']['language'] = record['metadata']['general']['language']
 
     for blocks in [record['metadata'],record['text']]:
       for key,block in blocks.iteritems():
@@ -121,7 +121,6 @@ class Enforcer:
     eLS = self.ensureLanguageSchema
     
     r = {}
-    r['body'] = g('body')
     r['acknowledgments'] = g('acknowledgments')
     r['creation'] = g('creation')
 
@@ -129,11 +128,11 @@ class Enforcer:
     r = {}
     r['JSON_fingerprint'] = JSON_fingerprint
     r['bibcode'] = record['@bibcode']
+    r['entry_date'] = record.get('@entry_date', None)
     r['modtime'] = datetime.datetime.now().strftime(datefmt)
     r['text'] = {}
-    r['text']['body'] = []
     r['text']['acknowledgement'] = []
-    fields = ['body','acknowledgement']
+    fields = ['acknowledgement']
     for f in fields:
       t = record.get('text') if record.get('text') else {}
       blocks = self.ensureList(t.get(f))
@@ -150,7 +149,7 @@ class Enforcer:
         })
 
 
-    r['metadata'] = record['metadata']
+    r['metadata'] = self.enforceMetadataSchema(record['metadata'])
     return r
 
   def enforceMetadataSchema(self,blocks):
