@@ -94,7 +94,7 @@ def readRecordsFromADSExports(records):
     for bibcode in targets.keys():
         try:
             logger.debug('addCompleteRecord: %s (%s/%s)' % (bibcode,targets.keys().index(bibcode)+1,len(targets.keys())))
-            adsrecords.addCompleteRecord(bibcode,fulltext=True)
+            adsrecords.addCompleteRecord(bibcode,fulltext=False)
             bibcodes.append(bibcode)
         except KeyboardInterrupt:
             raise
@@ -103,9 +103,9 @@ def readRecordsFromADSExports(records):
             logger.warning('ADSExports failed: %s (%s)' % (bibcode,err))
             
     logger.debug("Calling ADSRecords.export()")
-    adsrecords = adsrecords.export()
+    ads_export = adsrecords.export()
     logger.debug("...ADSRecords.export() returned.")
-    if not adsrecords.content:
+    if not ads_export.content:
         logger.warning('Recieved %s records, but ADSExports didn\'t return anything!' % len(records))
         return []
     ttc = time.time()-s
@@ -115,7 +115,7 @@ def readRecordsFromADSExports(records):
     logger.debug("Calling xml_to_dict")
     export = []
     try:
-        json_dict = xml_to_dict(adsrecords)
+        json_dict = xml_to_dict(ads_export)
         logger.debug("...xml_to_dict returned.")
         export = e.ensureList(json_dict['records']['record'])
     except timeout_decorator.timeout_decorator.TimeoutError:
@@ -125,7 +125,7 @@ def readRecordsFromADSExports(records):
         logger.warning("XML parsing error while processing bibcodes: %s" % '|'.join(bibcodes))
         failures.extend(bibcodes)
     finally:
-        adsrecords.freeDoc() #always release memory
+        ads_export.freeDoc() #always release memory
 
     logger.info("Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" % 
       {
@@ -138,9 +138,8 @@ def readRecordsFromADSExports(records):
     
     results = []
     for r in export:
-        r = e.enforceTopLevelSchema(record=r, JSON_fingerprint=targets[r['@bibcode']])
-        r['metadata'] = e.enforceMetadataSchema(r['metadata'])
-        results.append(r)
+        rec = e.enforceTopLevelSchema(record=r, JSON_fingerprint=targets[r['@bibcode']])
+        results.append(rec)
     return results
 
 
