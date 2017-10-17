@@ -145,7 +145,7 @@ def main(*args):
                         ' Use the syntax @filename.txt to read these from file (1 bibcode per line)'
                         )
 
-    parser.add_argument('--dont-init-lookers-cache', default=False,
+    parser.add_argument('--no-cache', default=False,
                         action='store_true',
                         dest='dont_init_lookers_cache',
                         help='dont call ADSExports2.init_lookers_cache()'
@@ -176,9 +176,6 @@ def main(*args):
 
 
     args = parser.parse_args()
-
-    if args.bibcodes:
-        args.bibcodes = [x.strip() for x in args.bibcodes.split(',')]
 
     # initialize cache (to read ADS records)
     if not args.dont_init_lookers_cache and read_records.INIT_LOOKERS_CACHE:

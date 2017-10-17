@@ -6,7 +6,7 @@ import re
 import traceback
 
 
-from adsputils import setup_logging
+from adsputils import setup_logging, get_date, date2solrstamp
 from aip.libs import enforce_schema
 
 logger = setup_logging('solr_adapter')
@@ -26,6 +26,8 @@ def get_date_by_datetype(ADS_record):
             pass
     return None
 
+def _normalize_author_name(strname):
+    return ' '.join(strname.split('.')).strip()
 
 
 class SolrAdapter(object):
@@ -62,6 +64,7 @@ class SolrAdapter(object):
     'doi':[u'',],
     'eid':u'',
     'email': [u'', ],
+    'entry_date': '',
     'facility': [u'', ],
     'first_author': u'',
     'first_author_facet_hier': [u'',],
@@ -188,9 +191,9 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = []
     for author in authors:
-      r = u"0/%s" % (author['name']['normalized'],)
+      r = u"0/%s" % (_normalize_author_name(author['name']['normalized']),)
       result.append(r)
-      r = u"1/%s/%s" % (author['name']['normalized'], author['name']['western'])
+      r = u"1/%s/%s" % (_normalize_author_name(author['name']['normalized']), _normalize_author_name(author['name']['western']))
       result.append(r)
     return {'author_facet_hier': result}
 
@@ -297,7 +300,13 @@ class SolrAdapter(object):
   @staticmethod
   def _data_facet(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('data_sources', [])]
-    return {'data_facet': result}    
+    return {'data_facet': result}
+
+  
+  @staticmethod
+  def _entry_date(ADS_record):
+    d = ADS_record.get('entry_date', None)     
+    return {'entry_date': date2solrstamp(d and get_date(d) or get_date())}
 
   @staticmethod
   def _year(ADS_record):
@@ -370,9 +379,10 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = []
     if authors:
-      r = u"0/%s" % (authors[0]['name']['normalized'],)
+      r = u"0/%s" % (_normalize_author_name(authors[0]['name']['normalized']),)
       result.append(r)
-      r = u"1/%s/%s" % (authors[0]['name']['normalized'], authors[0]['name']['western'])
+      r = u"1/%s/%s" % (_normalize_author_name(authors[0]['name']['normalized']), 
+                        _normalize_author_name(authors[0]['name']['western']))
       result.append(r)
     return {'first_author_facet_hier':result}
 
@@ -392,9 +402,6 @@ class SolrAdapter(object):
 
   @staticmethod
   def _links_data(ADS_record):
-    """rca: it is my understanding that this function is not producing a valid
-    JSON; the 'null' gets turned into '' - and I can't tell whether that is
-    by design"""
     result = [json.dumps({"title": i.get('title', "") or "", 
                           "type": i.get('type', "") or "", 
                           "instances": i.get('count', "") or "", 

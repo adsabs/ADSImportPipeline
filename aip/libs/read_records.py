@@ -5,6 +5,10 @@ import timeout_decorator
 
 from aip.libs import xmltodict
 from aip.libs import enforce_schema
+try:
+    from xml.parsers.expat import ExpatError
+except:
+    ExpatError = None
 
 import adsputils as utils
 
@@ -121,7 +125,7 @@ def readRecordsFromADSExports(records):
     except timeout_decorator.timeout_decorator.TimeoutError:
         logger.warning("xml_to_dict timed while processing bibcodes: %s" % '|'.join(bibcodes))
         failures.extend(bibcodes)
-    except xml.parsers.expat.ExpatError:
+    except ExpatError:
         logger.warning("XML parsing error while processing bibcodes: %s" % '|'.join(bibcodes))
         failures.extend(bibcodes)
     finally:
