@@ -706,6 +706,7 @@ MERGEDRECS['2015ApJ...815..133S'] = {'abstract': u'In order to examine their rel
  'doi': [u'10.1088/0004-637X/815/2/133'],
  'eid': u'133',
  'email': [u'jhshinn@kasi.re.kr', u'-'],
+ 'entry_date': '2003-01-01T00:00:00.000000Z',
  'first_author': u'Shinn, Jong-Ho',
  'first_author_facet_hier': [u'0/Shinn, J', u'1/Shinn, J/Shinn, Jong-Ho'],
  'first_author_norm': u'Shinn, J',
