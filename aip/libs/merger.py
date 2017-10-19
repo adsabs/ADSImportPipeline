@@ -79,7 +79,7 @@ class Merger:
   def mergeText(self,blocks):
     mergedBlock = {}
     #Order matters here; we prioritize data coming from body over acknow.
-    fields = ['acknowledgement','body']
+    fields = ['acknowledgement']
     for f in fields:
       mergedBlock[f] = {}
       if len(blocks[f])<2:

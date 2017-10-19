@@ -49,10 +49,6 @@ class SolrAdapter(object):
     'bibgroup_facet': [u'', ],
     'bibstem': [u'', ],
     'bibstem_facet': u'',
-    'citation': [u'', ],
-    'citation_count': 0,
-    'cite_read_boost': 0.0,
-    'classic_factor': 0,
     'comment': [u'',],
     'copyright': [u'',],
     'database': [u'',],
@@ -69,8 +65,6 @@ class SolrAdapter(object):
     'first_author': u'',
     'first_author_facet_hier': [u'',],
     'first_author_norm':u'', 
-    'grant': [u'',],
-    'grant_facet_hier': [u'',],
     'id': 0,
     'identifier': [u'',],
     'isbn': [u'',],
@@ -82,9 +76,6 @@ class SolrAdapter(object):
     'keyword_schema': [u'', ],
     'lang': u'',
     'links_data': [u'', ],
-    'nedid': [u'', ],
-    'nedtype': [u'', ],
-    'ned_object_facet_hier': [u'', ],
     'orcid': [u''],
     'orcid_pub': [u''],
     'orcid_user': [u''],
@@ -97,13 +88,7 @@ class SolrAdapter(object):
     'pubnote': [u'',],
     'pub_raw': u'',
     'pubdate': u'',
-    'read_count': 0,
-    'reader':[u'', ],
     'recid': 0,
-    'reference': [u'', ],
-    'simbid': [0, ],
-    'simbtype': [u'', ],
-    'simbad_object_facet_hier': [u'', ],
     'thesis': u'',
     'title': [u'', ],
     'vizier': [u'', ],
@@ -248,29 +233,6 @@ class SolrAdapter(object):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('copyright', [])]
     return {'copyright': result}
 
-  @staticmethod
-  def _citation(ADS_record):
-    result = [i for i in ADS_record.get('adsdata', {}).get('citations', [])]
-    return {'citation': result}
-
-  @staticmethod
-  def _citation_count(ADS_record):
-    result = len([i for i in ADS_record.get('adsdata', {}).get('citations', [])])
-    return {'citation_count': result}
-
-  @staticmethod
-  def _cite_read_boost(ADS_record):
-    result = ADS_record.get('adsdata', {}).get('boost')
-    if result:
-      result = float(result)
-    return {'cite_read_boost': result}
-
-  @staticmethod
-  def _classic_factor(ADS_record):
-    result = ADS_record.get('adsdata', {}).get('norm_cites')
-    if result:
-      result = int(result)
-    return {'classic_factor': result}
 
   @staticmethod
   def _comment(ADS_record):
@@ -412,49 +374,7 @@ class SolrAdapter(object):
     result = [unicode(i) for i in result]
     return {'links_data': result}
 
-  @staticmethod
-  def _grant(ADS_record):
-    result = []
 
-    grant_dicts = SolrAdapter.convert_grants(ADS_record.get('adsdata', {}).get('grants'))
-    for grant in grant_dicts: # ADS_record.get('adsdata',{}).get('grants',{})
-      result.append(grant['agency'])
-      result.append(grant['grant'])
-    return {'grant': result}
-
-  @staticmethod
-  def convert_grants(grants_string):
-    "convert sql string to the dict mongo used so other code can remain unchanged"
-    # first, check to see if conversion is needed
-    # if passed an array of dicts, simply return it
-    if (isinstance(grants_string, list) and len(grants_string) > 0
-        and isinstance(grants_string[0], dict)):
-        return grants_string
-
-    # otherwise, process
-    grant_dicts = []
-    if grants_string is None:
-      return grant_dicts
-    for current in grants_string:
-      current = current.strip()
-      parts = current.split(' ')
-      if len(parts) == 2:
-        d = {'agency': unicode(parts[0]), 'grant': unicode(parts[1])}
-        grant_dicts.append(d)
-      else:
-        print 'warning, band length to grant string {}'.format(current)
-    return grant_dicts
-
-  @staticmethod
-  def _grant_facet_hier(ADS_record):
-    grant_dicts = SolrAdapter.convert_grants(ADS_record.get('adsdata', {}).get('grants'))
-    result = []
-    for grant in grant_dicts:  # ADS_record.get('adsdata',{}).get('grants',[]):
-      r = u"0/%s" % (grant['agency'],)
-      result.append(r)
-      r = u"1/%s/%s" % (grant['agency'], grant['grant'])
-      result.append(r)
-    return {'grant_facet_hier': result}
 
   @staticmethod
   def _id(ADS_record):
@@ -589,15 +509,6 @@ class SolrAdapter(object):
                 out[indexname] = claims
     return out
 
-  @staticmethod
-  def _read_count(ADS_record):
-    readers = ADS_record.get('adsdata', {}).get('readers', [])
-    return {'read_count': len(readers)}
-
-  @staticmethod
-  def _reader(ADS_record):
-    result = ADS_record.get('adsdata', {}).get('readers', [])
-    return {'reader': result}
 
   @staticmethod
   def _reference(ADS_record):
@@ -607,115 +518,7 @@ class SolrAdapter(object):
     # sort it so that it's easier to manage
     return {'reference': sorted(set(result))}
 
-  @staticmethod
-  def _simbid(ADS_record):
-    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata',{}).get('simbad_objects',[]))
-    result = [int(i['id']) for i in simbad] # ADS_record.get('adsdata',{}).get('simbad_objects',[])]
-    return {'simbid': result}
 
-  @staticmethod
-  def convert_simbad(simbad_strings):
-    """convert sql string to the dict mongo used so other code can remain unchanged
-    sql version contains an array of strings: ['1010152 PN', '1010659 PN', '1011325 PN']"""
-    # first, check to see if conversion is needed
-    # if passed an array of dicts, simply return it
-    if (isinstance(simbad_strings, list) and len(simbad_strings) > 0 
-        and isinstance(simbad_strings[0], dict)):
-        return simbad_strings
-
-    #otherwise, process
-    simbad_dicts = []
-    if simbad_strings is None:
-      return simbad_dicts
-    for current in simbad_strings:
-      current = current.strip()
-      parts = current.split(' ')
-      if len(parts) == 2:
-        d = {'type': unicode(parts[1]), 'id': unicode(parts[0])}
-        simbad_dicts.append(d)
-      else:
-        print 'warning, bad length to simbad string {}'.format(current)
-
-    return simbad_dicts
-
-
-
-  @staticmethod
-  def _simbtype(ADS_record):
-    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata', {}).get('simbad_objects', []))
-    result = []
-    for object in simbad: # ADS_record.get('adsdata',{}).get('simbad_objects',[]):
-      otype = simbad_type_mapper(object['type'])
-      result.append(otype)
-    result = list(set(result))
-    return {'simbtype': result}
-
-  @staticmethod
-  def _simbad_object_facet_hier(ADS_record):
-    simbad = SolrAdapter.convert_simbad(ADS_record.get('adsdata', {}).get('simbad_objects', []))
-    result = []
-    for object in simbad:  # ADS_record.get('adsdata',{}).get('simbad_objects',[]):
-      otype = simbad_type_mapper(object['type'])
-      r = u"0/%s" % (otype,)
-      result.append(r)
-      r = u"1/%s/%s" % (otype, object['id'])
-      result.append(r)
-    return {'simbad_object_facet_hier': result}
-
-  @staticmethod
-  def _nedid(ADS_record):
-    ned = SolrAdapter.convert_ned(ADS_record.get('adsdata',{}).get('ned_objects',[]))
-    result = [u"%s" % i['id'] for i in ned] # ADS_record.get('adsdata',{}).get('ned_objects',[])]
-    return {'nedid': result}
-
-  @staticmethod
-  def convert_ned(ned_strings):
-    """convert sql string to the dict mongo used so other code can remain unchanged
-    sql version contains an array of strings: ['1010152 PN', '1010659 PN', '1011325 PN']"""
-    # first, check to see if conversion is needed
-    # if passed an array of dicts, simply return it
-    if (isinstance(ned_strings, list) and len(ned_strings) > 0 
-        and isinstance(ned_strings[0], dict)):
-        return ned_strings
-
-    #otherwise, process
-    ned_dicts = []
-    if ned_strings is None:
-      return ned_dicts
-    for current in ned_strings:
-      current = current.strip()
-      parts = current.split(' ')
-      if len(parts) == 2:
-        d = {'type': unicode(parts[1]), 'id': unicode(parts[0])}
-        ned_dicts.append(d)
-      else:
-        print 'warning, bad length to ned string {}'.format(current)
-
-    return ned_dicts
-
-
-
-  @staticmethod
-  def _nedtype(ADS_record):
-    ned = SolrAdapter.convert_ned(ADS_record.get('adsdata', {}).get('ned_objects', []))
-    result = []
-    for object in ned: # ADS_record.get('adsdata',{}).get('ned_objects',[]):
-      otype = ned_type_mapper(object['type'])
-      result.append(otype)
-    result = list(set(result))
-    return {'nedtype': result}
-
-  @staticmethod
-  def _ned_object_facet_hier(ADS_record):
-    ned = SolrAdapter.convert_ned(ADS_record.get('adsdata', {}).get('ned_objects', []))
-    result = []
-    for object in ned:  # ADS_record.get('adsdata',{}).get('ned_objects',[]):
-      otype = ned_type_mapper(object['type'])
-      r = u"0/%s" % (otype,)
-      result.append(r)
-      r = u"1/%s/%s" % (otype, object['id'])
-      result.append(r)
-    return {'ned_object_facet_hier': result}
 
   @staticmethod
   def _title(ADS_record):
