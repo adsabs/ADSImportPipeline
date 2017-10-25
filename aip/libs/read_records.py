@@ -93,7 +93,7 @@ def readRecordsFromADSExports(records):
     
     s = time.time()
     failures = []
-    adsrecords = ADSRecords('full','XML',cacheLooker=True)
+    adsrecords = ADSRecords(mode='full', type='XML', cacheLooker=True, extract_references=False)
     bibcodes = []
     for bibcode in targets.keys():
         try:

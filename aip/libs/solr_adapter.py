@@ -510,15 +510,6 @@ class SolrAdapter(object):
     return out
 
 
-  @staticmethod
-  def _reference(ADS_record):
-    # take only bibcodes for references which are resolved (score > 0) and verified (score < 5)
-    result = [i['bibcode'] for i in ADS_record['metadata']['references'] if i['bibcode'] and i['score'] and int(i['score']) > 0 and int(i['score']) < 5]
-    # there may be multiple references in the merged document, so unique the list and 
-    # sort it so that it's easier to manage
-    return {'reference': sorted(set(result))}
-
-
 
   @staticmethod
   def _title(ADS_record):
