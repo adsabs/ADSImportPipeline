@@ -588,7 +588,7 @@ def unroll_unique_list(array):
       result += i
     else:
       result.append(i)
-  return list(set(result))
+  return filter(lambda x: x is not None, set(result))
 
 doctype_dict = {
   'article':       'Journal Article',
