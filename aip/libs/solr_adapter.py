@@ -27,6 +27,8 @@ def get_date_by_datetype(ADS_record):
     return None
 
 def _normalize_author_name(strname):
+    if not strname:
+        return None
     return ' '.join(strname.split('.')).strip()
 
 
@@ -176,10 +178,12 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = []
     for author in authors:
-      r = u"0/%s" % (_normalize_author_name(author['name']['normalized']),)
-      result.append(r)
-      r = u"1/%s/%s" % (_normalize_author_name(author['name']['normalized']), _normalize_author_name(author['name']['western']))
-      result.append(r)
+      if author['name']['normalized']:
+        r = u"0/%s" % (_normalize_author_name(author['name']['normalized']),)
+        result.append(r)
+        if author['name']['western']:
+          r = u"1/%s/%s" % (_normalize_author_name(author['name']['normalized']), _normalize_author_name(author['name']['western']))
+          result.append(r)
     return {'author_facet_hier': result}
 
 
@@ -341,11 +345,13 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = []
     if authors:
-      r = u"0/%s" % (_normalize_author_name(authors[0]['name']['normalized']),)
-      result.append(r)
-      r = u"1/%s/%s" % (_normalize_author_name(authors[0]['name']['normalized']), 
+      if authors[0]['name']['normalized']:
+        r = u"0/%s" % (_normalize_author_name(authors[0]['name']['normalized']),)
+        result.append(r)
+        if authors[0]['name']['western']:
+          r = u"1/%s/%s" % (_normalize_author_name(authors[0]['name']['normalized']), 
                         _normalize_author_name(authors[0]['name']['western']))
-      result.append(r)
+          result.append(r)
     return {'first_author_facet_hier':result}
 
   @staticmethod
