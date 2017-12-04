@@ -55,8 +55,6 @@ class SolrAdapter(object):
     'copyright': [u'',],
     'database': [u'',],
     'date': u'YYYY-MM[-DD]',
-    'data':[u''],
-    'data_facet': [u''],
     'doctype': u'',
     'doctype_facet_hier': [u''],
     'doi':[u'',],
@@ -257,16 +255,6 @@ class SolrAdapter(object):
     result = [translation[i['content'].upper()] for i in ADS_record['metadata']['properties'].get('databases', [])]
     result = list(set(result))
     return {'database': result}
-
-  @staticmethod
-  def _data(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['properties'].get('data_sources', [])]
-    return {'data': result}
-
-  @staticmethod
-  def _data_facet(ADS_record):
-    result = [i['content'] for i in ADS_record['metadata']['properties'].get('data_sources', [])]
-    return {'data_facet': result}
 
   
   @staticmethod
