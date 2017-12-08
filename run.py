@@ -194,7 +194,7 @@ def main(*args):
     # read bibcodes:json_fingerprints into memory
     records = read_bibcodes(app.conf.get('BIBCODE_FILES'))
     logger.info('Read %s records', len(records))
-    targets = OrderedDict
+    targets = OrderedDict()
     if args.bibcodes:
         for t in args.bibcodes:
             if t.startswith('@'):
