@@ -41,6 +41,13 @@ class TestUpdateRecords(unittest.TestCase):
         self.app.update_processed_timestamp('foo')
         r = self.app.get_record('foo')
         self.assertTrue(r['processed'] != None)
+        
+    def test_delete_record(self):
+        self.app.update_storage('foo', 'fingerprint')
+        self.app.delete_by_bibcode('foo')
+        with self.app.session_scope() as session:
+            r = session.query(models.ChangeLog).filter_by(key='deleted').first()
+            self.assertEquals(r.oldvalue, 'foo')
 
 if __name__ == '__main__':
     unittest.main()

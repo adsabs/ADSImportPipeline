@@ -4,7 +4,7 @@ import os
 import sys
 from aip.libs import read_records
 from adsputils import setup_logging, load_config
-from aip.models import Records
+from aip.models import Records, ChangeLog
 from aip import tasks
 
 import time
@@ -173,7 +173,13 @@ def main(*args):
                         action='store_true',
                         default=False,
                         help='Show me what you would do with bibcodes')
-
+    
+    parser.add_argument('-r',
+                        '--replay-deletions',
+                        dest='replay_deletions',
+                        action='store_true',
+                        default=False,
+                        help='Resubmit all bibcodes (that were ever deleted) again to the master pipeline.')
 
     args = parser.parse_args()
 
@@ -188,7 +194,7 @@ def main(*args):
     # read bibcodes:json_fingerprints into memory
     records = read_bibcodes(app.conf.get('BIBCODE_FILES'))
     logger.info('Read %s records', len(records))
-    targets = []
+    targets = OrderedDict
     if args.bibcodes:
         for t in args.bibcodes:
             if t.startswith('@'):
@@ -197,15 +203,24 @@ def main(*args):
                         if line.startswith('#'):
                             continue
                         b = line.strip()
+                        if b not in records:
+                            logger.error('Asked to process %s but the bibcode is not in the list of canonical bibcodes (%s)', 
+                                         b, app.conf.get('BIBCODE_FILES'))
+                            continue
                         if b:
-                            targets.append({b: records[b]})
+                            targets[b] = records[b]
             else:
-                targets.append({t:records[t]})
+                targets[t] = records[t]
 
     #TODO(rca): getAlternates is called multiple times unnecessarily
     records = read_records.canonicalize_records(records, targets or records, ignore_fingerprints=args.ignore_json_fingerprints)
     logger.info('Canonicalize %s records', len(records))
 
+    if args.replay_deletions:
+        with app.session_scope() as session:
+            for r in session.query(ChangeLog).filter(ChangeLog.key == 'deleted').yield_per(1000):
+                tasks.task_delete_documents.delay(r.oldvalue)
+                
     # discover differences
     orphaned = set()
     if args.process_deletions:

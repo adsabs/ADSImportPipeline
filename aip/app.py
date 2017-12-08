@@ -4,7 +4,7 @@ in order to initialize the database and get a working configuration.
 """
 
 from __future__ import absolute_import, unicode_literals
-from .models import Records
+from .models import Records, ChangeLog
 from sqlalchemy.orm import load_only as _load_only
 from adsputils import ADSCelery, get_date
 
@@ -17,6 +17,7 @@ class ADSImportPipelineCelery(ADSCelery):
             r = session.query(Records).filter_by(bibcode=bibcode).first()
             if r is not None:
                 session.delete(r)
+                session.add(ChangeLog(key='deleted', oldvalue=bibcode))
                 session.commit()
     
     
