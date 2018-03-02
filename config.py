@@ -182,6 +182,7 @@ _PRIORITIES_JOURNALS = {
 _PRIORITIES_AUTHORS = {
   10: ['ADS METADATA',],
   1.0: ['ISI'],
+  0.6: ['STI'],
   0.5: ['ASJ','A&A', 'A&AS', 'A&G', 'AAO', 'AAS', 'AASP', 'AAVSO', 'ACA',
       'ACASN', 'ACHA', 'ACTA', 'ADASS', 'ADIL', 'ADS', 'AFRSK', 'AG',
       'AGDP', 'AGU', 'AIP', 'AJ', 'ALMA', 'AMS', 'AN', 'ANREV', 'ANRFM', 'ANRMS',
@@ -217,7 +218,7 @@ _PRIORITIES_AUTHORS = {
   0.45: ['ARI', 'ARIBIB', 'JSTOR', 'KATKAT', 'AAA', ],
   0.4: ['CARL', 'CFA', 'HOLLIS', 'LIBRARY', 'POS', 'PRINCETON', 'SIMBAD', 'CDS',
       'STSCI', 'UTAL',],
-  0.375: ['AP', 'METBASE', 'STI', 'WEB',],
+  0.375: ['AP', 'METBASE', 'WEB',],
   0.35: ['CROSSREF', 'GCPD', 'GONG', 'KNUDSEN'],
   0.3: ['OCR',],
   0.25: ['NED',],
