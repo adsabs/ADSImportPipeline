@@ -6,7 +6,7 @@ import os
 import sys
 import types
 
-from aip.libs import enforce_schema, author_match
+from aip.classic import enforce_schema, author_match
 import adsputils as utils
 
 _config = utils.load_config()

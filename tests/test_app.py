@@ -2,11 +2,7 @@
 
 from aip import models, tasks, app as app_module
 from aip.models import Base
-from tests.stubdata import stubdata
-import adsputils as utils
-import json
 import os
-import time
 import unittest
 
 

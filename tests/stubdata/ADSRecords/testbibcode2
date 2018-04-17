@@ -1,0 +1,229 @@
+{
+    "id" : 99999998,
+    "modtime" : "2014-11-06T14:11:18.697474Z",
+    "bibcode" : u"2000A&AS..143...41K_test",
+    "JSON_fingerprint" : "{\"abs\":[{\"p\":\"/proj/ads/abstracts/ast/text/J20/J20-02694.abs\",\"primary\":1,\"t\":\"1317932566\"},{\"p\":\"/proj/ads/abstracts/ast/text/S20/S20-02694.abs\",\"t\":\"1347312274\"}],\"full\":[{\"p\":\"/proj/ads/fulltext/extracted/20/00/A&/AS/,,/14/3,/,,/41/K//meta.json\",\"t\":1395500064},{\"p\":\"/proj/ads/fulltext/extracted/20/00/A&/AS/,,/14/3,/,,/41/K//fulltext.txt\",\"t\":1363680233}],\"links\":{\"electr\":[{\"u\":\"http://dx.doi.org/10.1051%2Faas%3A2000170\"}],\"preprint\":[{\"u\":\"astro-ph/0002104\"}],\"spires\":[{\"u\":\"http://inspirehep.net/search?p=find+j+AAESB,143,41\"}]},\"prop\":[\"bibgroup: CfA\",\"refereed\"],\"refs\":[{\"p\":\"/proj/ads/references/resolved/A+AS/0143/iss1.raw.result\",\"t\":1374540245},{\"p\":\"/proj/ads/references/resolved/AUTHOR/Markus/MarkusMagic.pairs.result\",\"t\":1412026020},{\"p\":\"/proj/ads/references/resolved/ISI/A&AS/A&AS0143.isi.pairs.result\",\"t\":1414726893}]};{\"abs\":[{\"p\":\"/proj/ads/abstracts/pre/text/X00/X00-03262.abs\",\"primary\":1,\"t\":\"1257155059\"}],\"links\":{\"electr\":[{\"u\":\"http://dx.doi.org/10.1051%2Faas%3A2000170\"}],\"preprint\":[{\"u\":\"astro-ph/0002104\"}],\"spires\":[{\"u\":\"http://inspirehep.net/search?p=find+eprint+astro-ph/0002104\"}]},\"prop\":[\"bibgroup: CfA\"],\"refs\":[{\"p\":\"/proj/ads/references/resolved/astro-ph/2000/0002104.raw.result\",\"t\":1360840132}]}",
+    "entry_date": "2003-03-21",
+    "text": {},
+    "metadata" : {
+    "references": [],
+    'properties': {'refereed': True, 'openaccess': False, 
+                   'doctype': {'content': u'article', 'origin': u'ADS metadata'}, 
+                   'private': False, 'ocrabstract': False, 
+                   'ads_openaccess': False,
+                   'eprint_openaccess': False,
+                   'pub_openaccess': False,
+                   'databases': [{'content': u'ast', 'origin': ''}], 
+                   'bibgroups': [{'content': u'CfA', 'origin': ''}],
+                   'data_sources': [{'content':u'foo','origin':u'bar'},{'content':u'foo2'}],
+                   'vizier_tables': [{'content':u'tab1','origin':u'vizier'},{'content':u'tab2'}],
+                   },
+    "relations": {},
+    "general" : {
+        "comment" : [ ],
+        "doi" : [
+            {
+                "origin" : u"A&AS",
+                "content" : u"10.1051/aas:2000170"
+                }
+            ],
+        "titles" : [
+                {
+                "lang" : u"en",
+                "text" : u"The NASA Astrophysics Data System: Overview"
+                }
+            ],
+        "publication" : {
+            "origin" : u"A&AS",
+            "dates" : [
+                {
+                    "content" : u"2000-04-00",
+                    "type" : u"date-published"
+                    },
+                {
+                    "content" : u"2000",
+                    "type" : u"publication_year"
+                    }
+                ],
+            "name" : {
+                "raw" : u"Astronomy and Astrophysics Supplement, v.143, p.41-59",
+                "canonical" : u"Astronomy and Astrophysics Supplement Series"
+                },
+            "page_count" : u"19",
+            "page" : u"41",
+            "volume" : u"143",
+            "page_range" : u"41-59",
+            "electronic_id" : u"here is the eid",
+            "issue" : None,
+            "page_last" : u"59"
+            },
+        "language" : u"",
+        "issns" : [ ],
+        "conf_metadata" : {
+            "origin" : u"A&AS",
+            "content" : None
+            },
+        "copyright" : [ ],
+        "isbns" : [ ],
+        "authors" : [
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Kurtz, Michael J.",
+                    "normalized" : u"Kurtz, M"
+                    },
+                "number" : u"1",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Eichhorn, Guenther",
+                    "normalized" : u"Eichhorn, G"
+                    },
+                "number" : u"2",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Accomazzi, Alberto",
+                    "normalized" : u"Accomazzi, A"
+                    },
+                "number" : u"3",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : u"0000-0002-4110-3511",
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Grant, Carolyn S.",
+                    "normalized" : u"Grant, C"
+                    },
+                "number" : u"4",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Murray, Stephen S.",
+                    "normalized" : u"Murray, S"
+                    },
+                "number" : u"5",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                },
+            {
+                "name" : {
+                    "native" : None,
+                    "western" : u"Watson, Joyce M.",
+                    "normalized" : u"Watson, J"
+                    },
+                "number" : u"6",
+                "affiliations" : [
+                    u"Harvard-Smithsonian Center for Astrophysics, Cambridge, MA 02138, USA"
+                    ],
+                "orcid" : None,
+                "type" : u"regular",
+                "emails" : [ ]
+                }
+            ],
+        "keywords" : [
+            {
+                "origin" : u"A&AS",
+                "type" : u"Astronomy",
+                "original" : u"METHODS: DATA ANALYSIS",
+                "channel" : u"",
+                "normalized" : u"methods data analysis"
+                },
+            {
+                "origin" : u"A&AS",
+                "type" : u"Astronomy",
+                "original" : u"ASTRONOMICAL DATABASES: MISCELLANEOUS",
+                "channel" : u"",
+                "normalized" : None
+                },
+            {
+                "origin" : u"A&AS",
+                "type" : u"Astronomy",
+                "original" : u"PUBLICATIONS: BIBLIOGRAPHY",
+                "channel" : u"",
+                "normalized" : None
+                },
+            {
+                "origin" : u"A&AS",
+                "type" : u"Astronomy",
+                "original" : u"SOCIOLOGY OF ASTRONOMY",
+                "channel" : u"",
+                "normalized" : None
+                },
+            {
+                "origin" : u"ARXIV",
+                "type" : u"arXiv",
+                "original" : u"Astrophysics",
+                "channel" : u"astro-ph",
+                "normalized" : u"astrophysics"
+                }
+            ],
+        "arxivcategories" : [
+            u"Astrophysics"
+            ],
+        "pubnote" : [
+            {
+                "origin" : u"ARXIV",
+                "content" : u"19 pages, 22 figures; Astron.Astrophys.Suppl.Ser. 143 (2000) 41-59; doi:10.1051/aas:2000170"
+                }
+            ],
+        "altpublications" : [
+            {
+                "origin" : u"ARXIV",
+                "dates" : [
+                    {
+                        "content" : u"2000-02-00",
+                        "type" : u"date-preprint"
+                        },
+                    {
+                        "content" : u"2000",
+                        "type" : u"publication_year"
+                        }
+                    ],
+                "name" : {
+                    "raw" : u"eprint arXiv:astro-ph/0002104",
+                    "canonical" : u"ArXiv e-prints"
+                    },
+                "page_count" : None,
+                "page" : None,
+                "volume" : None,
+                "page_range" : None,
+                "electronic_id" : u"astro-ph/0002104",
+                "altbibcode" : u"2000astro.ph..2104K",
+                "issue" : None,
+                "page_last" : None
+                }
+            ],
+        }
+    }
+}
