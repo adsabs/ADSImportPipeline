@@ -3,8 +3,8 @@ import json
 import time
 import timeout_decorator
 
-from aip.libs import xmltodict
-from aip.libs import enforce_schema
+from aip.classic import xmltodict
+from aip.classic import enforce_schema
 try:
     from xml.parsers.expat import ExpatError
 except:
@@ -21,7 +21,7 @@ except ImportError:
 try:
     from ads.ADSCachedExports import ADSRecords, init_lookers_cache
     from ads.ADSCachedExports import LOGGER as export_logger
-    from aip.libs import conversions
+    from aip.classic import conversions
 except ImportError:
     sys.path.append('/proj/ads/soft/python/lib/site-packages') #TODO: make it configurable
     try:
