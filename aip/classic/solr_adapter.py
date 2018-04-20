@@ -7,7 +7,7 @@ import traceback
 
 
 from adsputils import setup_logging, get_date, date2solrstamp
-from aip.libs import enforce_schema
+from aip.classic import enforce_schema
 
 logger = setup_logging('solr_adapter')
 
