@@ -28,7 +28,7 @@ class TestUpdateRecords(unittest.TestCase):
         tasks.app = self._app
 
     def test_database(self):
-        self.app.update_storage('foo', 'fingerprint')
+        self.app.update_storage('foo', fingerprint='fingerprint')
         r = self.app.get_record('foo')
         self.assertEqual('foo', r['bibcode'])
         self.assertTrue(r['updated'] != None)
@@ -39,7 +39,7 @@ class TestUpdateRecords(unittest.TestCase):
         self.assertTrue(r['processed'] != None)
         
     def test_delete_record(self):
-        self.app.update_storage('foo', 'fingerprint')
+        self.app.update_storage('foo', fingerprint='fingerprint')
         self.app.delete_by_bibcode('foo')
         with self.app.session_scope() as session:
             r = session.query(models.ChangeLog).filter_by(key='deleted').first()

@@ -45,9 +45,13 @@ class Records(Base):
     updated = Column(UTCDateTime, default=get_date)
     processed = Column(UTCDateTime)
     
-    _date_fields = ['created', 'updated', 'processed']
+    arxiv_data = Column(Text)
+    arxiv_created = Column(UTCDateTime, default=get_date)
+    arxiv_updated = Column(UTCDateTime, default=get_date)
+    
+    _date_fields = ['created', 'updated', 'processed', 'arxiv_created', 'arxiv_updated']
     _text_fields = ['id', 'bibcode', 'fingerprint']
-    _json_fields = []
+    _json_fields = ['arxiv_data']
     
     def toJSON(self, for_solr=False, load_only=None):
         if for_solr:

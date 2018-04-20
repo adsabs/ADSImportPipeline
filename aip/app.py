@@ -21,16 +21,42 @@ class ADSImportPipelineCelery(ADSCelery):
                 session.commit()
     
     
-    def update_storage(self, bibcode, fingerprint):
+    def update_storage(self, bibcode, **kwargs):
+        """Update database record; you can pass in the kwargs
+        the payload; only 'data' and fingerprint are considered
+        payload. The record will be created if the bibcode is 
+        seen the first time.
+        
+        @param bibcode: bibcode
+        @keyword kwargs: dictionary with payload, keys correspond
+            to the `Records` attribute
+        @return: JSON representation of the record
+        """
+        
         with self.session_scope() as session:
             r = session.query(Records).filter_by(bibcode=bibcode).first()
+            updated = False
             if r is None:
+                updated = True
                 r = Records(bibcode=bibcode)
                 session.add(r)
+            
             now = get_date()
-            r.fingerprint = fingerprint
-            r.updated = now
-            session.commit()
+            for k, v in kwargs.items():
+                if k == 'fingerprint':
+                    r.__setattr__(k, v)
+                elif '_data' in k and hasattr(r, k):
+                    colname, _ = k.split('_')
+                    r.__setattr__(k, v)
+                    if r.__getattr__('{}_created').format(colname) is None:
+                        r.__setattr__('{}_created'.format(colname), now)
+                    r.__setattr__('{}_upated'.format(colname), now)
+                    updated = True
+                    
+
+            if updated:
+                r.updated = now
+                session.commit()
             return r.toJSON()
     
     

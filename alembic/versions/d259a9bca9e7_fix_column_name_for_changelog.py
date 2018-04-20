@@ -35,8 +35,7 @@ def upgrade():
 
 def downgrade():
     cx = op.get_context()
-    if 'sqlite' in cx.connection.engine.name:
-        with op.batch_alter_table("change_log") as batch_op:
-            batch_op.alter_column('newvalue', new_column_name='oldvalue')
-    else:
-        op.alter_column('change_log', 'newvalue', new_column_name='oldvalue')
+    with op.batch_alter_table("change_log") as batch_op:
+        batch_op.drop_column('oldvalue')
+        batch_op.alter_column('newvalue', new_column_name='oldvalue')
+        
