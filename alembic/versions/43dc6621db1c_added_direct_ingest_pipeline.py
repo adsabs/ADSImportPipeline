@@ -20,15 +20,15 @@ def upgrade():
     cx = op.get_context()
     
     with op.batch_alter_table("records") as batch_op:
-        batch_op.add_column(sa.Column('arxiv_data', sa.Text))
-        batch_op.add_column(sa.Column('arxiv_updated', sa.TIMESTAMP))
-        batch_op.add_column(sa.Column('arxiv_processed', sa.TIMESTAMP))
+        batch_op.add_column(sa.Column('direct_data', sa.Text))
+        batch_op.add_column(sa.Column('direct_updated', sa.TIMESTAMP))
+        batch_op.add_column(sa.Column('direct_processed', sa.TIMESTAMP))
             
 
 def downgrade():
     cx = op.get_context()
     with op.batch_alter_table("records") as batch_op:
-        batch_op.drop_column('arxiv_data')
-        batch_op.drop_column('arxiv_updated')
-        batch_op.drop_column('arxiv_processed')
+        batch_op.drop_column('direct_data')
+        batch_op.drop_column('direct_updated')
+        batch_op.drop_column('direct_processed')
         
