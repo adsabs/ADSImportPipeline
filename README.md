@@ -66,6 +66,32 @@ to have it become active in the ingest process:
 1. restart running processes so that new code is loaded and executed: `supervisorctl restart ADSimportpipeline`
 (if running under supervisord).
 
+## Incorporating a new sub-pipeline
+
+The steps below describe how to extend existing import pipeline. This is a preferred method to add a new
+source (publisher) unless the transformations are really complex and it would be better to create a new
+import pipeline just for that purpose.
+
+  1. add a new storage column (if the new sub-pipeline needs to store its output)
+    - run `alembic revision -m "......"` to update the database, example: `alembic/versions/43dc6621db1c_added_direct_ingest_pipeline.py`
+    - update `aip/models.py`, add 3 new columns to the `storage` table
+        - '<name>_data' : i.e. `arxiv_data` - the type is text, but for all practical purposes you should always use JSON formatted data
+        - '<name>_created' : timestamp that says when this particular column was updated
+        - '<name>_updated' : timestamp that says when this particular column was created
+  1. place your sub-pipeline code into `aip/<subpipeline-name`; i.e. `aip/classic`
+    - and unittests into `tests/<name>/...`, example `tests/classic/test_tasks.py`
+  1. update app.py if necessary
+    - it should contain methods that are generally useful
+    - update its accompanying unittest: `tests/test_app.py`
+  1. update `tasks.py`
+    - create whatever queue/taks that is necessary for your pipeline
+    - output is always redirected through `task_output_results`
+        - modify this task to incorporate/load any additional data that should be exported
+        - the sub-pipelines are NOT expected to be sending their own protobuf (ADSImportPipeline always sends `DenormalizedRecord`)
+  1. update `run.py`
+    - try to update the diagnostics() function to provide output useful for testing
+    - add options to start/run your sub-pipeline
+
 
 ## Maintainers
 

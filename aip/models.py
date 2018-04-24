@@ -45,9 +45,13 @@ class Records(Base):
     updated = Column(UTCDateTime, default=get_date)
     processed = Column(UTCDateTime)
     
-    _date_fields = ['created', 'updated', 'processed']
+    direct_data = Column(Text)
+    direct_created = Column(UTCDateTime, default=get_date)
+    direct_updated = Column(UTCDateTime, default=get_date)
+    
+    _date_fields = ['created', 'updated', 'processed', 'direct_created', 'direct_updated']
     _text_fields = ['id', 'bibcode', 'fingerprint']
-    _json_fields = []
+    _json_fields = ['direct_data']
     
     def toJSON(self, for_solr=False, load_only=None):
         if for_solr:
