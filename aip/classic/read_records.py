@@ -3,7 +3,7 @@ import json
 import time
 import timeout_decorator
 
-from aip.classic import xmltodict
+import xmltodict
 from aip.classic import enforce_schema
 try:
     from xml.parsers.expat import ExpatError
