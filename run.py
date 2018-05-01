@@ -4,7 +4,8 @@ import os
 import sys
 import datetime
 import gzip
-from aip.libs import read_records
+
+from aip.classic import read_records
 from adsputils import setup_logging, load_config
 from aip.models import Records, ChangeLog
 from aip import tasks
@@ -237,11 +238,11 @@ def main(*args):
         if isinstance(args.caldate,basestring):
             pass
         else:
-            args.caldate = datetime.datetime.today().strftime(%Y-%m-%d)
+            args.caldate = datetime.datetime.today().strftime('%Y-%m-%d')
 
         if args.direct == 'APS':
 
-            logfile = config.APS_UPDATE_AGENT_LOG + args.caldate
+            logfile = app.conf.get('APS_UPDATE_AGENT_LOG') + args.caldate
             reclist = list()
             with open(logfile,'rU') as flist:
                 for l in flist.readlines():
@@ -251,30 +252,36 @@ def main(*args):
             if (len(reclist) > 0):
                 for f in reclist:
                     with open(f,'rU') as fp:
-                        parser = aps.APSJATSParser()
-                        parsed_records.append(parser.parse(fp))
+                        try:
+                            parser = aps.APSJATSParser()
+                            parsed_records.append(parser.parse(fp))
+                        except:
+                            logger.error("bad record: %s from %s ingest"%(f,args.direct))
 
         elif args.direct == 'Arxiv':
 
-            logfile = config.ARXIV_UPDATE_AGENT_DIR + 'UpdateAgent.out.' + args.caldate + '.gz'
+            logfile = app.conf.get('ARXIV_UPDATE_AGENT_DIR') + '/UpdateAgent.out.' + args.caldate + '.gz'
             reclist = list()
             with gzip.open(logfile,'r') as flist:
                 for l in flist.readlines():
-                    a = ARXIV_INCOMING_ABS_DIR + '/' + l.split()[0]
+                    a = config.ARXIV_INCOMING_ABS_DIR + '/' + l.split()[0]
                     reclist.append(a)
 
             if (len(reclist) > 0):
                 for f in reclist:
                     with open(f,'rU') as fp:
-                        parser = arxiv.ArxivParser()
-                        parsed_records.append(parser.parse(fp))
+                        try:
+                            parser = arxiv.ArxivParser()
+                            parsed_records.append(parser.parse(fp))
+                        except:
+                            logger.error("bad record: %s from %s ingest"%(f,args.direct))
 
 
         else:
             print "lol, wut?"
 
         for r in parsed_records:
-            tasks.task_output_direct(direct_translate(r))
+            tasks.task_output_results(direct_translate(r))
 
 
 
