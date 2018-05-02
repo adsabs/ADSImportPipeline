@@ -256,16 +256,11 @@ def main(*args):
         else:
             print "lol, wut?"
 
-        print ("number of records: %s"%len(parsed_records))
         for r in parsed_records:
 
 #           tasks.task_output_results(direct_translate(r))
 
-            foo = sd.translate(r)
-            if type(foo) is not type(None):
-                tasks.task_output_direct(foo)
-            else:
-                print "zomg nonetype."
+            tasks.task_output_direct(sd.translate(r))
 
 
 

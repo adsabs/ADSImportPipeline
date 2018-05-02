@@ -4,6 +4,10 @@ def translate(record, **kwargs):
 # and re-serializes it into a form used by denormalized
 # records.
 
+    for k in record.keys():
+        if record[k] == None:
+            del record[k]
+
     try:
         record['title']
     except:
