@@ -6,6 +6,7 @@ import datetime
 import gzip
 
 from aip.classic import read_records
+from aip.direct import serialize_direct as sd
 from adsputils import setup_logging, load_config
 from aip.models import Records, ChangeLog
 from aip import tasks
@@ -19,31 +20,6 @@ from sqlalchemy.orm import load_only
 
 app = tasks.app
 logger = setup_logging('run.py')
-
-
-def direct_translate(record):
-    if record['title']:
-        record['title'] = [record['title']]
-    if record['authors']:
-        record['author'] = [record['authors']]
-        del record['authors']
-    if record['affiliations']:
-       record['aff'] = record['affiliations']
-       del record['affiliations']
-    if record['keywords']:
-        record['keyword'] = [record['keywords']]
-        del record['keywords']
-    if record['properties']:
-        del record['properties']
-    if record['publication']:
-       record['pub'] = record['publication']
-       del record['publication']
-    if record['page']:
-       record['page'] = [record['page']]
-    return record
-
-def do_direct(records):
-    return
 
 
 def read_bibcodes(files):
@@ -264,7 +240,7 @@ def main(*args):
             reclist = list()
             with gzip.open(logfile,'r') as flist:
                 for l in flist.readlines():
-                    a = config.ARXIV_INCOMING_ABS_DIR + '/' + l.split()[0]
+                    a = aff.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[0]
                     reclist.append(a)
 
             if (len(reclist) > 0):
@@ -281,13 +257,10 @@ def main(*args):
             print "lol, wut?"
 
         for r in parsed_records:
-#TODO (MT): task_output_results has a call to check for the bibcode to see if it exists.
-#           If it doesn't, an exception is raised (see app.py)
-#           Should I create a new task that just outputs a record with no checks?
-#           (i.e. tasks.task_output_direct(direct_translate(r))?)
+
 #           tasks.task_output_results(direct_translate(r))
 
-            tasks.task_output_direct(direct_translate(r))
+            tasks.task_output_direct(sd.translate(r))
 
 
 

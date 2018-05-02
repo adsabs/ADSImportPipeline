@@ -14,8 +14,7 @@ app.conf.CELERY_QUEUES = (
     Queue('classic:find-new-records', app.exchange, routing_key='classic:find-new-records'),
     Queue('classic:read-records', app.exchange, routing_key='classic:read-records'),
     Queue('classic:merge-metadata', app.exchange, routing_key='classic:merge-metadata'),
-    Queue('output-results', app.exchange, routing_key='output-results'),
-    Queue('output-direct', app.exchange, routing_key='output-direct')
+    Queue('output-results', app.exchange, routing_key='output-results')
 )
 
 
@@ -124,7 +123,7 @@ def task_output_results(msg):
     app.update_processed_timestamp(rec.bibcode)
 
 
-@app.task(queue='output-direct')
+@app.task(queue='output-results')
 def task_output_direct(msg):
     """
     This worker will forward direct ingest data to 
