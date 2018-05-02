@@ -1,4 +1,4 @@
-def translate(record):
+def translate(record, **kwargs):
 
 # takes an input json object from an adsabs-pyingest parser
 # and re-serializes it into a form used by denormalized
