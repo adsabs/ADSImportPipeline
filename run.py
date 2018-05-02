@@ -240,7 +240,7 @@ def main(*args):
             reclist = list()
             with gzip.open(logfile,'r') as flist:
                 for l in flist.readlines():
-                    a = aff.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[0]
+                    a = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[0]
                     reclist.append(a)
 
             if (len(reclist) > 0):
@@ -260,7 +260,11 @@ def main(*args):
 
 #           tasks.task_output_results(direct_translate(r))
 
-            tasks.task_output_direct(sd.translate(r))
+            foo = sd.translate(r)
+            if type(foo) is not type(None):
+                tasks.task_output_direct(sd.translate(r))
+            else:
+                print "zomg nonetype."
 
 
 
