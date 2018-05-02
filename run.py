@@ -285,7 +285,9 @@ def main(*args):
 #           If it doesn't, an exception is raised (see app.py)
 #           Should I create a new task that just outputs a record with no checks?
 #           (i.e. tasks.task_output_direct(direct_translate(r))?)
-            tasks.task_output_results(direct_translate(r))
+#           tasks.task_output_results(direct_translate(r))
+
+            tasks.task_output_direct(direct_translate(r))
 
 
 
