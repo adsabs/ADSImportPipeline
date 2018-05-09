@@ -216,25 +216,7 @@ def main(*args):
         else:
             args.caldate = datetime.datetime.today().strftime('%Y-%m-%d')
 
-        if args.direct == 'APS':
-
-            logfile = app.conf.get('APS_UPDATE_AGENT_LOG') + args.caldate
-            reclist = list()
-            with open(logfile,'rU') as flist:
-                for l in flist.readlines():
-                    a,b,c = l.split('\t')
-                    reclist.append(b)
-
-            if (len(reclist) > 0):
-                for f in reclist:
-                    with open(f,'rU') as fp:
-                        try:
-                            parser = aps.APSJATSParser()
-                            parsed_records.append(parser.parse(fp))
-                        except:
-                            logger.error("bad record: %s from %s ingest"%(f,args.direct))
-
-        elif args.direct == 'Arxiv':
+        if args.direct == 'Arxiv':
 
             logfile = app.conf.get('ARXIV_UPDATE_AGENT_DIR') + '/UpdateAgent.out.' + args.caldate + '.gz'
             reclist = list()
@@ -252,9 +234,27 @@ def main(*args):
                         except:
                             logger.error("bad record: %s from %s ingest"%(f,args.direct))
 
+        elif args.direct == 'APS':
+
+            logfile = app.conf.get('APS_UPDATE_AGENT_LOG') + args.caldate
+            reclist = list()
+            with open(logfile,'rU') as flist:
+                for l in flist.readlines():
+                    a,b,c = l.split('\t')
+                    reclist.append(b)
+
+            if (len(reclist) > 0):
+                for f in reclist:
+                    with open(f,'rU') as fp:
+                        try:
+                            parser = aps.APSJATSParser()
+                            parsed_records.append(parser.parse(fp))
+                        except:
+                            logger.error("bad record: %s from %s ingest"%(f,args.direct))
+
 
         else:
-            print "lol, wut?"
+            print "This should never happen"
 
         for r in parsed_records:
 
