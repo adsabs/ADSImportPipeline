@@ -2,10 +2,16 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-from aip.libs import read_records
+import datetime
+import gzip
+
+from aip.classic import read_records
+from aip.direct import serialize_direct as sd
 from adsputils import setup_logging, load_config
 from aip.models import Records, ChangeLog
 from aip import tasks
+import pyingest.parsers.aps as aps
+import pyingest.parsers.arxiv as arxiv
 
 import time
 import argparse
@@ -14,7 +20,6 @@ from sqlalchemy.orm import load_only
 
 app = tasks.app
 logger = setup_logging('run.py')
-
 
 
 def read_bibcodes(files):
@@ -173,7 +178,7 @@ def main(*args):
                         action='store_true',
                         default=False,
                         help='Show me what you would do with bibcodes')
-    
+
     parser.add_argument('-r',
                         '--replay-deletions',
                         dest='replay_deletions',
@@ -181,67 +186,146 @@ def main(*args):
                         default=False,
                         help='Resubmit all bibcodes (that were ever deleted) again to the master pipeline.')
 
+    parser.add_argument('--APS',
+                        dest='direct',
+                        action='store_const',
+                        const='APS',
+                        help='Launch a direct import of APS content.')
+
+    parser.add_argument('--Arxiv',
+                        dest='direct',
+                        action='store_const',
+                        const='Arxiv',
+                        help='Launch a direct import of Arxiv content.')
+
+    parser.add_argument('-c',
+                        '--caldate',
+                        dest = 'caldate',
+                        action = 'store',
+                        help = 'Process direct import metadata for YYYY-MM-DD')
+
     args = parser.parse_args()
 
-    # initialize cache (to read ADS records)
-    if not args.dont_init_lookers_cache and read_records.INIT_LOOKERS_CACHE:
-        start = time.time()
-        logger.info('Calling init_lookers_cache()')
-        read_records.INIT_LOOKERS_CACHE()
-        logger.info('init_lookers_cache() returned in %0.1f sec'
-                    % (time.time() - start))
+# for testing of direct import
+    if args.direct:
 
-    # read bibcodes:json_fingerprints into memory
-    records = read_bibcodes(app.conf.get('BIBCODE_FILES'))
-    logger.info('Read %s records', len(records))
-    targets = OrderedDict()
-    if args.bibcodes:
-        for t in args.bibcodes:
-            if t.startswith('@'):
-                with open(t.replace('@', '')) as fp:
-                    for line in fp:
-                        if line.startswith('#'):
-                            continue
-                        b = line.strip()
-                        if b not in records:
-                            logger.error('Asked to process %s but the bibcode is not in the list of canonical bibcodes (%s)', 
-                                         b, app.conf.get('BIBCODE_FILES'))
-                            continue
-                        if b:
-                            targets[b] = records[b]
-            else:
-                targets[t] = records[t]
+        parsed_records = list()
 
-    #TODO(rca): getAlternates is called multiple times unnecessarily
-    records = read_records.canonicalize_records(records, targets or records, ignore_fingerprints=args.ignore_json_fingerprints)
-    logger.info('Canonicalize %s records', len(records))
+        if isinstance(args.caldate,basestring):
+            pass
+        else:
+            args.caldate = datetime.datetime.today().strftime('%Y-%m-%d')
 
-    if args.replay_deletions:
-        with app.session_scope() as session:
-            for r in session.query(ChangeLog).filter(ChangeLog.key == 'deleted').yield_per(1000):
-                tasks.task_delete_documents.delay(r.oldvalue)
-                
-    # discover differences
-    orphaned = set()
-    if args.process_deletions:
-        logger.info('Will discover orphans')
-        # get all bibcodes from the storage (into memory)
-        store = set()
-        with app.session_scope() as session:
-            for r in session.query(Records).options(load_only('bibcode')).yield_per(1000):
-                store.add(r.bibcode)
-        logger.info('Loaded %s bibcodes from the database', len(store))
-        canonical_bibcodes = set([x[0] for x in records])
-        orphaned = store.difference(canonical_bibcodes)
-        logger.info('Discovered %s orphans', len(orphaned))
+        if args.direct == 'Arxiv':
+
+            logfile = app.conf.get('ARXIV_UPDATE_AGENT_DIR') + '/UpdateAgent.out.' + args.caldate + '.gz'
+            reclist = list()
+            with gzip.open(logfile,'r') as flist:
+                for l in flist.readlines():
+                    a = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[0]
+                    reclist.append(a)
+
+            if (len(reclist) > 0):
+                for f in reclist:
+                    with open(f,'rU') as fp:
+                        try:
+                            parser = arxiv.ArxivParser()
+                            parsed_records.append(parser.parse(fp))
+                        except:
+                            logger.error("bad record: %s from %s ingest"%(f,args.direct))
+
+        elif args.direct == 'APS':
+
+            logfile = app.conf.get('APS_UPDATE_AGENT_LOG') + args.caldate
+            reclist = list()
+            with open(logfile,'rU') as flist:
+                for l in flist.readlines():
+                    a,b,c = l.split('\t')
+                    reclist.append(b)
+
+            if (len(reclist) > 0):
+                for f in reclist:
+                    with open(f,'rU') as fp:
+                        try:
+                            parser = aps.APSJATSParser()
+                            parsed_records.append(parser.parse(fp))
+                        except:
+                            logger.error("bad record: %s from %s ingest"%(f,args.direct))
 
 
-    if args.diagnose:
-        logger.info('Running diagnostics on %s records (orphaned=%s)', len(records), len(orphaned))
-        show_api_diagnostics(records, orphaned)
+        else:
+            print "This should never happen"
+
+        for r in parsed_records:
+
+#           tasks.task_output_results(direct_translate(r))
+
+            tasks.task_output_direct(sd.translate(r))
+
+
+
+
     else:
-        logger.info('Running %s records (orphaned=%s)', len(records), len(orphaned))
-        do_the_work(records, orphaned)
+
+        # initialize cache (to read ADS records)
+        if not args.dont_init_lookers_cache and read_records.INIT_LOOKERS_CACHE:
+            start = time.time()
+            logger.info('Calling init_lookers_cache()')
+            read_records.INIT_LOOKERS_CACHE()
+            logger.info('init_lookers_cache() returned in %0.1f sec'
+                        % (time.time() - start))
+
+        # read bibcodes:json_fingerprints into memory
+        records = read_bibcodes(app.conf.get('BIBCODE_FILES'))
+        logger.info('Read %s records', len(records))
+        targets = OrderedDict()
+        if args.bibcodes:
+            for t in args.bibcodes:
+                if t.startswith('@'):
+                    with open(t.replace('@', '')) as fp:
+                        for line in fp:
+                            if line.startswith('#'):
+                                continue
+                            b = line.strip()
+                            if b not in records:
+                                logger.error('Asked to process %s but the bibcode is not in the list of canonical bibcodes (%s)', 
+                                             b, app.conf.get('BIBCODE_FILES'))
+                                continue
+                            if b:
+                                targets[b] = records[b]
+                else:
+                    targets[t] = records[t]
+
+        #TODO(rca): getAlternates is called multiple times unnecessarily
+        records = read_records.canonicalize_records(records, targets or records, ignore_fingerprints=args.ignore_json_fingerprints)
+        logger.info('Canonicalize %s records', len(records))
+
+        if args.replay_deletions:
+            with app.session_scope() as session:
+                for r in session.query(ChangeLog).filter(ChangeLog.key == 'deleted').yield_per(1000):
+                    tasks.task_delete_documents.delay(r.oldvalue)
+
+        # discover differences
+        orphaned = set()
+        if args.process_deletions:
+            logger.info('Will discover orphans')
+            # get all bibcodes from the storage (into memory)
+            store = set()
+            with app.session_scope() as session:
+                for r in session.query(Records).options(load_only('bibcode')).yield_per(1000):
+                    store.add(r.bibcode)
+            logger.info('Loaded %s bibcodes from the database', len(store))
+            canonical_bibcodes = set([x[0] for x in records])
+            orphaned = store.difference(canonical_bibcodes)
+            logger.info('Discovered %s orphans', len(orphaned))
+
+
+        if args.diagnose:
+            logger.info('Running diagnostics on %s records (orphaned=%s)', len(records), len(orphaned))
+            show_api_diagnostics(records, orphaned)
+        else:
+            logger.info('Running %s records (orphaned=%s)', len(records), len(orphaned))
+            do_the_work(records, orphaned)
 
 
 

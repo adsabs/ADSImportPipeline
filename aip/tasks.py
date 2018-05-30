@@ -14,7 +14,7 @@ app.conf.CELERY_QUEUES = (
     Queue('classic:find-new-records', app.exchange, routing_key='classic:find-new-records'),
     Queue('classic:read-records', app.exchange, routing_key='classic:read-records'),
     Queue('classic:merge-metadata', app.exchange, routing_key='classic:merge-metadata'),
-    Queue('output-results', app.exchange, routing_key='output-results'),
+    Queue('output-results', app.exchange, routing_key='output-results')
 )
 
 
@@ -121,6 +121,31 @@ def task_output_results(msg):
     rec = DenormalizedRecord(**msg)
     app.forward_message(rec)
     app.update_processed_timestamp(rec.bibcode)
+
+
+@app.task(queue='output-results')
+def task_output_direct(msg):
+    """
+    This worker will forward direct ingest data to 
+    the outside exchange (typically an 
+    ADSMasterPipeline) to be incorporated into the
+    storage
+
+    :param msg: contains the bibliographic metadata
+
+            {'bibcode': '....',
+             'authors': [....],
+             'title': '.....',
+             .....
+            }
+    :return: no return
+    """
+    logger.debug('Will forward this record: %s', msg)
+    
+    #TODO: load whatever else there is in database (if needed) and merge it with this record
+    
+    rec = DenormalizedRecord(**msg)
+    app.forward_message(rec)
 
 
 
