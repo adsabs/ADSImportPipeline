@@ -7,8 +7,7 @@ from __future__ import absolute_import, unicode_literals
 from .models import Records, ChangeLog
 from sqlalchemy.orm import load_only as _load_only
 from adsputils import ADSCelery, get_date
-
-
+from aip.models import Records
 
 class ADSImportPipelineCelery(ADSCelery):
     
@@ -52,11 +51,16 @@ class ADSImportPipelineCelery(ADSCelery):
                         r.__setattr__('{}_created'.format(colname), now)
                     r.__setattr__('{}_upated'.format(colname), now)
                     updated = True
+                elif k == 'origin':
+                    r.__setattr__(k, v)
+                    if v == 'direct':
+                        r.__setattr__('direct_created', now)
+                    updated = True
                     
-
             if updated:
                 r.updated = now
                 session.commit()
+
             return r.toJSON()
     
     
@@ -88,4 +92,16 @@ class ADSImportPipelineCelery(ADSCelery):
                 raise Exception('Cant find bibcode {0} to update timestamp'.format(bibcode))
             r.processed = get_date()
             session.commit()
-    
+
+    def compute_orphaned(self, canonical_bibcodes):
+        """return a list of orphaned bibcodes, compare database to passed canonical """
+        orphaned = set()
+        # get all bibcodes from the storage (into memory)
+        store = set()
+        with self.session_scope() as session:
+            for r in session.query(Records).filter(Records.origin=='classic').options(_load_only('bibcode')).yield_per(1000):
+                store.add(r.bibcode)
+            orphaned = store.difference(canonical_bibcodes)
+            self.logger.info('Found %s orphaned bibcode, %s canonical, %s from database',
+                             len(orphaned), len(canonical_bibcodes), len(store))
+        return orphaned

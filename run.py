@@ -222,6 +222,7 @@ def main(*args):
             reclist = list()
             with gzip.open(logfile,'r') as flist:
                 for l in flist.readlines():
+                    # sample line: oai/arXiv.org/0706/2491 2018-06-13T01:00:29
                     a = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[0]
                     reclist.append(a)
 
@@ -252,18 +253,15 @@ def main(*args):
                         except:
                             logger.error("bad record: %s from %s ingest"%(f,args.direct))
 
-
         else:
-            print "This should never happen"
+            logger.error('invalid direct argument passed: %s' % args.direct)
+            print 'invalid direct argument passed: %s' % args.direct
 
         for r in parsed_records:
 
 #           tasks.task_output_results(direct_translate(r))
 
             tasks.task_output_direct(sd.translate(r))
-
-
-
 
     else:
 
@@ -308,15 +306,8 @@ def main(*args):
         # discover differences
         orphaned = set()
         if args.process_deletions:
-            logger.info('Will discover orphans')
-            # get all bibcodes from the storage (into memory)
-            store = set()
-            with app.session_scope() as session:
-                for r in session.query(Records).options(load_only('bibcode')).yield_per(1000):
-                    store.add(r.bibcode)
-            logger.info('Loaded %s bibcodes from the database', len(store))
             canonical_bibcodes = set([x[0] for x in records])
-            orphaned = store.difference(canonical_bibcodes)
+            orphaned = app.compute_orphaned(canonical_bibcodes)
             logger.info('Discovered %s orphans', len(orphaned))
 
 

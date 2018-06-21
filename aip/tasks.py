@@ -87,7 +87,7 @@ def task_merge_metadata(record):
 
     if result and len(result) > 0:
         for r in result: # TODO: save the mid-cycle representation of the metadata ???
-            record = app.update_storage(r['bibcode'], fingerprint=record['JSON_fingerprint'])
+            record = app.update_storage(r['bibcode'], fingerprint=record['JSON_fingerprint'], origin='classic')
             r['id'] = record['id']
             r = solr_adapter.SolrAdapter.adapt(r)
             solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
@@ -142,10 +142,23 @@ def task_output_direct(msg):
     """
     logger.debug('Will forward this record: %s', msg)
     
-    #TODO: load whatever else there is in database (if needed) and merge it with this record
-    
-    rec = DenormalizedRecord(**msg)
-    app.forward_message(rec)
+    # update Records table entry
+    bibcode = msg.bibcode
+    rec = app.get_record(bibcode, load_only='origin')
+    if (rec):
+        # here if we previously ingested this bibcode, nothing to do
+        if rec['origin'] is 'classic':
+            logger.warn('direct ingest of %s ignored, classic data already received' % bibcode)
+        elif rec['origin'] is 'direct':
+            logger.warn('direct ingest of %s ignored, direct data already received' % bibcode)
+        else:
+            logger.error('direct ingest of {} failed, unexpected value for origin: {}'.format(bibcode, rec['origin']))
+        return
+    else:
+        # process new bibcode
+        json = app.update_storage(msg.bibcode, origin='direct')
+        rec = DenormalizedRecord(**msg)
+        app.forward_message(rec)
 
 
 
