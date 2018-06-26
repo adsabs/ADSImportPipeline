@@ -52,9 +52,21 @@ class ADSImportPipelineCelery(ADSCelery):
                     r.__setattr__('{}_upated'.format(colname), now)
                     updated = True
                 elif k == 'origin':
-                    r.__setattr__(k, v)
+                    r.origin = v
                     if v == 'direct':
-                        r.__setattr__('direct_created', now)
+                        # if bibcode was already deleted it can not be added by direct
+                        d = session.query(ChangeLog) \
+                                   .filter_by(oldvalue=bibcode) \
+                                   .filter_by(key='deleted') \
+                                   .first()
+                        if d:
+                            # just abort, do not update storage
+                            self.logger.warn('direct tried to overwrite deleted bibcode %s' % bibcode)
+                            session.rollback()
+                            return None
+                        if r.direct_created is None:
+                            r.direct_created = now
+                        r.direct_updated = now
                     updated = True
                     
             if updated:

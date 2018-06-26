@@ -2,6 +2,7 @@
 
 from aip import models, tasks, app as app_module
 from aip.models import Base
+from time import sleep
 import os
 import unittest
 
@@ -44,6 +45,15 @@ class TestUpdateRecords(unittest.TestCase):
         r = self.app.get_record('bar')
         self.assertEqual('direct', r['origin'])
         self.assertTrue(r['direct_created'] != None)
+        self.assertTrue(r['direct_updated'] != None)
+        self.assertEqual(r['direct_created'], r['direct_updated'])
+
+        sleep(.1)
+        self.app.update_storage('bar', origin='direct')
+        r = self.app.get_record('bar')
+        self.assertEqual('direct', r['origin'])
+        self.assertTrue(r['direct_created'] != None)
+        self.assertNotEqual(r['direct_created'], r['direct_updated'])
         
         
     def test_delete_record(self):
@@ -52,6 +62,29 @@ class TestUpdateRecords(unittest.TestCase):
         with self.app.session_scope() as session:
             r = session.query(models.ChangeLog).filter_by(key='deleted').first()
             self.assertEquals(r.oldvalue, 'foo')
+
+    def test_direct_after_delete(self):
+        """bibcode can not be added via direct ingest after it has been deleted"""
+        r0 = self.app.update_storage('foo', origin='direct')
+        self.assertIsNotNone(r0)
+        r = self.app.get_record('foo')
+        self.assertEqual('direct', r['origin'])
+        sleep(.1)
+        r1 = self.app.update_storage('foo', fingerprint='fingerprint',
+                                     origin='classic')
+        self.assertIsNotNone(r1)
+        self.assertIsNotNone(r1['updated'])
+        self.assertIsNotNone(r1['direct_updated'])
+        self.assertNotEqual(r1['updated'], ['direct_updated'])
+        r = self.app.get_record('foo')
+        self.assertEqual('classic', r['origin'])
+        
+        self.app.delete_by_bibcode('foo')
+        # after delete, it direct can not add it
+        r2 = self.app.update_storage('foo', origin='direct')
+        self.assertIsNone(r2)
+        r = self.app.get_record('foo')
+        self.assertIsNone(r)
 
     def test_compute_orphaned(self):
         self.app.update_storage('foo', fingerprint='fingerprint', origin='classic')
