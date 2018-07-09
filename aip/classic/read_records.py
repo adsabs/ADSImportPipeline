@@ -27,7 +27,7 @@ except ImportError:
     try:
         from ads.ADSCachedExports import ADSRecords, init_lookers_cache
         from ads.ADSCachedExports import LOGGER as export_logger
-        from aip.libs import conversions
+        from aip.classic import conversions
         INIT_LOOKERS_CACHE = init_lookers_cache
     except ImportError:
         print "Unable to import ads.ADSExports.ADSRecords!"
