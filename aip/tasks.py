@@ -143,14 +143,14 @@ def task_output_direct(msg):
     logger.debug('Will forward this record: %s', msg)
     
     # update Records table entry
-    bibcode = msg.bibcode
-    rec = app.get_record(bibcode, load_only='origin')
+    bibcode = msg['bibcode']
+    rec = app.get_record(bibcode, load_only=['origin'])
     if (rec):
         # here if we previously ingested this bibcode
         if rec['origin'] is 'classic':
             logger.warn('direct ingest of %s ignored, classic data already received' % bibcode)
         elif rec['origin'] is 'direct':
-            json = app.update_storage(msg.bibcode, origin='direct')
+            json = app.update_storage(bibcode, origin='direct')
             if json:
                 rec = DenormalizedRecord(**msg)
                 app.forward_message(rec)
@@ -159,7 +159,7 @@ def task_output_direct(msg):
         return
     else:
         # process new bibcode
-        json = app.update_storage(msg.bibcode, origin='direct')
+        json = app.update_storage(bibcode, origin='direct')
         if json:
             rec = DenormalizedRecord(**msg)
             app.forward_message(rec)
