@@ -46,6 +46,7 @@ class SolrAdapter(object):
     #'author_native': [u'',], Waiting for montysolr
     'author_facet_hier': [u'',],
     'author_norm': [u'',],
+    'book_author': [u'',],
     'bibcode': u'',
     'bibgroup': [u'', ],
     'bibgroup_facet': [u'', ],
@@ -58,6 +59,7 @@ class SolrAdapter(object):
     'doctype': u'',
     'doctype_facet_hier': [u''],
     'doi':[u'',],
+    'editor': [u'',],
     'eid':u'',
     'email': [u'', ],
     'entry_date': '',
@@ -89,6 +91,7 @@ class SolrAdapter(object):
     'pub_raw': u'',
     'pubdate': u'',
     'recid': 0,
+    'series': u'',
     'thesis': u'',
     'title': [u'', ],
     'vizier': [u'', ],
@@ -147,7 +150,7 @@ class SolrAdapter(object):
   def _author(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['western'] for i in authors if i['name']['western']]
+    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type']=='regular']
     return {'author': result}  
 
   @staticmethod
@@ -162,6 +165,20 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = [i['name']['normalized'] for i in authors if i['name']['normalized']]
     return {'author_norm': result}
+
+  @staticmethod
+  def _book_author(ADS_record):
+    author = ADS_record['metadata']['general'].get('book_author', [])
+    author = sorted(author, key=lambda k: int(k['number']))
+    result = [i['name']['western'] for i in author if i['name']['western']]
+    return {'book_author': result}
+
+  @staticmethod
+  def editor(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors', [])
+    authors = sorted(authors, key=lambda k: int(k['number']))
+    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type']=='editor']
+    return {'editors': result}
 
   @staticmethod
   def _author_facet(ADS_record):
@@ -453,6 +470,10 @@ class SolrAdapter(object):
   def _pubnote(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('pubnote',[])]
     return {'pubnote':result}
+
+  @staticmethod
+  def _series(ADS_record):
+    return {'series': ADS_record['metadata']['general'].get('series', u'')}
 
   @staticmethod
   def _keyword(ADS_record):

@@ -167,13 +167,13 @@ class TestSolrAdapter(unittest.TestCase):
                         },
                     'authors': [
                         {'name': {'normalized': u'T Hooft, V', 'western': u"t'Hooft, van X", 'native': ''}, 
-                         'number': u'1', 'affiliations': [], 'orcid': '', 'type': '', 'emails': []}, 
+                         'number': u'1', 'affiliations': [], 'orcid': '', 'type': 'regular', 'emails': []},
                         {'name': {'normalized': u'Anders, J M', 'western': u'Anders, John Michael', 'native': ''}, 
                          'number': u'2', 'affiliations': [u'NASA Kavli space center, Cambridge, MA 02138, USA'], 
-                         'orcid': '', 'type': '', 'emails': [u'anders@email.com']}, 
+                         'orcid': '', 'type': 'regular', 'emails': [u'anders@email.com']},
                         {'name': {'normalized': u'Einstein, A', 'western': u'Einstein, A', 'native': ''}, 
                          'number': u'3', 'affiliations': [u'Einsteininstitute, Zurych, Switzerland'], 
-                         'orcid': '', 'type': '', 'emails': []}],
+                         'orcid': '', 'type': 'regular', 'emails': []}],
                     }
                 },
             'orcid_claims': {'verified': [u'-', u'1111-2222-3333-4444', u'-']}
@@ -187,9 +187,9 @@ class TestSolrAdapter(unittest.TestCase):
             'bibstem_facet': u'arXiv',
             'entry_date': '2003-02-21T00:00:00.000000Z',
             'pubdate' : u'2014-06-00',
-            "property": [u"OPENACCESS", u"EPRINT_OPENACCESS", u"ARTICLE", u"NOT REFEREED"], 
+            "property": [u"OPENACCESS", u"EPRINT_OPENACCESS", u"ARTICLE", u"NOT REFEREED"],
             'doctype': u'article',
-            
+
             'aff': [u'-',
                   u'NASA Kavli space center, Cambridge, MA 02138, USA',
                   u'Einsteininstitute, Zurych, Switzerland'],
@@ -211,6 +211,63 @@ class TestSolrAdapter(unittest.TestCase):
             'page_count': 0,
             'author_count': 3,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
+        })
+
+        # test editor/series field
+        r = solr_adapter.SolrAdapter.adapt({
+            "id" : 99999996,
+            'bibcode' : u'2018arXiv180303598K',
+            "text": {},
+            "entry_date": "2018-03-11T00:00:00Z",
+            "metadata" : {
+                "references": [],
+                'properties': {'refereed': False, 'openaccess': True,
+                               'doctype': {'content': u'article', 'origin': u'ADS metadata'},
+                               'private': False, 'ocrabstract': False, 'ads_openaccess':False,
+                               'eprint_openaccess': True, 'pub_openaccess': False},
+                "relations": {},
+                "general" : {
+                    "publication" : {
+                        "origin" : u"ARXIV",
+                        'dates' : [
+                            {
+                                'type' : u'date-preprint',
+                                'content' : u'2018-03-00'
+                                }
+                            ]
+                        },
+                    'series': u'series name go here if this was a series',
+                    'authors': [
+                        {'name': {'normalized': u'Accomazzi, A', 'western': u"Accomazzi, Alberto", 'native': ''},
+                         'number': u'1', 'affiliations': [], 'orcid': '', 'type': 'editor', 'emails': []}],
+                }
+            },
+        })
+        solr_adapter.SolrAdapter.validate(r) #Raises AssertionError if not validated
+        self.assertEquals(r, {
+            "id" : 99999996,
+            'bibcode' : u'2018arXiv180303598K',
+            'date':     u'2018-03-01T00:00:00.000000Z',
+            'bibstem': [u'arXiv', u'arXiv1803'],
+            'bibstem_facet': u'arXiv',
+            'entry_date': '2018-03-11T00:00:00.000000Z',
+            'pubdate' : u'2018-03-00',
+            "property": [u"OPENACCESS", u"EPRINT_OPENACCESS", u"ARTICLE", u"NOT REFEREED"],
+            'doctype': u'article',
+
+            'aff': [u'-'],
+           'author_facet': [u'Accomazzi, A'],
+           'author_facet_hier': [u'0/Accomazzi, A', u'1/Accomazzi, A/Accomazzi, Alberto'],
+           'author_norm': [u'Accomazzi, A'],
+            'email': [u'-'],
+            'first_author': u'Accomazzi, Alberto',
+            'first_author_facet_hier': [u'0/Accomazzi, A', u'1/Accomazzi, A/Accomazzi, Alberto'],
+            'first_author_norm': u'Accomazzi, A',
+            'orcid_pub': [u'-'],
+            'author_count': 1,
+            'page_count': 0,
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
+            'series': u'series name go here if this was a series',
         })
 
 
