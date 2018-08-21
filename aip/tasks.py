@@ -102,8 +102,6 @@ def task_merge_metadata(record):
 @app.task(queue='classic:merge-metadata')
 def task_merge_direct(record):
 
-    print "enters as....:",record
-    print "\n\n"
     modrec = ArXivDirect.adsDirectRecord('full','XML',cacheLooker=False)
     modrec.addDirect(record)
     output = read_records.xml_to_dict(modrec.root)
@@ -118,8 +116,6 @@ def task_merge_direct(record):
         r['id'] = None
         r = solr_adapter.SolrAdapter.adapt(r)
         solr_adapter.SolrAdapter.validate(r)
-        print "exits preprocessing as.....:",r
-        print "\n\n\n\n\n\n\n\n\n"
         task_output_direct.delay(r)
 
 
@@ -167,6 +163,7 @@ def task_output_direct(msg):
     """
     logger.debug('Will forward this record: %s', msg)
     
+# THIS STUFF ISN'T NEEDED
 #   # update Records table entry
 #   bibcode = msg['bibcode']
 #   rec = app.get_record(bibcode, load_only='origin')
@@ -188,7 +185,7 @@ def task_output_direct(msg):
 #       if json:
 #           rec = DenormalizedRecord(**msg)
 #           app.forward_message(rec)
-    print "LOL:",msg
+
     rec = DenormalizedRecord(**msg)
     app.forward_message(rec)
 
