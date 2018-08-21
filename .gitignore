@@ -4,4 +4,3 @@ test*txt
 .cache
 .coverage*
 venv
-*~

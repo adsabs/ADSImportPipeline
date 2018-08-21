@@ -1,6 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 from aip import app as app_module
-from aip.classic import solr_adapter, merger, read_records
+from aip.libs import solr_adapter, merger, read_records
 from kombu import Queue
 from adsmsg import BibRecord, DenormalizedRecord
 
@@ -10,15 +10,15 @@ logger = app.logger
 
 
 app.conf.CELERY_QUEUES = (
-    Queue('classic:delete-documents', app.exchange, routing_key='classic:delete-documents'),
-    Queue('classic:find-new-records', app.exchange, routing_key='classic:find-new-records'),
-    Queue('classic:read-records', app.exchange, routing_key='classic:read-records'),
-    Queue('classic:merge-metadata', app.exchange, routing_key='classic:merge-metadata'),
-    Queue('output-results', app.exchange, routing_key='output-results')
+    Queue('delete-documents', app.exchange, routing_key='delete-documents'),
+    Queue('find-new-records', app.exchange, routing_key='find-new-records'),
+    Queue('read-records', app.exchange, routing_key='read-records'),
+    Queue('merge-metadata', app.exchange, routing_key='merge-metadata'),
+    Queue('output-results', app.exchange, routing_key='output-results'),
 )
 
 
-@app.task(queue='classic:find-new-records')
+@app.task(queue='find-new-records')
 def task_find_new_records(fingerprints):
     """Finds bibcodes that are in need of updating. It will do so by comparing
     the json_fingerprint against existing db record.
@@ -61,7 +61,7 @@ def task_find_new_records(fingerprints):
 
 
 
-@app.task(queue='classic:read-records')
+@app.task(queue='read-records')
 def task_read_records(fingerprints):
     """
     Read ADS records from disk; and inserts them into the queue that ingests them.
@@ -75,7 +75,7 @@ def task_read_records(fingerprints):
             task_merge_metadata.delay(r)
 
 
-@app.task(queue='classic:merge-metadata')
+@app.task(queue='merge-metadata')
 def task_merge_metadata(record):
     """Receives the full metadata record (incl all the versions) as read by the ADS
     extractors. We'll merge the versions and create a close-to-canonical version of
@@ -87,7 +87,7 @@ def task_merge_metadata(record):
 
     if result and len(result) > 0:
         for r in result: # TODO: save the mid-cycle representation of the metadata ???
-            record = app.update_storage(r['bibcode'], fingerprint=record['JSON_fingerprint'], origin='classic')
+            record = app.update_storage(r['bibcode'], record['JSON_fingerprint'])
             r['id'] = record['id']
             r = solr_adapter.SolrAdapter.adapt(r)
             solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
@@ -115,58 +115,13 @@ def task_output_results(msg):
     :return: no return
     """
     logger.debug('Will forward this record: %s', msg)
-    
-    #TODO: load whatever else there is in database (if needed) and merge it with this record
-    
     rec = DenormalizedRecord(**msg)
     app.forward_message(rec)
     app.update_processed_timestamp(rec.bibcode)
 
 
-@app.task(queue='output-results')
-def task_output_direct(msg):
-    """
-    This worker will forward direct ingest data to 
-    the outside exchange (typically an 
-    ADSMasterPipeline) to be incorporated into the
-    storage
 
-    :param msg: contains the bibliographic metadata
-
-            {'bibcode': '....',
-             'authors': [....],
-             'title': '.....',
-             .....
-            }
-    :return: no return
-    """
-    logger.debug('Will forward this record: %s', msg)
-    
-    # update Records table entry
-    bibcode = msg.bibcode
-    rec = app.get_record(bibcode, load_only='origin')
-    if (rec):
-        # here if we previously ingested this bibcode
-        if rec['origin'] is 'classic':
-            logger.warn('direct ingest of %s ignored, classic data already received' % bibcode)
-        elif rec['origin'] is 'direct':
-            json = app.update_storage(msg.bibcode, origin='direct')
-            if json:
-                rec = DenormalizedRecord(**msg)
-                app.forward_message(rec)
-        else:
-            logger.error('direct ingest of {} failed, unexpected value for origin: {}'.format(bibcode, rec['origin']))
-        return
-    else:
-        # process new bibcode
-        json = app.update_storage(msg.bibcode, origin='direct')
-        if json:
-            rec = DenormalizedRecord(**msg)
-            app.forward_message(rec)
-
-
-
-@app.task(queue='classic:delete-documents')
+@app.task(queue='delete-documents')
 def task_delete_documents(bibcode):
     """Delete document from SOLR and from our storage.
     @param bibcode: string

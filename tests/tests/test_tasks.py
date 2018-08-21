@@ -4,7 +4,7 @@ from aip import tasks, app as app_module
 from aip.models import Base, Records
 from collections import OrderedDict
 from mock import patch
-from tests.stubdata import ADSRECORDS, mergerdata
+from tests.stubdata import stubdata
 import mock, copy
 import os
 import sys
@@ -55,8 +55,8 @@ class TestWorkers(unittest.TestCase):
 
     def test_task_read_records(self):
         with patch('aip.tasks.task_merge_metadata.delay', return_value=None) as next_task, \
-            patch('aip.classic.read_records.readRecordsFromADSExports',
-                  return_value=[ADSRECORDS['2015ApJ...815..133S'], ADSRECORDS['2015ASPC..495..401C']]) \
+            patch('aip.libs.read_records.readRecordsFromADSExports',
+                  return_value=[stubdata.ADSRECORDS['2015ApJ...815..133S'], stubdata.ADSRECORDS['2015ASPC..495..401C']]) \
                   as _:
             self.assertFalse(next_task.called)
             tasks.task_read_records([('bibcode', 'fingerprint')])
@@ -68,10 +68,10 @@ class TestWorkers(unittest.TestCase):
         with patch('aip.tasks.task_output_results.delay', return_value=None) as next_task:
             self.assertFalse(next_task.called)
 
-            out = copy.deepcopy(mergerdata.MERGEDRECS['2015ApJ...815..133S'])
+            out = copy.deepcopy(stubdata.MERGEDRECS['2015ApJ...815..133S'])
             out['id'] = 1
 
-            tasks.task_merge_metadata(ADSRECORDS['2015ApJ...815..133S'])
+            tasks.task_merge_metadata(stubdata.ADSRECORDS['2015ApJ...815..133S'])
             self.assertTrue(next_task.called)
             self.assertEqual(out, next_task.call_args_list[0][0][0])
 
@@ -81,9 +81,9 @@ class TestWorkers(unittest.TestCase):
             patch.object(self.app, 'forward_message', return_value=None) as next_task:
 
             self.assertFalse(next_task.called)
-            tasks.task_output_results(mergerdata.MERGEDRECS['2015ApJ...815..133S'])
+            tasks.task_output_results(stubdata.MERGEDRECS['2015ApJ...815..133S'])
             self.assertTrue(next_task.called)
-            expected = mergerdata.MERGEDRECS['2015ApJ...815..133S'].copy()
+            expected = stubdata.MERGEDRECS['2015ApJ...815..133S'].copy()
             self.maxDiff = None
             self.assertDictEqual(next_task.call_args[0][0].toJSON(), expected)
             self.assertTrue(update_timestamp.called)
