@@ -40,19 +40,14 @@ class Records(Base):
     id = Column(Integer, primary_key=True)
     bibcode = Column(String(19))
     fingerprint = Column(Text)
-    origin = Column(Text)
 
     created = Column(UTCDateTime, default=get_date)
     updated = Column(UTCDateTime, default=get_date)
     processed = Column(UTCDateTime)
     
-    direct_data = Column(Text)
-    direct_created = Column(UTCDateTime)
-    direct_updated = Column(UTCDateTime)
-    
-    _date_fields = ['created', 'updated', 'processed', 'direct_created', 'direct_updated']
-    _text_fields = ['id', 'bibcode', 'fingerprint', 'origin']
-    _json_fields = ['direct_data']
+    _date_fields = ['created', 'updated', 'processed']
+    _text_fields = ['id', 'bibcode', 'fingerprint']
+    _json_fields = []
     
     def toJSON(self, for_solr=False, load_only=None):
         if for_solr:
@@ -99,4 +94,3 @@ class ChangeLog(Base):
                 'newvalue': self.newvalue,
                 'oldvalue': self.oldvalue
                 }
-

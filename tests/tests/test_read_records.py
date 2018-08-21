@@ -2,7 +2,7 @@ import unittest
 import sys
 import mock
 from collections import OrderedDict
-from tests.stubdata import ADSRECORDS
+from tests.stubdata import stubdata
 
 if '/proj/ads/soft/python/lib/site-packages' not in sys.path:
     sys.path.append('/proj/ads/soft/python/lib/site-packages')
@@ -13,13 +13,13 @@ except ImportError:
     ADSRecords = None
     print "Warning: Fallback to explicit path declaration for import"
 
-from aip.classic import read_records
+from aip.libs import read_records
 
 class TestADSExports(unittest.TestCase):
 
     @unittest.skipIf(not ADSRecords, "ads.ADSCachedExports not available")
     def test_canonicalize_records(self):
-        from aip.classic import read_records
+        from aip.libs import read_records
     
         records = OrderedDict([
             ('2014arXiv1401.2993T','b'), #This is an alternate to 'f'
@@ -54,9 +54,9 @@ class TestADSExports(unittest.TestCase):
             read_records.ADSRecords = {}
         
         adsrecord = mock.Mock()
-        with mock.patch('aip.classic.read_records.ADSRecords', return_value=adsrecord), \
+        with mock.patch('aip.libs.read_records.ADSRecords', return_value=adsrecord), \
             mock.patch.object(adsrecord, 'export', return_value=adsrecord), \
-            mock.patch('aip.classic.read_records.xml_to_dict', return_value=ADSRECORDS[u'2009AAS...21320006C.classic']):
+            mock.patch('aip.libs.read_records.xml_to_dict', return_value=stubdata.ADSRECORDS[u'2009AAS...21320006C.classic']):
             results = read_records.readRecordsFromADSExports([(u'2009AAS...21320006C', 'fingerprint')]) 
             self.assertDictContainsSubset({'JSON_fingerprint': 'fingerprint',
                               'bibcode': u'2009AAS...21320006C',

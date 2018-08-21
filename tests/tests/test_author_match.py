@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from aip.classic import author_match
+from aip.libs import author_match
 
 class TestAuthorMatch(unittest.TestCase):
 

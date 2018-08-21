@@ -337,26 +337,3 @@ PRIORITIES = {
 
 #References with these origins will always be added to merged reference metadata blocks.
 REFERENCES_ALWAYS_APPEND = ['ISI', 'AUTHOR', 'OTHER',]
-
-
-#Direct Ingest Defaults
-
-## ================ ArXiv data location ================ #
-## ##################################################### #
-# Where the worker is going to look for incoming ArXiv
-# submissions: ARCHIVE_ABS_DIR
-
-ARXIV_INCOMING_ABS_DIR = '/proj/ads/abstracts/sources/ArXiv'
-
-ARXIV_UPDATE_AGENT_DIR = ARXIV_INCOMING_ABS_DIR + '/UpdateAgent'
-
-ARXIV_ARCHIVE_ABS_DIR = ARXIV_INCOMING_ABS_DIR + '/oai/arXiv.org'
-
-
-## ================ APS data location ================== #
-## ##################################################### #
-# Where the worker is going to look for incoming APS
-# submissions:
-
-APS_UPDATE_AGENT_LOG = '/proj/ads/abstracts/sources/APS/logs/aps-update.out.'
-
