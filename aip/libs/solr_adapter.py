@@ -46,6 +46,7 @@ class SolrAdapter(object):
     #'author_native': [u'',], Waiting for montysolr
     'author_facet_hier': [u'',],
     'author_norm': [u'',],
+    'book_author': [u'',],
     'bibcode': u'',
     'bibgroup': [u'', ],
     'bibgroup_facet': [u'', ],
@@ -58,6 +59,7 @@ class SolrAdapter(object):
     'doctype': u'',
     'doctype_facet_hier': [u''],
     'doi':[u'',],
+    'editor': [u'',],
     'eid':u'',
     'email': [u'', ],
     'entry_date': '',
@@ -89,6 +91,7 @@ class SolrAdapter(object):
     'pub_raw': u'',
     'pubdate': u'',
     'recid': 0,
+    'series': u'',
     'thesis': u'',
     'title': [u'', ],
     'vizier': [u'', ],
@@ -119,7 +122,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _aff(ADS_record):
-    authors = ADS_record['metadata']['general'].get('authors', [])
+    authors = [i for i in ADS_record['metadata']['general'].get('authors', []) if i['type']=='regular']
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = ['; '.join([j for j in i['affiliations'] if j]) if i['affiliations'] else u'-' for i in authors]
     return {'aff': result}
@@ -147,27 +150,41 @@ class SolrAdapter(object):
   def _author(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['western'] for i in authors if i['name']['western']]
+    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type']=='regular']
     return {'author': result}  
 
   @staticmethod
   def _author_count(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
-    result = len([i['name']['western'] for i in authors if i['name']['western']])
+    result = len([i['name']['western'] for i in authors if i['name']['western'] and i['type']=='regular'])
     return {'author_count': result}
 
   @staticmethod
   def _author_norm(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i['name']['normalized']]
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type']=='regular']
     return {'author_norm': result}
+
+  @staticmethod
+  def _book_author(ADS_record):
+    author = ADS_record['metadata']['general'].get('book_author', [])
+    author = sorted(author, key=lambda k: int(k['number']))
+    result = [i['name']['western'] for i in author if i['name']['western']]
+    return {'book_author': result}
+
+  @staticmethod
+  def _editor(ADS_record):
+    authors = ADS_record['metadata']['general'].get('authors', [])
+    authors = sorted(authors, key=lambda k: int(k['number']))
+    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type']=='editor']
+    return {'editor': result}
 
   @staticmethod
   def _author_facet(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i['name']['normalized']]
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type']=='regular']
     return {'author_facet': result}    
 
   @staticmethod
@@ -176,12 +193,13 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = []
     for author in authors:
-      if author['name']['normalized']:
-        r = u"0/%s" % (_normalize_author_name(author['name']['normalized']),)
-        result.append(r)
-        if author['name']['western']:
-          r = u"1/%s/%s" % (_normalize_author_name(author['name']['normalized']), _normalize_author_name(author['name']['western']))
-          result.append(r)
+        if author['type']=='regular':
+            if author['name']['normalized']:
+                r = u"0/%s" % (_normalize_author_name(author['name']['normalized']),)
+                result.append(r)
+                if author['name']['western']:
+                    r = u"1/%s/%s" % (_normalize_author_name(author['name']['normalized']), _normalize_author_name(author['name']['western']))
+                    result.append(r)
     return {'author_facet_hier': result}
 
 
@@ -453,6 +471,10 @@ class SolrAdapter(object):
   def _pubnote(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('pubnote',[])]
     return {'pubnote':result}
+
+  @staticmethod
+  def _series(ADS_record):
+    return {'series': ADS_record['metadata']['general'].get('series', u'')}
 
   @staticmethod
   def _keyword(ADS_record):

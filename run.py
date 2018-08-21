@@ -211,6 +211,9 @@ def main(*args):
                             targets[b] = records[b]
             else:
                 targets[t] = records[t]
+        if not targets:
+            print 'error: no valid bibcodes supplied'
+            return
 
     #TODO(rca): getAlternates is called multiple times unnecessarily
     records = read_records.canonicalize_records(records, targets or records, ignore_fingerprints=args.ignore_json_fingerprints)
