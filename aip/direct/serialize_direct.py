@@ -47,6 +47,13 @@ def translate(record, **kwargs):
         del record['properties']
 
     try:
+        record['comments']
+    except:
+        pass
+    else:
+        del record['comments']
+
+    try:
         record['publication']
     except:
         pass

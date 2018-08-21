@@ -7,6 +7,7 @@ import gzip
 
 from aip.classic import read_records
 from aip.direct import serialize_direct as sd
+from aip.direct import ArXivDirect
 from adsputils import setup_logging, load_config
 from aip.models import Records, ChangeLog
 from aip import tasks
@@ -259,9 +260,14 @@ def main(*args):
 
         for r in parsed_records:
 
-#           tasks.task_output_results(direct_translate(r))
-
+# simple direct ingest
             tasks.task_output_direct(sd.translate(r))
+
+# enhanced direct ingest, using 
+#           try:
+#               tasks.task_merge_direct(r)
+#           except:
+#               print "doh! Message failed: ",r
 
     else:
 
