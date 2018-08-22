@@ -15,6 +15,10 @@ app.conf.CELERY_QUEUES = (
     Queue('classic:find-new-records', app.exchange, routing_key='classic:find-new-records'),
     Queue('classic:read-records', app.exchange, routing_key='classic:read-records'),
     Queue('classic:merge-metadata', app.exchange, routing_key='classic:merge-metadata'),
+    Queue('direct:delete-documents', app.exchange, routing_key='direct:delete-documents'),
+    Queue('direct:find-new-records', app.exchange, routing_key='direct:find-new-records'),
+    Queue('direct:read-records', app.exchange, routing_key='direct:read-records'),
+    Queue('direct:merge-metadata', app.exchange, routing_key='direct:merge-metadata'),
     Queue('output-results', app.exchange, routing_key='output-results')
 )
 
@@ -116,7 +120,7 @@ def task_merge_direct(record):
         r['id'] = None
         r = solr_adapter.SolrAdapter.adapt(r)
         solr_adapter.SolrAdapter.validate(r)
-        task_output_direct.delay(r)
+        task_output_results.delay(r)
 
 
 @app.task(queue='output-results')
@@ -188,6 +192,7 @@ def task_output_direct(msg):
 
     rec = DenormalizedRecord(**msg)
     app.forward_message(rec)
+    app.update_processed_timestamp(rec.bibcode)
 
 
 
