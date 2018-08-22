@@ -103,7 +103,7 @@ def task_merge_metadata(record):
         logger.debug('Strangely, the result of merge is empty: %s', record)
 
 
-@app.task(queue='classic:merge-metadata')
+@app.task(queue='direct:merge-metadata')
 def task_merge_direct(record):
 
     modrec = ArXivDirect.adsDirectRecord('full','XML',cacheLooker=False)
