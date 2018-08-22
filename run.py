@@ -261,11 +261,11 @@ def main(*args):
         for r in parsed_records:
 
 # simple direct ingest
-            tasks.task_output_direct(sd.translate(r))
+            tasks.task_output_results.delay(sd.translate(r))
 
 # enhanced direct ingest, using 
 #           try:
-#               tasks.task_merge_direct(r)
+#               tasks.task_merge_direct.delay(r)
 #           except:
 #               print "doh! Message failed: ",r
 
