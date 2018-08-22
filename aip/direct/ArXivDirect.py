@@ -39,7 +39,7 @@ class adsDirectRecord(ads_ex.ADSRecords):
 
         ads_ex.xml_node(self.current_abstract, 'bibcode', bibcode)
 
-        (year,month,dum) = creation_time.split('-')
+        (year,month,dum) = record['pubdate'].split('-')
         dates = {'date-preprint':'%s-%s-00'%(year,month)}
         ads_ex.add_dates(self.current_abstract, dates)
 
