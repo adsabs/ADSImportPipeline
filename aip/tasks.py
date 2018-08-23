@@ -145,7 +145,7 @@ def task_output_results(msg):
     
     rec = DenormalizedRecord(**msg)
     app.forward_message(rec)
-    app.update_processed_timestamp(rec.bibcode)
+    app.update_processed_timestamp(rec['bibcode'])
 
 
 @app.task(queue='output-results')
@@ -192,7 +192,7 @@ def task_output_direct(msg):
 
     rec = DenormalizedRecord(**msg)
     app.forward_message(rec)
-    app.update_processed_timestamp(rec.bibcode)
+    app.update_processed_timestamp(rec['bibcode'])
 
 
 
