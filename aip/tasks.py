@@ -116,6 +116,7 @@ def task_merge_arxiv_direct(record):
         rec = e.enforceTopLevelSchema(record=r,JSON_fingerprint='Fake')
         newrec.append(rec)
     result = merger.mergeRecords(newrec)
+    print "LOL:",result
     for r in result:
         r['id'] = None
         r = solr_adapter.SolrAdapter.adapt(r)
