@@ -85,7 +85,6 @@ class SolrAdapter(object):
     'page': [u''],
     'page_range': u'',
     'page_count': 0,
-    'property': [u'', ],
     'pub': u'',
     'pubnote': [u'',],
     'pub_raw': u'',
@@ -438,21 +437,6 @@ class SolrAdapter(object):
       except TypeError:
           result = 0
       return {'page_count':result}
-
-  @staticmethod
-  def _property(ADS_record):
-    fields = ['openaccess', 'ocrabstract', 'private', 'refereed', 'ads_openaccess', 'eprint_openaccess', 'pub_openaccess']
-    result = []
-    for f in fields:
-      if ADS_record['metadata']['properties'][f]:
-        result.append(unicode(f.upper()))
-    if ADS_record['metadata']['properties']['doctype']['content'] in ARTICLE_TYPES:
-      result.append(u"ARTICLE")
-    else:
-      result.append(u"NONARTICLE")
-    if u'REFEREED' not in result:
-      result.append(u"NOT REFEREED")
-    return {'property':result}
 
   @staticmethod
   def _pub(ADS_record):
