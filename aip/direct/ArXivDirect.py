@@ -35,7 +35,7 @@ class adsDirectRecord(ads_ex.ADSRecords):
         creation_time = ads_ex.iso_8601_time(None)
         modif_time = creation_time
         ads_ex.xml_node(self.current_abstract, 'creation_time', creation_time)
-        ads_ex.xml_node(self.current_abstract, 'modification_time', modif_time)
+#       ads_ex.xml_node(self.current_abstract, 'modification_time', modif_time)
 
         ads_ex.xml_node(self.current_abstract, 'bibcode', bibcode)
 
@@ -119,7 +119,7 @@ class adsDirectRecord(ads_ex.ADSRecords):
             ads_ex.add_keywords(self.current_abstract, all_keywords)
 
 
-        pubnote = ". ".join([x.replace('\n','') for x in record['comments']])
+        pubnote = "; ".join([x.replace('\n','') for x in record['comments']])
         ads_ex.xml_node(self.current_abstract,'pubnote',pubnote.replace('  ',' '))
         
 
@@ -176,7 +176,7 @@ def main():
 #   reclist.append(meta_dir + '1711/05739')
 #   reclist.append(meta_dir + '1710/08505')
 
-    caldate = '2018-08-16'
+    caldate = '2018-08-21'
 
     ARXIV_INCOMING_ABS_DIR = '/proj/ads/abstracts/sources/ArXiv'
     ARXIV_UPDATE_AGENT_DIR = ARXIV_INCOMING_ABS_DIR + '/UpdateAgent'
@@ -196,7 +196,8 @@ def main():
             output = adsDirectRecord('full','XML',cacheLooker=False)
             output.addDirect(r)
 #           print output.root.serialize()
-            output.write()
+            if r['bibcode'] == '2018arXiv180703779S':
+                output.write()
 
 if __name__ == '__main__':
     main()
