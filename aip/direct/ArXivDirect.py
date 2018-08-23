@@ -35,7 +35,7 @@ class adsDirectRecord(ads_ex.ADSRecords):
         creation_time = ads_ex.iso_8601_time(None)
         modif_time = creation_time
         ads_ex.xml_node(self.current_abstract, 'creation_time', creation_time)
-#       ads_ex.xml_node(self.current_abstract, 'modification_time', modif_time)
+        ads_ex.xml_node(self.current_abstract, 'modification_time', modif_time)
 
         ads_ex.xml_node(self.current_abstract, 'bibcode', bibcode)
 
