@@ -274,6 +274,7 @@ def main(*args):
 # simple direct ingest
 #               tasks.task_output_results.delay(sd.translate(r))
                 print "Other output queues not available for DI yet."
+                quit()
 
 
 
