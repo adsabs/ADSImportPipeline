@@ -207,7 +207,7 @@ def main(*args):
 
     args = parser.parse_args()
 
-# for testing of direct import
+# DIRECT INGEST
     if args.direct:
 
         parsed_records = list()
@@ -215,8 +215,10 @@ def main(*args):
         if isinstance(args.caldate,basestring):
             pass
         else:
-            args.caldate = datetime.datetime.today().strftime('%Y-%m-%d')
+            # "today's" arxiv is actually sent at 9PM EDT on the previous day.
+            args.caldate = (datetime.datetime.today() - datetime.timedelta(1)).strftime('%Y-%m-%d')
 
+        # PARSE ARXIV
         if args.direct == 'Arxiv':
 
             logfile = app.conf.get('ARXIV_UPDATE_AGENT_DIR') + '/UpdateAgent.out.' + args.caldate + '.gz'
@@ -236,6 +238,7 @@ def main(*args):
                         except:
                             logger.error("bad record: %s from %s ingest"%(f,args.direct))
 
+        # PARSE APS
         elif args.direct == 'APS':
 
             logfile = app.conf.get('APS_UPDATE_AGENT_LOG') + args.caldate
@@ -252,7 +255,7 @@ def main(*args):
                             parser = aps.APSJATSParser()
                             parsed_records.append(parser.parse(fp))
                         except:
-                            logger.error("bad record: %s from %s ingest"%(f,args.direct))
+                            logger.error("bad record: %s from %s parser"%(f,args.direct))
 
         else:
             logger.error('invalid direct argument passed: %s' % args.direct)
@@ -260,15 +263,22 @@ def main(*args):
 
         for r in parsed_records:
 
+            # INGEST ARXIV
+            if args.direct == 'Arxiv':
+                try:
+                    tasks.task_merge_arxiv_direct.delay(r)
+                except:
+                    logger.warning("Bad record: %s from %s direct ingest"%(r['bibcode'],args.direct)
+
+            else:
 # simple direct ingest
-#           tasks.task_output_results.delay(sd.translate(r))
+#               tasks.task_output_results.delay(sd.translate(r))
+                print "Other output queues not available for DI yet."
 
-# enhanced direct ingest, using 
-            try:
-                tasks.task_merge_direct.delay(r)
-            except:
-                print "doh! Message failed: ",r
 
+
+
+# CLASSIC INGEST
     else:
 
         # initialize cache (to read ADS records)

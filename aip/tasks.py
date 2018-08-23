@@ -104,7 +104,7 @@ def task_merge_metadata(record):
 
 
 @app.task(queue='direct:merge-metadata')
-def task_merge_direct(record):
+def task_merge_arxiv_direct(record):
 
     modrec = ArXivDirect.adsDirectRecord('full','XML',cacheLooker=False)
     modrec.addDirect(record)
