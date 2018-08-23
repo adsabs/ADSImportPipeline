@@ -268,7 +268,7 @@ def main(*args):
                 try:
                     tasks.task_merge_arxiv_direct.delay(r)
                 except:
-                    logger.warning("Bad record: %s from %s direct ingest"%(r['bibcode'],args.direct)
+                    logger.warning("Bad record: %s from %s direct ingest"%(r['bibcode'],args.direct))
 
             else:
 # simple direct ingest
