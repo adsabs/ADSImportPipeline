@@ -120,7 +120,7 @@ def task_merge_arxiv_direct(record):
         r['id'] = None
         r = solr_adapter.SolrAdapter.adapt(r)
         solr_adapter.SolrAdapter.validate(r)
-        task_output_results.delay(r)
+        task_output_direct.delay(r)
 
 
 @app.task(queue='output-results')
