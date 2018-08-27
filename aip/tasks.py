@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from aip import app as app_module
-from aip.classic import solr_adapter, merger, read_records
+from aip.classic import solr_adapter, merger, read_records, enforce_schema
+from aip.direct import ArXivDirect
 from kombu import Queue
 from adsmsg import BibRecord, DenormalizedRecord
 
@@ -14,6 +15,10 @@ app.conf.CELERY_QUEUES = (
     Queue('classic:find-new-records', app.exchange, routing_key='classic:find-new-records'),
     Queue('classic:read-records', app.exchange, routing_key='classic:read-records'),
     Queue('classic:merge-metadata', app.exchange, routing_key='classic:merge-metadata'),
+    Queue('direct:delete-documents', app.exchange, routing_key='direct:delete-documents'),
+    Queue('direct:find-new-records', app.exchange, routing_key='direct:find-new-records'),
+    Queue('direct:read-records', app.exchange, routing_key='direct:read-records'),
+    Queue('direct:merge-metadata', app.exchange, routing_key='direct:merge-metadata'),
     Queue('output-results', app.exchange, routing_key='output-results')
 )
 
@@ -98,6 +103,26 @@ def task_merge_metadata(record):
         logger.debug('Strangely, the result of merge is empty: %s', record)
 
 
+@app.task(queue='direct:merge-metadata')
+def task_merge_arxiv_direct(record):
+
+    modrec = ArXivDirect.adsDirectRecord('full','XML',cacheLooker=False)
+    modrec.addDirect(record)
+    output = read_records.xml_to_dict(modrec.root)
+    e = enforce_schema.Enforcer()
+    export = e.ensureList(output['records']['record'])
+    newrec = []
+    for r in export:
+        rec = e.enforceTopLevelSchema(record=r,JSON_fingerprint='Fake')
+        newrec.append(rec)
+    result = merger.mergeRecords(newrec)
+    for r in result:
+        r['id'] = None
+        r = solr_adapter.SolrAdapter.adapt(r)
+        solr_adapter.SolrAdapter.validate(r)
+        task_output_direct.delay(r)
+
+
 @app.task(queue='output-results')
 def task_output_results(msg):
     """
@@ -142,27 +167,8 @@ def task_output_direct(msg):
     """
     logger.debug('Will forward this record: %s', msg)
     
-    # update Records table entry
-    bibcode = msg['bibcode']
-    rec = app.get_record(bibcode, load_only=['origin'])
-    if (rec):
-        # here if we previously ingested this bibcode
-        if rec['origin'] is 'classic':
-            logger.warn('direct ingest of %s ignored, classic data already received' % bibcode)
-        elif rec['origin'] is 'direct':
-            json = app.update_storage(bibcode, origin='direct')
-            if json:
-                rec = DenormalizedRecord(**msg)
-                app.forward_message(rec)
-        else:
-            logger.error('direct ingest of {} failed, unexpected value for origin: {}'.format(bibcode, rec['origin']))
-        return
-    else:
-        # process new bibcode
-        json = app.update_storage(bibcode, origin='direct')
-        if json:
-            rec = DenormalizedRecord(**msg)
-            app.forward_message(rec)
+    rec = DenormalizedRecord(**msg)
+    app.forward_message(rec)
 
 
 

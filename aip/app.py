@@ -49,7 +49,7 @@ class ADSImportPipelineCelery(ADSCelery):
                     r.__setattr__(k, v)
                     if r.__getattr__('{}_created').format(colname) is None:
                         r.__setattr__('{}_created'.format(colname), now)
-                    r.__setattr__('{}_upated'.format(colname), now)
+                    r.__setattr__('{}_updated'.format(colname), now)
                     updated = True
                 elif k == 'origin':
                     r.origin = v
