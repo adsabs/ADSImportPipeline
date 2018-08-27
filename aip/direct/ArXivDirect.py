@@ -93,8 +93,11 @@ class adsDirectRecord(ads_ex.ADSRecords):
         try:
             field = ads_ex.UNICODE_HANDLER.ent2xml(record['keywords'])
         except:
-            pass
-        else:
+            try:
+                field = record['keywords']
+            except:
+                pass
+        if len(field) > 0:
             self.arxiv_categories = ads_ex.xml_node(self.current_abstract,'arxivcategories')
             all_keywords = {}
             keywords = []
@@ -115,8 +118,8 @@ class adsDirectRecord(ads_ex.ADSRecords):
                         pass
                     main_category = None
                     keywords.append((keyword, kw_normalizer.get_normalized_keyword(keyword)))
-            all_keywords.setdefault('arXiv',[]).extend(keywords)
-            ads_ex.add_keywords(self.current_abstract, all_keywords)
+        all_keywords.setdefault('arXiv',[]).extend(keywords)
+        ads_ex.add_keywords(self.current_abstract, all_keywords)
 
 
         pubnote = "; ".join([x.replace('\n','') for x in record['comments']])
@@ -164,40 +167,37 @@ class adsDirectRecord(ads_ex.ADSRecords):
                                     'access':'open'})
 
         # Done
-
-
-
-def main():
-
-    import gzip
-
-    reclist = list()
-#   meta_dir = '/proj/ads/abstracts/sources/ArXiv/oai/arXiv.org/'
-#   reclist.append(meta_dir + '1711/05739')
-#   reclist.append(meta_dir + '1710/08505')
-
-    caldate = '2018-08-21'
-
-    ARXIV_INCOMING_ABS_DIR = '/proj/ads/abstracts/sources/ArXiv'
-    ARXIV_UPDATE_AGENT_DIR = ARXIV_INCOMING_ABS_DIR + '/UpdateAgent'
-    ARXIV_ARCHIVE_ABS_DIR = ARXIV_INCOMING_ABS_DIR + '/oai/arXiv.org'
-
-    logfile = ARXIV_UPDATE_AGENT_DIR + '/UpdateAgent.out.' + caldate + '.gz'
-    with gzip.open(logfile,'r') as flist:
-        for l in flist.readlines():
-            # sample line: oai/arXiv.org/0706/2491 2018-06-13T01:00:29
-            a = ARXIV_INCOMING_ABS_DIR + '/' + l.split()[0]
-            reclist.append(a)
-
-    for f in reclist:
-        with open(f,'rU') as fp:
-            input_doc = arxiv.ArxivParser()
-            r = input_doc.parse(fp)
-            output = adsDirectRecord('full','XML',cacheLooker=False)
-            output.addDirect(r)
-#           print output.root.serialize()
-            if r['bibcode'] == '2018arXiv180703779S':
-                output.write()
-
-if __name__ == '__main__':
-    main()
+#def main():
+#
+#    import gzip
+#
+#    reclist = list()
+##   meta_dir = '/proj/ads/abstracts/sources/ArXiv/oai/arXiv.org/'
+##   reclist.append(meta_dir + '1711/05739')
+##   reclist.append(meta_dir + '1710/08505')
+#
+#    caldate = '2018-07-10'
+#
+#    ARXIV_INCOMING_ABS_DIR = '/proj/ads/abstracts/sources/ArXiv'
+#    ARXIV_UPDATE_AGENT_DIR = ARXIV_INCOMING_ABS_DIR + '/UpdateAgent'
+#    ARXIV_ARCHIVE_ABS_DIR = ARXIV_INCOMING_ABS_DIR + '/oai/arXiv.org'
+#
+#    logfile = ARXIV_UPDATE_AGENT_DIR + '/UpdateAgent.out.' + caldate + '.gz'
+#    with gzip.open(logfile,'r') as flist:
+#        for l in flist.readlines():
+#            # sample line: oai/arXiv.org/0706/2491 2018-06-13T01:00:29
+#            a = ARXIV_INCOMING_ABS_DIR + '/' + l.split()[0]
+#            reclist.append(a)
+#
+#    for f in reclist:
+#        with open(f,'rU') as fp:
+#            input_doc = arxiv.ArxivParser()
+#            r = input_doc.parse(fp)
+#            output = adsDirectRecord('full','XML',cacheLooker=False)
+#            output.addDirect(r)
+##           print output.root.serialize()
+#            if r['bibcode'] == '2018arXiv180703779S':
+#                print r
+#
+#if __name__ == '__main__':
+#    main()
