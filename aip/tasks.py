@@ -106,14 +106,13 @@ def task_merge_metadata(record):
 @app.task(queue='direct:merge-metadata')
 def task_merge_arxiv_direct(record):
 
-    modrec = ArXivDirect.adsDirectRecord('full','XML',cacheLooker=False)
-    modrec.addDirect(record)
+    modrec = ArXivDirect.add_direct(record)
     output = read_records.xml_to_dict(modrec.root)
     e = enforce_schema.Enforcer()
     export = e.ensureList(output['records']['record'])
     newrec = []
     for r in export:
-        rec = e.enforceTopLevelSchema(record=r,JSON_fingerprint='Fake')
+        rec = e.enforceTopLevelSchema(record=r, JSON_fingerprint='Fake')
         newrec.append(rec)
     result = merger.mergeRecords(newrec)
     for r in result:
