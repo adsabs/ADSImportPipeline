@@ -1,15 +1,22 @@
 
-from adsputils import get_date
-from aip import tasks, app as app_module
-from aip.models import Base, Records
-from collections import OrderedDict
+import copy
 from mock import patch
-from tests.stubdata import ADSRECORDS, mergerdata, directdata
-import mock, copy
 import os
 import sys
 import unittest
-from adsmsg import BibRecord
+
+from aip import tasks, app as app_module
+from aip.models import Base
+from tests.stubdata import directdata
+
+if '/proj/ads/soft/python/lib/site-packages' not in sys.path:
+    sys.path.append('/proj/ads/soft/python/lib/site-packages')
+try:
+    import ads.ADSCachedExports as ads_ex
+except ImportError:
+    print 'Warning: adspy not available'
+    ads_ex = None
+
 
 class TestWorkers(unittest.TestCase):
 
@@ -17,14 +24,13 @@ class TestWorkers(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.proj_home = os.path.join(os.path.dirname(__file__), '../..')
         self._app = tasks.app
-        self.app = app_module.ADSImportPipelineCelery('test',local_config={
+        self.app = app_module.ADSImportPipelineCelery('test', local_config={
             'SQLALCHEMY_URL': 'sqlite:///',
             'SQLALCHEMY_ECHO': False
             })
-        tasks.app = self.app # monkey-patch the app object
+        tasks.app = self.app  # monkey-patch the app object
         Base.metadata.bind = self.app._session.get_bind()
         Base.metadata.create_all()
-
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -32,8 +38,7 @@ class TestWorkers(unittest.TestCase):
         self.app.close_app()
         tasks.app = self._app
 
-
-
+    @unittest.skipUnless(ads_ex, 'adspy not available')
     def test_task_merge_arxiv_direct(self):
         self.maxDiff = None
         with patch('aip.tasks.task_output_direct.delay', return_value=None) as next_task:
@@ -44,8 +49,7 @@ class TestWorkers(unittest.TestCase):
 
             tasks.task_merge_arxiv_direct(inputrec)
             self.assertTrue(next_task.called)
-            self.assertEqual(next_task.call_args_list[0][0][0],out)
-
+            self.assertEqual(next_task.call_args_list[0][0][0], out)
 
     def test_task_output_arxiv_results(self):
         with patch.object(self.app, 'forward_message', return_value=None) as next_task:
@@ -56,7 +60,6 @@ class TestWorkers(unittest.TestCase):
             expected = directdata.DIRECT_OUTPUT.copy()
             self.maxDiff = None
             self.assertDictEqual(expected, next_task.call_args[0][0].toJSON())
-
 
 
 if __name__ == '__main__':
