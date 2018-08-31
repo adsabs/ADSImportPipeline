@@ -54,6 +54,8 @@ Since the code makes use of ads.ADSCachedExports for data ingest, you will have 
 repo to test the code locally.  Until we properly write tests that mock that input, follow the
 directions given in adsabs/adspy/DEVELOP.txt for setting up adspy to read the required files from ADS Classic.
 
+libxml2 is required, you may want to install globally via brew and access via virtualenv --system-site-packages.
+
 A useful script that helps you see how the documents are transformed is found in tests/tests/readrecords.py
 
 ## Updating the code
