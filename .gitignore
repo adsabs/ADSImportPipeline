@@ -4,3 +4,5 @@ test*txt
 .cache
 .coverage*
 venv
+*.pyc
+*~

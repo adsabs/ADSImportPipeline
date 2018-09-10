@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import unittest
-from aip.libs import merger
+from aip.classic import merger
 import datetime
+from tests.stubdata import ADSRECORDS
 
 class TestMerger(unittest.TestCase):
 
@@ -106,7 +107,7 @@ class TestMerger(unittest.TestCase):
         self.assertTrue(isinstance(res,datetime.date))
         self.assertEqual(res.minute,now.minute)
 
-
+    
 if __name__ == '__main__':
     unittest.main()
 

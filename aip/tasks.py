@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from aip import app as app_module
-from aip.libs import solr_adapter, merger, read_records
+from aip.classic import solr_adapter, merger, read_records, enforce_schema
+from aip.direct import ArXivDirect
 from kombu import Queue
 from adsmsg import BibRecord, DenormalizedRecord
 
@@ -10,11 +11,15 @@ logger = app.logger
 
 
 app.conf.CELERY_QUEUES = (
-    Queue('delete-documents', app.exchange, routing_key='delete-documents'),
-    Queue('find-new-records', app.exchange, routing_key='find-new-records'),
-    Queue('read-records', app.exchange, routing_key='read-records'),
-    Queue('merge-metadata', app.exchange, routing_key='merge-metadata'),
-    Queue('output-results', app.exchange, routing_key='output-results'),
+    Queue('classic:delete-documents', app.exchange, routing_key='classic:delete-documents'),
+    Queue('classic:find-new-records', app.exchange, routing_key='classic:find-new-records'),
+    Queue('classic:read-records', app.exchange, routing_key='classic:read-records'),
+    Queue('classic:merge-metadata', app.exchange, routing_key='classic:merge-metadata'),
+    Queue('direct:delete-documents', app.exchange, routing_key='direct:delete-documents'),
+    Queue('direct:find-new-records', app.exchange, routing_key='direct:find-new-records'),
+    Queue('direct:read-records', app.exchange, routing_key='direct:read-records'),
+    Queue('direct:merge-metadata', app.exchange, routing_key='direct:merge-metadata'),
+    Queue('output-results', app.exchange, routing_key='output-results')
 )
 
 
@@ -87,7 +92,7 @@ def task_merge_metadata(record):
 
     if result and len(result) > 0:
         for r in result: # TODO: save the mid-cycle representation of the metadata ???
-            record = app.update_storage(r['bibcode'], record['JSON_fingerprint'])
+            record = app.update_storage(r['bibcode'], fingerprint=record['JSON_fingerprint'], origin='classic')
             r['id'] = record['id']
             r = solr_adapter.SolrAdapter.adapt(r)
             solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
@@ -96,6 +101,25 @@ def task_merge_metadata(record):
             task_output_results.delay(r)
     else:
         logger.debug('Strangely, the result of merge is empty: %s', record)
+
+
+@app.task(queue='direct:merge-metadata')
+def task_merge_arxiv_direct(record):
+
+    modrec = ArXivDirect.add_direct(record)
+    output = read_records.xml_to_dict(modrec.root)
+    e = enforce_schema.Enforcer()
+    export = e.ensureList(output['records']['record'])
+    newrec = []
+    for r in export:
+        rec = e.enforceTopLevelSchema(record=r, JSON_fingerprint='Fake')
+        newrec.append(rec)
+    result = merger.mergeRecords(newrec)
+    for r in result:
+        r['id'] = None
+        r = solr_adapter.SolrAdapter.adapt(r)
+        solr_adapter.SolrAdapter.validate(r)
+        task_output_direct.delay(r)
 
 
 @app.task(queue='output-results')
@@ -120,6 +144,28 @@ def task_output_results(msg):
     app.update_processed_timestamp(rec.bibcode)
 
 
+@app.task(queue='output-results')
+def task_output_direct(msg):
+    """
+    This worker will forward direct ingest data to 
+    the outside exchange (typically an 
+    ADSMasterPipeline) to be incorporated into the
+    storage
+
+    :param msg: contains the bibliographic metadata
+
+            {'bibcode': '....',
+             'authors': [....],
+             'title': '.....',
+             .....
+            }
+    :return: no return
+    """
+    logger.debug('Will forward this record: %s', msg)
+    
+    rec = DenormalizedRecord(**msg)
+    app.forward_message(rec)
+
 
 @app.task(queue='delete-documents')
 def task_delete_documents(bibcode):
@@ -130,7 +176,6 @@ def task_delete_documents(bibcode):
     app.delete_by_bibcode(bibcode)
     rec = DenormalizedRecord(bibcode=bibcode, status='deleted')
     app.forward_message(rec)
-
 
 
 if __name__ == '__main__':
