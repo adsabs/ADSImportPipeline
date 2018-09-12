@@ -15,9 +15,10 @@ app.conf.CELERY_QUEUES = (
     Queue('classic:find-new-records', app.exchange, routing_key='classic:find-new-records'),
     Queue('classic:read-records', app.exchange, routing_key='classic:read-records'),
     Queue('classic:merge-metadata', app.exchange, routing_key='classic:merge-metadata'),
-    Queue('direct:delete-documents', app.exchange, routing_key='direct:delete-documents'),
-    Queue('direct:find-new-records', app.exchange, routing_key='direct:find-new-records'),
-    Queue('direct:read-records', app.exchange, routing_key='direct:read-records'),
+    # direct ingest currently only needs one queue
+    # Queue('direct:delete-documents', app.exchange, routing_key='direct:delete-documents'),
+    # Queue('direct:find-new-records', app.exchange, routing_key='direct:find-new-records'),
+    # Queue('direct:read-records', app.exchange, routing_key='direct:read-records'),
     Queue('direct:merge-metadata', app.exchange, routing_key='direct:merge-metadata'),
     Queue('output-results', app.exchange, routing_key='output-results')
 )
