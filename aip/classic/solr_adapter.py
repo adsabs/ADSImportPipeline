@@ -121,7 +121,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _aff(ADS_record):
-    authors = [i for i in ADS_record['metadata']['general'].get('authors', []) if i['type']=='regular']
+    authors = [i for i in ADS_record['metadata']['general'].get('authors', []) if i['type'] in ['regular', 'collaboration']]
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = ['; '.join([j for j in i['affiliations'] if j]) if i['affiliations'] else u'-' for i in authors]
     return {'aff': result}
@@ -149,20 +149,20 @@ class SolrAdapter(object):
   def _author(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type']=='regular']
+    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type'] in ['regular', 'collaboration']]
     return {'author': result}  
 
   @staticmethod
   def _author_count(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
-    result = len([i['name']['western'] for i in authors if i['name']['western'] and i['type']=='regular'])
+    result = len([i['name']['western'] for i in authors if i['name']['western'] and i['type'] in ['regular', 'collaboration']])
     return {'author_count': result}
 
   @staticmethod
   def _author_norm(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type']=='regular']
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in ['regular', 'collaboration']]
     return {'author_norm': result}
 
   @staticmethod
@@ -183,7 +183,7 @@ class SolrAdapter(object):
   def _author_facet(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type']=='regular']
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in ['regular', 'collaboration']]
     return {'author_facet': result}    
 
   @staticmethod
@@ -192,7 +192,7 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = []
     for author in authors:
-        if author['type']=='regular':
+        if author['type'] in ['regular', 'collaboration']:
             if author['name']['normalized']:
                 r = u"0/%s" % (_normalize_author_name(author['name']['normalized']),)
                 result.append(r)
