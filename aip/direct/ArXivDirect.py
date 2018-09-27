@@ -58,7 +58,8 @@ def add_direct(record, json_timestamp=None, current_record=None,
     dates = {'date-preprint': '%s-%s-00' % (year, month)}
     ads_ex.add_dates(adsr.current_abstract, dates)
 
-    ads_ex.xml_node(adsr.current_abstract, 'title', record['title'])
+    title = record['title'].replace('\n ','')
+    ads_ex.xml_node(adsr.current_abstract, 'title', title)
 
     abstract_field = record['abstract']
     abstract_field = ads_ex.UNICODE_HANDLER.remove_control_chars(abstract_field)
