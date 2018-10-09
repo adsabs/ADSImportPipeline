@@ -11,15 +11,15 @@ logger = app.logger
 
 
 app.conf.CELERY_QUEUES = (
-    Queue('classic:delete-documents', app.exchange, routing_key='classic:delete-documents'),
-    Queue('classic:find-new-records', app.exchange, routing_key='classic:find-new-records'),
-    Queue('classic:read-records', app.exchange, routing_key='classic:read-records'),
-    Queue('classic:merge-metadata', app.exchange, routing_key='classic:merge-metadata'),
+    Queue('classic-delete-documents', app.exchange, routing_key='classic-delete-documents'),
+    Queue('classic-find-new-records', app.exchange, routing_key='classic-find-new-records'),
+    Queue('classic-read-records', app.exchange, routing_key='classic-read-records'),
+    Queue('classic-merge-metadata', app.exchange, routing_key='classic-merge-metadata'),
     # direct ingest currently only needs one queue
-    # Queue('direct:delete-documents', app.exchange, routing_key='direct:delete-documents'),
-    # Queue('direct:find-new-records', app.exchange, routing_key='direct:find-new-records'),
-    # Queue('direct:read-records', app.exchange, routing_key='direct:read-records'),
-    Queue('direct:merge-metadata', app.exchange, routing_key='direct:merge-metadata'),
+    # Queue('direct-delete-documents', app.exchange, routing_key='direct-delete-documents'),
+    # Queue('direct-find-new-records', app.exchange, routing_key='direct-find-new-records'),
+    # Queue('direct-read-records', app.exchange, routing_key='direct-read-records'),
+    Queue('direct-merge-metadata', app.exchange, routing_key='direct-merge-metadata'),
     Queue('output-results', app.exchange, routing_key='output-results')
 )
 
@@ -112,12 +112,14 @@ def task_merge_arxiv_direct(record):
     e = enforce_schema.Enforcer()
     export = e.ensureList(output['records']['record'])
     newrec = []
+    update = app.update_storage(record['bibcode'], origin='direct')
     for r in export:
         rec = e.enforceTopLevelSchema(record=r, JSON_fingerprint='Fake')
+        rec['id'] = update['id']
         newrec.append(rec)
     result = merger.mergeRecords(newrec)
     for r in result:
-        r['id'] = None
+        r['id'] =  update['id']
         r = solr_adapter.SolrAdapter.adapt(r)
         solr_adapter.SolrAdapter.validate(r)
         task_output_direct.delay(r)
