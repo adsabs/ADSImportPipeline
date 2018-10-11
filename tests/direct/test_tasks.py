@@ -50,7 +50,10 @@ class TestWorkers(unittest.TestCase):
 
             tasks.task_merge_arxiv_direct(inputrec)
             self.assertTrue(next_task.called)
+            out['id'] = 1  # from database
             self.assertEqual(next_task.call_args_list[0][0][0], out)
+            r = self.app.get_record(directdata.DIRECT_RAW_INPUT['bibcode'])
+            self.assertEqual(directdata.DIRECT_RAW_INPUT['bibcode'], r['bibcode'])
 
     def test_task_output_arxiv_results(self):
         with patch.object(self.app, 'forward_message', return_value=None) as next_task:
