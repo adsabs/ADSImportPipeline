@@ -233,6 +233,8 @@ class Enforcer:
       'canonical':  g('canonical_journal'),
     }
 
+    if g('series'):
+      r['series']['publication'] = g('series')
     r['publication']['dates'] = []
     for i in eL(g('dates',[])):
       r['publication']['dates'].append({

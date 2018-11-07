@@ -458,7 +458,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _series(ADS_record):
-    return {'series': ADS_record['metadata']['general'].get('series', u'')}
+    return {'series': ADS_record['metadata']['general'].get('publication', {}).get('series')}
 
   @staticmethod
   def _keyword(ADS_record):
