@@ -234,7 +234,7 @@ class Enforcer:
     }
 
     if g('series'):
-      r['series'] = g('series')
+      r['series']['publication'] = g('series')
     r['publication']['dates'] = []
     for i in eL(g('dates',[])):
       r['publication']['dates'].append({
