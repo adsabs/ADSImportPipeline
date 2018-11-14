@@ -113,6 +113,8 @@ def task_merge_arxiv_direct(record):
     export = e.ensureList(output['records']['record'])
     newrec = []
     update = app.update_storage(record['bibcode'], origin='direct')
+    if update is None:
+        return  # here if bibcode was already deleted, etc.
     for r in export:
         rec = e.enforceTopLevelSchema(record=r, JSON_fingerprint='Fake')
         rec['id'] = update['id']
