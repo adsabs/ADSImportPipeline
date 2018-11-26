@@ -12,9 +12,9 @@ class TestEnforceSchema(unittest.TestCase):
         self.relations = self.e._relationsEnforcer(mergerdata.RELATIONS)
 
     def test_enforceMetadataSchema(self):
-        blocks = self.e.enforceMetadataSchema([mergerdata.GENERAL,mergerdata.PROPERTIES,mergerdata.REFERENCES,mergerdata.RELATIONS])
-        self.assertIsInstance(blocks,list)
-        self.assertEqual(blocks,[
+        blocks = self.e.enforceMetadataSchema([mergerdata.GENERAL, mergerdata.PROPERTIES, mergerdata.REFERENCES, mergerdata.RELATIONS])
+        self.assertIsInstance(blocks, list)
+        self.assertEqual(blocks, [
           self.general,
           self.properties,
           self.references,
@@ -22,20 +22,20 @@ class TestEnforceSchema(unittest.TestCase):
         ])
 
     def test_generalEnforcer(self):
-        #self.maxDiff=None
-        self.assertEqual(self.general,mergerdata.GENERAL_ENFORCED)
+        self.maxDiff = None
+        self.assertEqual(self.general, mergerdata.GENERAL_ENFORCED)
 
     def test_propertiesEnforcer(self):
-        self.maxDiff=None
-        self.assertEqual(self.properties,mergerdata.PROPERTIES_ENFORCED)
+        self.maxDiff = None
+        self.assertEqual(self.properties, mergerdata.PROPERTIES_ENFORCED)
 
     def test_referencesEnforcer(self):
-        self.maxDiff=None
-        self.assertEqual(self.references,mergerdata.REFERENCES_ENFORCED)
+        self.maxDiff = None
+        self.assertEqual(self.references, mergerdata.REFERENCES_ENFORCED)
 
     def test_relationsEnforcer(self):
-        #self.maxDiff=None
-        self.assertEqual(self.relations,mergerdata.RELATIONS_ENFORCED)
+        self.maxDiff = None
+        self.assertEqual(self.relations, mergerdata.RELATIONS_ENFORCED)
 
     def test_parseDate(self):
         testCases = {
@@ -46,7 +46,7 @@ class TestEnforceSchema(unittest.TestCase):
           '2012-00-00': u'2012-01-01T00:00:00.000000Z',
         }
         for _input, _output in testCases.iteritems():
-            self.assertEqual(self.e.parseDate(_input),_output)
+            self.assertEqual(self.e.parseDate(_input), _output)
 
 
 if __name__ == '__main__':
