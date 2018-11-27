@@ -195,7 +195,7 @@ class Merger:
         'page_last':      i['publication']['page_last'],
         'page_range':     i['publication']['page_range'],
         'page_count':     i['publication']['page_count'],
-        'series':         i['publication']['series'],
+        'series':         i['publication'].get('series', None),
         'altbibcode':     i['publication']['altbibcode'],
         'electronic_id':  i['publication']['electronic_id'],
         'name':           i['publication']['name'],
