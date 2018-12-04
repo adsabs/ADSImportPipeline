@@ -12,7 +12,7 @@ from aip.classic import enforce_schema
 logger = setup_logging('solr_adapter')
 
 ARTICLE_TYPES = set(['eprint', 'article', 'inproceedings', 'inbook'])
-        
+AUTHOR_TYPES = set(['regular', 'collaboration'])
 
 def get_date_by_datetype(ADS_record):
     """computes the standard pubdate by selecting the appropriate value
@@ -121,7 +121,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _aff(ADS_record):
-    authors = [i for i in ADS_record['metadata']['general'].get('authors', []) if i['type'] in ['regular', 'collaboration']]
+    authors = [i for i in ADS_record['metadata']['general'].get('authors', []) if i['type'] in AUTHOR_TYPES]
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = ['; '.join([j for j in i['affiliations'] if j]) if i['affiliations'] else u'-' for i in authors]
     return {'aff': result}
@@ -149,20 +149,20 @@ class SolrAdapter(object):
   def _author(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type'] in ['regular', 'collaboration']]
+    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type'] in AUTHOR_TYPES]
     return {'author': result}  
 
   @staticmethod
   def _author_count(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
-    result = len([i['name']['western'] for i in authors if i['name']['western'] and i['type'] in ['regular', 'collaboration']])
+    result = len([i['name']['western'] for i in authors if i['name']['western'] and i['type'] in AUTHOR_TYPES])
     return {'author_count': result}
 
   @staticmethod
   def _author_norm(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in ['regular', 'collaboration']]
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in AUTHOR_TYPES]
     return {'author_norm': result}
 
   @staticmethod
@@ -183,7 +183,7 @@ class SolrAdapter(object):
   def _author_facet(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in ['regular', 'collaboration']]
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in AUTHOR_TYPES]
     return {'author_facet': result}    
 
   @staticmethod
@@ -192,7 +192,7 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = []
     for author in authors:
-        if author['type'] in ['regular', 'collaboration']:
+        if author['type'] in AUTHOR_TYPES:
             if author['name']['normalized']:
                 r = u"0/%s" % (_normalize_author_name(author['name']['normalized']),)
                 result.append(r)
@@ -397,6 +397,7 @@ class SolrAdapter(object):
     result.extend([i['content'] for i in ADS_record['metadata']['relations'].get('preprints', [])])
     result.extend([i['content'] for i in ADS_record['metadata']['general'].get('doi', [])])
     result.extend([i['content'] for i in ADS_record['metadata']['relations'].get('alternates', [])])
+    result.extend([i['content'] for i in ADS_record['metadata']['relations'].get('identifiers', [])])
     return {'identifier': list(set(result))}
 
   @staticmethod
