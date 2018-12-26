@@ -419,6 +419,7 @@ REFERENCES_ENFORCED = {'references': [{'arxid': u'',
 
 
 RELATIONS_ENFORCED = {'alternates': [],
+ 'identifiers': [],
  'links': [{'access': None,
    'count': u'1',
    'origin': None,

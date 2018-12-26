@@ -390,6 +390,15 @@ class Enforcer:
           'content':  j.get('#text'),
         })
 
+    r['identifiers'] = []
+    for i in eL(g('identifiers',[])):
+      for j in eL(i.get('identifier',[])):
+        r['identifiers'].append({
+          'origin':   g('origin'),
+          'type':     j.get('@type'),
+          'content':  j.get('#text'),
+        })
+
     r['links'] = []
     for i in eL(g('links',[])):
       for j in eL(i.get('link',[])):
