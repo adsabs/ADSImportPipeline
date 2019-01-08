@@ -104,7 +104,7 @@ def readRecordsFromADSExports(records):
             raise
         except Exception, err:
             failures.append(bibcode)
-            logger.warning('ADSExports failed: %s (%s)' % (bibcode,err))
+            logger.exception('ADSExports failed: %s (%s)' % (bibcode,err))
             
     logger.debug("Calling ADSRecords.export()")
     ads_export = adsrecords.export()
