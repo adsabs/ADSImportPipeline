@@ -106,13 +106,17 @@ def task_merge_metadata(record):
 
 @app.task(queue='direct:merge-metadata')
 def task_merge_arxiv_direct(record):
-
+    origin = 'direct'
+    current = app.get_record(record['bibcode'], load_only=['origin'])
+    if current and current['origin'] == 'classic':
+        # if record has been seen through classic, don't overwrite origin
+        origin = 'classic'
     modrec = ArXivDirect.add_direct(record)
     output = read_records.xml_to_dict(modrec.root)
     e = enforce_schema.Enforcer()
     export = e.ensureList(output['records']['record'])
     newrec = []
-    update = app.update_storage(record['bibcode'], origin='direct')
+    update = app.update_storage(record['bibcode'], origin=origin)
     if update is None:
         return  # here if bibcode was already deleted, etc.
     for r in export:
@@ -121,7 +125,7 @@ def task_merge_arxiv_direct(record):
         newrec.append(rec)
     result = merger.mergeRecords(newrec)
     for r in result:
-        r['id'] =  update['id']
+        r['id'] = update['id']
         r = solr_adapter.SolrAdapter.adapt(r)
         solr_adapter.SolrAdapter.validate(r)
         task_output_direct.delay(r)
