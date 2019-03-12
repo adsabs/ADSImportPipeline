@@ -511,7 +511,9 @@ class TestBibstemMapper(unittest.TestCase):
           { 'bibcode': '2010ApJ...724.1099L',
             'bibstems': [ 'ApJ..', 'ApJ...724' ] },
           { 'bibcode': '2015rmtm.book...81D',
-            'bibstems': [ 'rmtm.', 'rmtm.book' ] }
+            'bibstems': [ 'rmtm.', 'rmtm.book' ] },
+          { 'bibcode': '2018SPIE10974E..13W',
+            'bibstems': [ 'SPIE.', 'SPIE10974' ] }
           ]
         for t in test_cases:
             s, l = solr_adapter.bibstem_mapper(t['bibcode'])

@@ -604,6 +604,7 @@ doctype_dict = {
   'circular':      'Circular',
   'newsletter':    'Newsletter',
   'catalog':       'Catalog',
+  'editorial':     'Editorial',
   'misc':          'Other'
 }
 
@@ -703,6 +704,14 @@ arxiv_categories = set(["acc.phys.",
                         "solv.int.",
                         "supr.con."])
 
+# these are publications for which there may be a 5-digit volume
+# which "spills left" i.e. has its most significant digit in the
+# journal field
+PUB_VOLUME_SPILLS_LEFT = (
+    'SPIE',
+    'ATel',
+    'GCN.',
+)
 
 def bibstem_mapper(bibcode):
   short_stem = bibcode[4:9]
@@ -712,14 +721,19 @@ def bibstem_mapper(bibcode):
   # ApJL
   if short_stem == 'ApJ..' and bibcode[13:14] == 'L':
     short_stem = u'ApJL.'
+    long_stem = short_stem + vol_field
   # MPECs have a letter in the journal field which should be ignored
   elif short_stem == 'MPEC.' and re.match(r'^[\.\w]+$', vol_field):
     vol_field = u'....'
+    long_stem = short_stem + vol_field
   # map old arXiv bibcodes to arXiv only
   elif long_stem in arxiv_categories:
     short_stem = u'arXiv'
     vol_field = u'....'
-  long_stem = short_stem + vol_field
+    long_stem = short_stem + vol_field
+  # 5th character could be volume digit, in whih case reset it
+  elif short_stem[0:4] in PUB_VOLUME_SPILLS_LEFT and short_stem[4].isdigit():
+    short_stem = short_stem[0:4] + u'.'
   return (unicode(short_stem), unicode(long_stem))
 
 
