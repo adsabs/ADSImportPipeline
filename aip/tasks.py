@@ -104,7 +104,7 @@ def task_merge_metadata(record):
         logger.debug('Strangely, the result of merge is empty: %s', record)
 
 
-@app.task(queue='direct:merge-metadata')
+@app.task(queue='direct-merge-metadata')
 def task_merge_arxiv_direct(record):
     origin = 'direct'
     current = app.get_record(record['bibcode'], load_only=['origin'])
