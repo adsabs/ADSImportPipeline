@@ -129,6 +129,7 @@ def task_merge_arxiv_direct(record):
         r = solr_adapter.SolrAdapter.adapt(r)
         solr_adapter.SolrAdapter.validate(r)
         task_output_direct.delay(r)
+        logger.info('direct ingest processed bibocde %s', record['bibcode'])
 
 
 @app.task(queue='output-results')
