@@ -191,9 +191,15 @@ def main(*args):
                         help='Direct ingest from publisher: Arxiv, APS')
     parser.add_argument('-c',
                         '--caldate',
-                        dest = 'caldate',
-                        action = 'store',
-                        help = 'Process direct import metadata for YYYY-MM-DD')
+                        dest='caldate',
+                        action='store',
+                        help='Process direct import metadata for YYYY-MM-DD')
+    parser.add_argument('--date_offset',
+                        dest='date_offset',
+                        action='store',
+                        default=0,
+                        type=int,
+                        help='offsets date for direct ingest.  use 0 for today, 1 for yesterday, etc.')
 
     args = parser.parse_args()
 
@@ -201,7 +207,7 @@ def main(*args):
         parsed_records = list()
         if args.caldate is None:
             # default to yesterdays date, arxiv is actually sent at 9PM EDT
-            args.caldate = (datetime.datetime.today() - datetime.timedelta(1)).strftime('%Y-%m-%d')
+            args.caldate = (datetime.datetime.today() - datetime.timedelta(args.date_offset)).strftime('%Y-%m-%d')
 
         for d in args.direct:
             if 'arxiv' == d.lower():
