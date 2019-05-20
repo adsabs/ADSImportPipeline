@@ -11,15 +11,15 @@ logger = app.logger
 
 
 app.conf.CELERY_QUEUES = (
-    Queue('classic:delete-documents', app.exchange, routing_key='classic:delete-documents'),
-    Queue('classic:find-new-records', app.exchange, routing_key='classic:find-new-records'),
-    Queue('classic:read-records', app.exchange, routing_key='classic:read-records'),
-    Queue('classic:merge-metadata', app.exchange, routing_key='classic:merge-metadata'),
+    Queue('classic-delete-documents', app.exchange, routing_key='classic-delete-documents'),
+    Queue('classic-find-new-records', app.exchange, routing_key='classic-find-new-records'),
+    Queue('classic-read-records', app.exchange, routing_key='classic-read-records'),
+    Queue('classic-merge-metadata', app.exchange, routing_key='classic-merge-metadata'),
     # direct ingest currently only needs one queue
-    # Queue('direct:delete-documents', app.exchange, routing_key='direct:delete-documents'),
-    # Queue('direct:find-new-records', app.exchange, routing_key='direct:find-new-records'),
-    # Queue('direct:read-records', app.exchange, routing_key='direct:read-records'),
-    Queue('direct:merge-metadata', app.exchange, routing_key='direct:merge-metadata'),
+    # Queue('direct-delete-documents', app.exchange, routing_key='direct-delete-documents'),
+    # Queue('direct-find-new-records', app.exchange, routing_key='direct-find-new-records'),
+    # Queue('direct-read-records', app.exchange, routing_key='direct-read-records'),
+    Queue('direct-merge-metadata', app.exchange, routing_key='direct-merge-metadata'),
     Queue('output-results', app.exchange, routing_key='output-results')
 )
 
@@ -104,23 +104,32 @@ def task_merge_metadata(record):
         logger.debug('Strangely, the result of merge is empty: %s', record)
 
 
-@app.task(queue='direct:merge-metadata')
+@app.task(queue='direct-merge-metadata')
 def task_merge_arxiv_direct(record):
-
+    origin = 'direct'
+    current = app.get_record(record['bibcode'], load_only=['origin'])
+    if current and current['origin'] == 'classic':
+        # if record has been seen through classic, don't overwrite origin
+        origin = 'classic'
     modrec = ArXivDirect.add_direct(record)
     output = read_records.xml_to_dict(modrec.root)
     e = enforce_schema.Enforcer()
     export = e.ensureList(output['records']['record'])
     newrec = []
+    update = app.update_storage(record['bibcode'], origin=origin)
+    if update is None:
+        return  # here if bibcode was already deleted, etc.
     for r in export:
         rec = e.enforceTopLevelSchema(record=r, JSON_fingerprint='Fake')
+        rec['id'] = update['id']
         newrec.append(rec)
     result = merger.mergeRecords(newrec)
     for r in result:
-        r['id'] = None
+        r['id'] = update['id']
         r = solr_adapter.SolrAdapter.adapt(r)
         solr_adapter.SolrAdapter.validate(r)
         task_output_direct.delay(r)
+        logger.info('direct ingest processed bibocde %s', record['bibcode'])
 
 
 @app.task(queue='output-results')

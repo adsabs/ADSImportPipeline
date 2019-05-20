@@ -274,6 +274,228 @@ class TestSolrAdapter(unittest.TestCase):
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
         })
 
+        # test identifer arXiv with bibcode
+        r = solr_adapter.SolrAdapter.adapt({
+            "id": 99999981,
+            "modtime": '2018-07-30T21:06:49',
+            'bibcode': u'2018arXiv180710779B',
+            "text": {},
+            "entry_date": "2018-07-30",
+            "metadata": {
+                "references": [],
+                'properties': {'refereed': False, 'openaccess': True,
+                               'doctype': {'content': u'article', 'origin': u'ADS metadata'},
+                               'private': False, 'ocrabstract': False, 'ads_openaccess': False,
+                               'eprint_openaccess': True, 'pub_openaccess': False
+                               },
+                "relations": {
+                    'identifiers': [
+                        {
+                            'bibcode': u'2018arXiv180710779B',
+                            'content': u'arXiv:1807.10779'
+                        }
+                    ]
+                },
+                "general": {
+                    "publication": {
+                        "origin": u"ARXIV",
+                        'dates': [
+                            {
+                                'type': u'date-preprint',
+                                'content': u'2018-07-30'
+                            }
+                        ]
+                    },
+                    'authors': [
+                        {'name': {'normalized': u'T Hooft, V', 'western': u"t'Hooft, van X", 'native': ''},
+                         'number': u'1', 'affiliations': [], 'orcid': '', 'type': 'regular', 'emails': []}],
+                }
+            },
+        })
+        solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
+        self.assertEquals(r, {
+            "id": 99999981,
+            'bibcode': u'2018arXiv180710779B',
+            'date': u'2018-07-30T00:30:00.000000Z',
+            'bibstem': [u'arXiv', u'arXiv1807'],
+            'bibstem_facet': u'arXiv',
+            'entry_date': '2018-07-30T00:00:00.000000Z',
+            'pubdate': u'2018-07-30',
+            'doctype': u'article',
+
+            'aff': [u'-'],
+            'author': [u"t'Hooft, van X"],
+            'author_facet': [u'T Hooft, V'],
+            'author_facet_hier': [u'0/T Hooft, V',
+                                  u"1/T Hooft, V/t'Hooft, van X"],
+            'author_norm': [u'T Hooft, V'],
+            'email': [u'-'],
+            'first_author': u"t'Hooft, van X",
+            'first_author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X"],
+            'first_author_norm': u'T Hooft, V',
+            'orcid_pub': [u'-'],
+            'page_count': 0,
+            'author_count': 1,
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
+
+            'identifier': [u'arXiv:1807.10779'],
+        })
+
+        # test identifer arXiv with bibcode, different kind of arXiv id, plus made sure links are captured properly
+        r = solr_adapter.SolrAdapter.adapt({
+            "id": 99999982,
+            "modtime": '1968-09-00T21:06:49',
+            'bibcode': u'1968NuPhB...7...79F',
+            "text": {},
+            "entry_date": "2004-06-09T00:00:00.000000Z",
+            "metadata": {
+                "references": [],
+                'properties': {'refereed': False, 'openaccess': True,
+                               'doctype': {'content': u'article', 'origin': u'ADS metadata'},
+                               'private': False, 'ocrabstract': False, 'ads_openaccess': False,
+                               'eprint_openaccess': True, 'pub_openaccess': False
+                               },
+                "relations": {
+                    'identifiers': [
+                        {
+                            'bibcode': u'2002quant.ph..6057F',
+                            'content': u'arXiv:quant-ph/0206057'
+                        }
+                    ],
+                    'preprints': [{'content': u'arXiv:quant-ph/0206057'}],
+                    'links': [
+                        {
+                            'url': u'http://arxiv.org/abs/quant-ph/0206057',
+                            'access': u'open',
+                            'type': u'preprint',
+                        },
+                        {
+                            'url': u'http://inspirehep.net/search?p=find+eprint+quant-ph/0206057',
+                            'type': u'spires',
+                        },
+                        {
+                            'url': u'http://adsabs.harvard.edu/abs/2002quant.ph..6057F',
+                            'type': u'ADSlink'
+                        }
+                    ]
+                },
+                "general": {
+                    "publication": {
+                        "origin": u"ARXIV",
+                        'dates': [
+                            {
+                                'type': u'date-preprint',
+                                'content': u'1968-09-00'
+                            }
+                        ]
+                    },
+                    'authors': [
+                        {'name': {'normalized': u'T Hooft, V', 'western': u"t'Hooft, van X", 'native': ''},
+                         'number': u'1', 'affiliations': [], 'orcid': '', 'type': 'regular', 'emails': []}],
+                }
+            },
+        })
+        solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
+        self.assertEquals(r, {
+            "id": 99999982,
+            'bibcode': u'1968NuPhB...7...79F',
+            'date': u'1968-09-01T00:00:00.000000Z',
+            'bibstem': [u'NuPhB', u'NuPhB...7'],
+            'bibstem_facet': u'NuPhB',
+            'entry_date': '2004-06-09T00:00:00.000000Z',
+            'pubdate': u'1968-09-00',
+            'doctype': u'article',
+
+            'aff': [u'-'],
+            'author': [u"t'Hooft, van X"],
+            'author_facet': [u'T Hooft, V'],
+            'author_facet_hier': [u'0/T Hooft, V',
+                                  u"1/T Hooft, V/t'Hooft, van X"],
+            'author_norm': [u'T Hooft, V'],
+            'email': [u'-'],
+            'first_author': u"t'Hooft, van X",
+            'first_author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X"],
+            'first_author_norm': u'T Hooft, V',
+            'orcid_pub': [u'-'],
+            'page_count': 0,
+            'author_count': 1,
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
+
+            'identifier': [u'arXiv:quant-ph/0206057'],
+            'links_data': [
+                u'{"access": "open", "instances": "", "title": "", "type": "preprint", "url": "http://arxiv.org/abs/quant-ph/0206057"}',
+                u'{"access": "", "instances": "", "title": "", "type": "spires", "url": "http://inspirehep.net/search?p=find+eprint+quant-ph/0206057"}',
+                u'{"access": "", "instances": "", "title": "", "type": "ADSlink", "url": "http://adsabs.harvard.edu/abs/2002quant.ph..6057F"}'
+            ],
+        })
+
+        # test identifer ascl
+        r = solr_adapter.SolrAdapter.adapt({
+            "id": 99999983,
+            "modtime": '1968-09-00T21:06:49',
+            'bibcode': u'2018ascl.soft02007G',
+            "text": {},
+            "entry_date": "2004-06-09T00:00:00.000000Z",
+            "metadata": {
+                "references": [],
+                'properties': {'refereed': False, 'openaccess': True,
+                               'doctype': {'content': u'Software', 'origin': ''},
+                               'private': False, 'ocrabstract': False, 'ads_openaccess': False,
+                               'eprint_openaccess': True, 'pub_openaccess': False
+                               },
+                "relations": {
+                    'identifiers': [
+                        {
+                            'type': u'ascl',
+                            'content': u'ascl:1802.007'
+                        }
+                    ]
+                },
+                "general": {
+                    "publication": {
+                        "origin": u"ASCL",
+                        'dates': [
+                            {
+                                'type': u'date-published',
+                                'content': u'2018-02-00'
+                            }
+                        ]
+                    },
+                    'authors': [
+                        {'name': {'normalized': u'T Hooft, V', 'western': u"t'Hooft, van X", 'native': ''},
+                         'number': u'1', 'affiliations': [], 'orcid': '', 'type': 'regular', 'emails': []}],
+                }
+            },
+        })
+        solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
+        self.assertEquals(r, {
+            "id": 99999983,
+            'bibcode': u'2018ascl.soft02007G',
+            'date': u'2018-02-01T00:00:00.000000Z',
+            'bibstem': [u'ascl', u'ascl.soft'],
+            'bibstem_facet': u'ascl.soft',
+            'entry_date': '2004-06-09T00:00:00.000000Z',
+            'pubdate': u'2018-02-00',
+            'doctype': u'software',
+
+            'aff': [u'-'],
+            'author': [u"t'Hooft, van X"],
+            'author_facet': [u'T Hooft, V'],
+            'author_facet_hier': [u'0/T Hooft, V',
+                                  u"1/T Hooft, V/t'Hooft, van X"],
+            'author_norm': [u'T Hooft, V'],
+            'email': [u'-'],
+            'first_author': u"t'Hooft, van X",
+            'first_author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X"],
+            'first_author_norm': u'T Hooft, V',
+            'orcid_pub': [u'-'],
+            'page_count': 0,
+            'author_count': 1,
+            'doctype_facet_hier': ["0/Non-Article", "1/Non-Article/Software"],
+
+            'identifier': [u'ascl:1802.007'],
+        })
+
 class TestBibstemMapper(unittest.TestCase):
     def setUp(self):
         pass
@@ -289,7 +511,9 @@ class TestBibstemMapper(unittest.TestCase):
           { 'bibcode': '2010ApJ...724.1099L',
             'bibstems': [ 'ApJ..', 'ApJ...724' ] },
           { 'bibcode': '2015rmtm.book...81D',
-            'bibstems': [ 'rmtm.', 'rmtm.book' ] }
+            'bibstems': [ 'rmtm.', 'rmtm.book' ] },
+          { 'bibcode': '2018SPIE10974E..13W',
+            'bibstems': [ 'SPIE.', 'SPIE10974' ] }
           ]
         for t in test_cases:
             s, l = solr_adapter.bibstem_mapper(t['bibcode'])

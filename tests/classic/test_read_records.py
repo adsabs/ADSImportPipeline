@@ -57,7 +57,7 @@ class TestADSExports(unittest.TestCase):
         with mock.patch('aip.classic.read_records.ADSRecords', return_value=adsrecord), \
             mock.patch.object(adsrecord, 'export', return_value=adsrecord), \
             mock.patch('aip.classic.read_records.xml_to_dict', return_value=ADSRECORDS[u'2009AAS...21320006C.classic']):
-            results = read_records.readRecordsFromADSExports([(u'2009AAS...21320006C', 'fingerprint')]) 
+            results = read_records.readRecordsFromADSExports([(u'2009AAS...21320006C', 'fingerprint')])
             self.assertDictContainsSubset({'JSON_fingerprint': 'fingerprint',
                               'bibcode': u'2009AAS...21320006C',
                               'entry_date': u'2009-01-03',
@@ -162,6 +162,9 @@ class TestADSExports(unittest.TestCase):
                                {'alternates': [{'content': u'2009BAAS...41..187C',
                                   'origin': None,
                                   'type': u'alternate'}],
+                                'identifiers': [{'content': u'2009AAS...21320006C',
+                                  'origin': None,
+                                  'type': u'identifier'}],
                                 'links': [],
                                 'preprints': [],
                                 'tempdata': {'alternate_journal': False,

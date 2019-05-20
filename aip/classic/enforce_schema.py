@@ -233,6 +233,8 @@ class Enforcer:
       'canonical':  g('canonical_journal'),
     }
 
+    if g('series'):
+      r['publication']['series'] = g('series')
     r['publication']['dates'] = []
     for i in eL(g('dates',[])):
       r['publication']['dates'].append({
@@ -383,6 +385,15 @@ class Enforcer:
     for i in eL(g('alternates',[])):
       for j in eL(i.get('alternate',[])):
         r['alternates'].append({
+          'origin':   g('origin'),
+          'type':     j.get('@type'),
+          'content':  j.get('#text'),
+        })
+
+    r['identifiers'] = []
+    for i in eL(g('identifiers',[])):
+      for j in eL(i.get('identifier',[])):
+        r['identifiers'].append({
           'origin':   g('origin'),
           'type':     j.get('@type'),
           'content':  j.get('#text'),

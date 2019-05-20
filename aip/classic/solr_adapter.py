@@ -12,7 +12,7 @@ from aip.classic import enforce_schema
 logger = setup_logging('solr_adapter')
 
 ARTICLE_TYPES = set(['eprint', 'article', 'inproceedings', 'inbook'])
-        
+AUTHOR_TYPES = set(['regular', 'collaboration'])
 
 def get_date_by_datetype(ADS_record):
     """computes the standard pubdate by selecting the appropriate value
@@ -121,7 +121,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _aff(ADS_record):
-    authors = [i for i in ADS_record['metadata']['general'].get('authors', []) if i['type'] in ['regular', 'collaboration']]
+    authors = [i for i in ADS_record['metadata']['general'].get('authors', []) if i['type'] in AUTHOR_TYPES]
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = ['; '.join([j for j in i['affiliations'] if j]) if i['affiliations'] else u'-' for i in authors]
     return {'aff': result}
@@ -149,20 +149,20 @@ class SolrAdapter(object):
   def _author(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type'] in ['regular', 'collaboration']]
+    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type'] in AUTHOR_TYPES]
     return {'author': result}  
 
   @staticmethod
   def _author_count(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors',[])
-    result = len([i['name']['western'] for i in authors if i['name']['western'] and i['type'] in ['regular', 'collaboration']])
+    result = len([i['name']['western'] for i in authors if i['name']['western'] and i['type'] in AUTHOR_TYPES])
     return {'author_count': result}
 
   @staticmethod
   def _author_norm(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in ['regular', 'collaboration']]
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in AUTHOR_TYPES]
     return {'author_norm': result}
 
   @staticmethod
@@ -183,7 +183,7 @@ class SolrAdapter(object):
   def _author_facet(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in ['regular', 'collaboration']]
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in AUTHOR_TYPES]
     return {'author_facet': result}    
 
   @staticmethod
@@ -192,7 +192,7 @@ class SolrAdapter(object):
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = []
     for author in authors:
-        if author['type'] in ['regular', 'collaboration']:
+        if author['type'] in AUTHOR_TYPES:
             if author['name']['normalized']:
                 r = u"0/%s" % (_normalize_author_name(author['name']['normalized']),)
                 result.append(r)
@@ -397,6 +397,7 @@ class SolrAdapter(object):
     result.extend([i['content'] for i in ADS_record['metadata']['relations'].get('preprints', [])])
     result.extend([i['content'] for i in ADS_record['metadata']['general'].get('doi', [])])
     result.extend([i['content'] for i in ADS_record['metadata']['relations'].get('alternates', [])])
+    result.extend([i['content'] for i in ADS_record['metadata']['relations'].get('identifiers', [])])
     return {'identifier': list(set(result))}
 
   @staticmethod
@@ -458,7 +459,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _series(ADS_record):
-    return {'series': ADS_record['metadata']['general'].get('series', u'')}
+    return {'series': ADS_record['metadata']['general'].get('publication', {}).get('series')}
 
   @staticmethod
   def _keyword(ADS_record):
@@ -603,6 +604,7 @@ doctype_dict = {
   'circular':      'Circular',
   'newsletter':    'Newsletter',
   'catalog':       'Catalog',
+  'editorial':     'Editorial',
   'misc':          'Other'
 }
 
@@ -702,6 +704,14 @@ arxiv_categories = set(["acc.phys.",
                         "solv.int.",
                         "supr.con."])
 
+# these are publications for which there may be a 5-digit volume
+# which "spills left" i.e. has its most significant digit in the
+# journal field
+PUB_VOLUME_SPILLS_LEFT = (
+    'SPIE',
+    'ATel',
+    'GCN.',
+)
 
 def bibstem_mapper(bibcode):
   short_stem = bibcode[4:9]
@@ -711,14 +721,19 @@ def bibstem_mapper(bibcode):
   # ApJL
   if short_stem == 'ApJ..' and bibcode[13:14] == 'L':
     short_stem = u'ApJL.'
+    long_stem = short_stem + vol_field
   # MPECs have a letter in the journal field which should be ignored
   elif short_stem == 'MPEC.' and re.match(r'^[\.\w]+$', vol_field):
     vol_field = u'....'
+    long_stem = short_stem + vol_field
   # map old arXiv bibcodes to arXiv only
   elif long_stem in arxiv_categories:
     short_stem = u'arXiv'
     vol_field = u'....'
-  long_stem = short_stem + vol_field
+    long_stem = short_stem + vol_field
+  # 5th character could be volume digit, in whih case reset it
+  elif short_stem[0:4] in PUB_VOLUME_SPILLS_LEFT and short_stem[4].isdigit():
+    short_stem = short_stem[0:4] + u'.'
   return (unicode(short_stem), unicode(long_stem))
 
 

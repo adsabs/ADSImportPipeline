@@ -61,6 +61,7 @@ MERGER_RULES = {
   'comment':              'originTrustMerger',
   'pubnote':              'takeAll',
   'language':             'originTrustMerger',
+  'series':               'originTrustMerger',
 
   #<metadata type="properties">
   'databases':            'takeAll',
@@ -85,6 +86,7 @@ MERGER_RULES = {
   #<metadata type="relations">
   'preprints':            'takeAll',
   'alternates':           'takeAll',
+  'identifiers':          'takeAll',
   'links':                'takeAll',
 }
 

@@ -61,9 +61,11 @@ GENERAL = OrderedDict([(u'@origin', u'AAS'),
               u'American Astronomical Society Meeting Abstracts #215'),
              (u'electronic_id', u'428.16'),
              (u'publication_year', u'2010'),
-             (u'volume', u'215')])
+             (u'volume', u'215'),
+             (u'series', '123')])
 
 PROPERTIES = OrderedDict([(u'@origin', u'ADS metadata'),
+             (u'series', None),
              (u'vizier_tables',
               OrderedDict([(u'vizier_table',
                             [u'Galaxies', u'HII regions', u'Optical'])])),
@@ -260,6 +262,7 @@ GENERAL_ENFORCED = {'abstracts': [{'lang': u'en',
   'page_count': None,
   'page_last': None,
   'page_range': None,
+  'series': '123',
   'volume': u'215'},
  'pubnote': [],
  'tempdata': {'alternate_journal': False,
@@ -416,6 +419,7 @@ REFERENCES_ENFORCED = {'references': [{'arxid': u'',
 
 
 RELATIONS_ENFORCED = {'alternates': [],
+ 'identifiers': [],
  'links': [{'access': None,
    'count': u'1',
    'origin': None,
@@ -429,7 +433,7 @@ RELATIONS_ENFORCED = {'alternates': [],
   'primary': False,
   'type': u'relations'}}
 
-
+# expected output from processing
 MERGEDRECS = {}
 MERGEDRECS[u'2015ApJ...815..133S'] = {'abstract': u'In order to examine their relation to the host galaxy, the extraplanar dusts of six nearby galaxies are modeled, employing a three-dimensional Monte Carlo radiative transfer code. The targets are from the highly inclined galaxies that show dust-scattered ultraviolet halos, and the archival Galaxy Evolution Explorer FUV band images were fitted with the model. The observed images are generally well-reproduced by two dust layers and one light source layer, whose vertical and radial distributions have exponential profiles. We obtained several important physical parameters, such as star formation rate (SFR<SUB>UV</SUB>), face-on optical depth, and scale-heights. Three galaxies (NGC 891, NGC 3628, and UGC 11794) show clear evidence for the existence of an extraplanar dust layer. However, it is found that the remaining three targets (IC 5249, NGC 24, and NGC 4173) do not necessarily need a thick dust disk to model the ultraviolet (UV) halo, because its contribution is too small and the UV halo may be caused by the wing part of the GALEX point spread function. This indicates that the galaxy samples reported to have UV halos may be contaminated by galaxies with negligible extraplanar (halo) dust. The galaxies showing evidence of an extraplanar dust layer fall within a narrow range on the scatter plots between physical parameters such as SFR<SUB>UV</SUB> and extraplanar dust mass. Several mechanisms that could possibly produce the extraplanar dust are discussed. We also found a hint that the extraplanar dust scale-height might not be much different from the polycyclic aromatic hydrocarbon emission characteristic height.',
          'ack': u'J.H.S. is grateful to Yujin Yang, Dennis Zaritsky, and Ann Zabludoff for their valuable comments and discussion of the results.',
@@ -508,4 +512,5 @@ MERGEDRECS[u'2015ApJ...815..133S'] = {'abstract': u'In order to examine their re
          'pubnote': [u'33 pages, 7 figures, 5 tables, ApJ in press; doi:10.1088/0004-637X/815/2/133'],
          'title': [u'Ultraviolet Radiative Transfer Modeling of Nearby Galaxies with Extraplanar Dusts'],
          'volume': u'815',
+         'series': '123',
          'year': u'2015'}

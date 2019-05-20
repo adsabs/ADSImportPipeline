@@ -25,7 +25,7 @@ import json
 import codecs
 import argparse
 
-PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
+PROJECT_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),'../'))
 sys.path.insert(0, PROJECT_HOME)
 
 from aip.libs import read_records, solr_adapter, merger
