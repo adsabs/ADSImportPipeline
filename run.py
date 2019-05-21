@@ -219,10 +219,10 @@ def main(*args):
                         a = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[0]
                         reclist.append(a)
 
+                parser = arxiv.ArxivParser()
                 for f in reclist:
                     with open(f, 'rU') as fp:
                         try:
-                            parser = arxiv.ArxivParser()
                             parsed_records.append(parser.parse(fp))
                         except:
                             logger.error("bad record: %s from arxiv ingest" % (f))
@@ -235,10 +235,10 @@ def main(*args):
                         a, b, c = l.split('\t')
                         reclist.append(b)
 
+                parser = aps.APSJATSParser()
                 for f in reclist:
                     with open(f, 'rU') as fp:
                         try:
-                            parser = aps.APSJATSParser()
                             parsed_records.append(parser.parse(fp))
                         except:
                             logger.error("bad record: %s from APS parser" % (f))
@@ -246,7 +246,7 @@ def main(*args):
             else:
                 msg = 'Error: invalid direct argument passed: %s' % d
                 logger.error(msg)
-                print msg
+                # print (msg)
 
             if 'arxiv' == d.lower():
                 for r in parsed_records:
@@ -256,7 +256,7 @@ def main(*args):
                         logger.warning("Bad record: %s from %s direct ingest" % (r['bibcode'], args.direct))
             else:
                 msg = 'Error: {} is not yet supported by direct ingest'.format(args.direct)
-                print msg
+                # print (msg)
                 logger.error(msg)
 
     else:
