@@ -12,7 +12,7 @@ from aip.classic import enforce_schema
 logger = setup_logging('solr_adapter')
 
 ARTICLE_TYPES = set(['eprint', 'article', 'inproceedings', 'inbook'])
-AUTHOR_TYPES = set(['regular', 'collaboration'])
+AUTHOR_TYPES = set(['regular', 'collaboration', 'review'])
 
 def get_date_by_datetype(ADS_record):
     """computes the standard pubdate by selecting the appropriate value
@@ -150,7 +150,7 @@ class SolrAdapter(object):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = [i['name']['western'] for i in authors if i['name']['western'] and i['type'] in AUTHOR_TYPES]
-    return {'author': result}  
+    return {'author': result}
 
   @staticmethod
   def _author_count(ADS_record):
@@ -167,9 +167,9 @@ class SolrAdapter(object):
 
   @staticmethod
   def _book_author(ADS_record):
-    author = ADS_record['metadata']['general'].get('book_author', [])
-    author = sorted(author, key=lambda k: int(k['number']))
-    result = [i['name']['western'] for i in author if i['name']['western']]
+    authors = ADS_record['metadata']['general'].get('authors', [])
+    authors = sorted(authors, key=lambda k: int(k['number']))
+    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type']=='book']
     return {'book_author': result}
 
   @staticmethod
@@ -338,16 +338,16 @@ class SolrAdapter(object):
   def _first_author(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    if not authors:
-      result = None
-    else:
-      result = authors[0]['name']['western']
+    result = [i['name']['western'] for i in authors if i['name']['western'] and i['type'] in AUTHOR_TYPES]
+    if result:
+      result = result[0]
     return {'first_author': result}
 
   @staticmethod
   def _first_author_facet_hier(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
+    authors = [i for i in authors if i['name']['western'] and i['name']['normalized'] and i['type'] in AUTHOR_TYPES]
     result = []
     if authors:
       if authors[0]['name']['normalized']:
@@ -363,10 +363,9 @@ class SolrAdapter(object):
   def _first_author_norm(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))   
-    if authors:
-      result = authors[0]['name']['normalized']
-    else:
-      result = None
+    result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in AUTHOR_TYPES]
+    if result:
+      result = result[0]
     return {'first_author_norm': result}
 
   @staticmethod

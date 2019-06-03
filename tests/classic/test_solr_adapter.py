@@ -496,6 +496,70 @@ class TestSolrAdapter(unittest.TestCase):
             'identifier': [u'ascl:1802.007'],
         })
 
+        # test addition of type = review, which should act similar to type = regular
+        r = solr_adapter.SolrAdapter.adapt({
+            "id": 99999984,
+            "modtime": "2017-08-27T23:33:35",
+            'bibcode': u'1988Sci...240..668D',
+            "text": {},
+            "entry_date": "2002-06-26",
+            "metadata": {
+                "references": [],
+                'properties': {'refereed': False, 'openaccess': False,
+                               'doctype': {'content': u'article', 'origin': u'ADS metadata'},
+                               'private': False, 'ocrabstract': False, 'ads_openaccess': False,
+                               'eprint_openaccess': False, 'pub_openaccess': False
+                               },
+                "relations": {},
+                "general": {
+                    "publication": {
+                        "origin": u"JSTOR",
+                        'dates': [
+                            {
+                                'type': u'date-published',
+                                'content': u'1988-04-00'
+                            }
+                        ]
+                    },
+                    'authors': [
+                        {'name': {'normalized': u'De Zeeuw, T', 'western': u'De Zeeuw, Tim', 'native': ''},
+                         'number': u'1', 'affiliations': [],
+                         'orcid': '', 'type': 'book', 'emails': []},
+                        {'name': {'normalized': u'Miller, R', 'western': u"Miller, Richard H.", 'native': ''},
+                         'number': u'2', 'affiliations': [], 'orcid': '', 'type': 'review', 'emails': []},
+                    ]
+               }
+            },
+            'orcid_claims': {'verified': [u'-']}
+        })
+        solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
+        self.assertEquals(r, {
+            "id": 99999984,
+            'bibcode': u'1988Sci...240..668D',
+            'date': u'1988-04-01T00:00:00Z',
+            'bibstem': [u'Sci', u'Sci...240'],
+            'bibstem_facet': u'Sci',
+            'entry_date': '2002-06-26T00:00:00.000000Z',
+            'pubdate': u'1988-04-00',
+            'date': u'1988-04-01T00:00:00.000000Z',
+            'doctype': u'article',
+            'aff': [u'-'],
+            'author': [u"Miller, Richard H."],
+            'author_facet': [u'Miller, R'],
+            'author_facet_hier': [u'0/Miller, R', u'1/Miller, R/Miller, Richard H'],
+            'author_norm': [u'Miller, R'],
+            'book_author': [u'De Zeeuw, Tim'],
+            'email': [u'-', u'-'],
+            'first_author': u"Miller, Richard H.",
+            'first_author_facet_hier': [u'0/Miller, R', u'1/Miller, R/Miller, Richard H'],
+            'first_author_norm': u'Miller, R',
+            'orcid_pub': [u'-', u'-'],
+            'orcid_user': [u'-', u'-'],
+            'page_count': 0,
+            'author_count': 1,
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
+        })
+
 class TestBibstemMapper(unittest.TestCase):
     def setUp(self):
         pass
