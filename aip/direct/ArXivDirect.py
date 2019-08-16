@@ -176,7 +176,6 @@ def add_direct(record, json_timestamp=None, current_record=None,
                                 'url': record['properties']['HTML'],
                                 'access': 'open'})
 
-    print adsr
     return adsr
 
 
