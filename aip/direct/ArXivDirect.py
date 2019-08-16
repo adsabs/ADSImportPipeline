@@ -149,7 +149,8 @@ def add_direct(record, json_timestamp=None, current_record=None,
     ads_ex.xml_node(adsr.current_properties, 'pubtype', 'eprint')
     ads_ex.xml_node(adsr.current_properties, 'private', 0)
     ads_ex.xml_node(adsr.current_properties, 'ocrabstract', 0)
-    preprint_id = electronic_id.replace('arXiv:', '')
+#   preprint_id = electronic_id.replace('arXiv:', '')
+    preprint_id = electronic_id
     ads_ex.xml_node(adsr.current_properties, 'preprint', preprint_id)
     ads_ex.xml_node(adsr.current_properties, 'nonarticle', 0)
     ads_ex.xml_node(adsr.current_properties, 'refereed', 0)
@@ -175,6 +176,7 @@ def add_direct(record, json_timestamp=None, current_record=None,
                                 'url': record['properties']['HTML'],
                                 'access': 'open'})
 
+    print adsr
     return adsr
 
 
