@@ -4,6 +4,7 @@
 #  and adspy via mount of /proj
 
 import sys
+import datetime
 try:
     import ads.ADSCachedExports as ads_ex
     import ads.journal_parser as ads_jp
@@ -35,7 +36,9 @@ def add_direct(record, json_timestamp=None, current_record=None,
     # create a new record for the Direct entry
 
     if current_record is None:
-        rec_properties = {'bibcode': bibcode, 'entry_date': record['pubdate']}
+        date_today = datetime.datetime.today().strftime('%Y-%m-%d')
+        rec_properties = {'bibcode': bibcode, 'entry_date': date_today}
+        # rec_properties = {'bibcode': bibcode, 'entry_date': record['pubdate']}
         adsr.current_record = ads_ex.xml_node(adsr.xml_records, 'record', properties=rec_properties)
     else:
         adsr.current_record = current_record
