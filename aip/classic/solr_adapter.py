@@ -488,7 +488,7 @@ class SolrAdapter(object):
   def _orcid(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
-    result = [i['orcid'] if i['orcid'] else u'-' for i in authors]
+    result = [i['orcid'] if i['orcid'] else u'-' for i in authors if i['type'] in AUTHOR_TYPES]
     out = {'orcid_pub': result}
     if 'orcid_claims' in ADS_record:
         for indexname, claimname in [('orcid_user', 'verified'), ('orcid_other', 'unverified')]:
