@@ -218,6 +218,7 @@ def main(*args):
                         # sample line: oai/arXiv.org/0706/2491 2018-06-13T01:00:29
                         a = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[0]
                         reclist.append(a)
+                logger.info("Direct Ingest: there are %s ArXiv records to process" % len(reclist))
 
                 parser = arxiv.ArxivParser()
                 for f in reclist:
@@ -249,6 +250,7 @@ def main(*args):
                 # print (msg)
 
             if 'arxiv' == d.lower():
+                logger.info("Direct Ingest: merging %s ArXiv records" % len(parsed_records))
                 for r in parsed_records:
                     try:
                         tasks.task_merge_arxiv_direct.delay(r)

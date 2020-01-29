@@ -111,7 +111,8 @@ def task_merge_arxiv_direct(record):
     if current and current['origin'] == 'classic':
         # if record has been seen through classic, don't overwrite origin
         origin = 'classic'
-    modrec = ArXivDirect.add_direct(record, current_record=current)
+    logger.info("Record for %s originates from %s" % (record['bibcode'], origin))
+    modrec = ArXivDirect.add_direct(record)
     output = read_records.xml_to_dict(modrec.root)
     e = enforce_schema.Enforcer()
     export = e.ensureList(output['records']['record'])
@@ -129,7 +130,7 @@ def task_merge_arxiv_direct(record):
         r = solr_adapter.SolrAdapter.adapt(r)
         solr_adapter.SolrAdapter.validate(r)
         task_output_direct.delay(r)
-        logger.info('direct ingest processed bibocde %s', record['bibcode'])
+        logger.info('direct ingest processed bibcode %s', record['bibcode'])
 
 
 @app.task(queue='output-results')
