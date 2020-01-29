@@ -111,7 +111,7 @@ def task_merge_arxiv_direct(record):
     if current and current['origin'] == 'classic':
         # if record has been seen through classic, don't overwrite origin
         origin = 'classic'
-    modrec = ArXivDirect.add_direct(record)
+    modrec = ArXivDirect.add_direct(record, current_record=current)
     output = read_records.xml_to_dict(modrec.root)
     e = enforce_schema.Enforcer()
     export = e.ensureList(output['records']['record'])
