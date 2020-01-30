@@ -4,6 +4,7 @@ from mock import patch
 import os
 import sys
 import unittest
+import xmltodict
 
 from aip import tasks
 from aip import app as app_module
@@ -11,6 +12,7 @@ from aip.models import Base
 from tests.stubdata import directdata
 from tests.stubdata import ADSRECORDS
 from aip.direct import ArXivDirect
+from aip.classic import read_records
 
 if '/proj/ads/soft/python/lib/site-packages' not in sys.path:
     sys.path.append('/proj/ads/soft/python/lib/site-packages')
@@ -50,13 +52,23 @@ class TestArXivDirect(unittest.TestCase):
             # expected = directdata.DIRECT_OUTPUT.copy()
             # self.maxDiff = None
             # self.assertDictEqual(expected, next_task.call_args[0][0].toJSON())
+
+            origin_shouldbe = 'ARXIV'
+            entryd_shouldbe = ads_ex.iso_8601_time(None)
             test_record = directdata.DIRECT_RAW_INPUT
             test_adsrec = ArXivDirect.add_direct(test_record)
-            # help(test_adsrec)
-            print "test adsrec:",test_adsrec.write()
+            test_serialized = test_adsrec.root.serialize()
+            xdict = xmltodict.parse(test_serialized)['records']['record']
+            test_origin = xdict['metadata'][0]['@origin']
+            test_entryd = xdict['@entry_date']
+            # print "deets:",type(xdict),xdict['records']['record']['@bibcode']
+            # print "lol wut:",xmltodict.parse(test_serialized)
+            # print "test adsrec:",read_records.xml_to_dict(test_serialized)
             # self.assertEqual('ARXIV',test_adsrec['current-properties'])
 
-            self.assertEqual(1,2)
+            # self.assertEqual(test_bibcode,'2017arXiv171105739L')
+            self.assertEqual(test_origin,'ARXIV')
+            self.assertEqual(test_entryd,entryd_shouldbe)
 
 
 if __name__ == '__main__':
