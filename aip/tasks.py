@@ -107,12 +107,14 @@ def task_merge_metadata(record):
 @app.task(queue='direct-merge-metadata')
 def task_merge_arxiv_direct(record):
     origin = 'direct'
-    current = app.get_record(record['bibcode'], load_only=['origin'])
+    current = app.get_record(record['bibcode'], load_only=['origin','created'])
+    entry_date = None
     if current and current['origin'] == 'classic':
         # if record has been seen through classic, don't overwrite origin
         origin = 'classic'
+        entry_date = current['created']
     logger.info("Record for %s originates from %s" % (record['bibcode'], origin))
-    modrec = ArXivDirect.add_direct(record)
+    modrec = ArXivDirect.add_direct(record, created_date=entry_date)
     output = read_records.xml_to_dict(modrec.root)
     e = enforce_schema.Enforcer()
     export = e.ensureList(output['records']['record'])
