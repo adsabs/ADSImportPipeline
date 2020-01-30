@@ -43,6 +43,7 @@ class TestArXivDirect(unittest.TestCase):
         self.app.close_app()
         tasks.app = self._app
 
+    @unittest.skipIf(not ads_ex, "ads.ADSCachedExports not available")
     def test_ArXivDirect_add_direct(self):
         with patch.object(self.app, 'forward_message', return_value=None) as next_task:
 
