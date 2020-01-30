@@ -50,7 +50,13 @@ class TestArXivDirect(unittest.TestCase):
             # expected = directdata.DIRECT_OUTPUT.copy()
             # self.maxDiff = None
             # self.assertDictEqual(expected, next_task.call_args[0][0].toJSON())
-            self.assertEqual('a','b')
+            test_record = directdata.DIRECT_RAW_INPUT
+            test_adsrec = ArXivDirect.add_direct(test_record)
+            # help(test_adsrec)
+            print "test adsrec:",test_adsrec.write()
+            # self.assertEqual('ARXIV',test_adsrec['current-properties'])
+
+            self.assertEqual(1,2)
 
 
 if __name__ == '__main__':
