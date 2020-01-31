@@ -34,6 +34,15 @@ def add_direct(record, json_timestamp=None, created_date=None,
 
     # create a new record for the Direct entry
 
+    if created_date is None:
+        date_today = datetime.datetime.today().strftime('%Y-%m-%d')
+        rec_properties = {'bibcode': bibcode, 'entry_date': date_today}
+        # rec_properties = {'bibcode': bibcode, 'entry_date': record['pubdate']}
+        adsr.current_record = ads_ex.xml_node(adsr.xml_records, 'record', properties=rec_properties)
+    else:
+        rec_properties = {'bibcode': bibcode, 'entry_date': created_date}
+        adsr.current_record = current_record
+
     rec_properties = {'bibcode': bibcode, 'entry_date': created_date}
         # rec_properties = {'bibcode': bibcode, 'entry_date': record['pubdate']}
 
