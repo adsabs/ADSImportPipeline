@@ -63,7 +63,7 @@ class TestArXivDirect(unittest.TestCase):
 
             origin_shouldbe2 = 'classic'
             entryd_shouldbe2 = '2019-01-01T12:00:00Z'
-            test_adsrec = ArXivDirect.add_direct(test_record, '2019-01-01T12:00:00Z')
+            test_adsrec = ArXivDirect.add_direct(test_record, created_date='2019-01-01T12:00:00Z')
             test_serialized = test_adsrec.root.serialize()
             xdict = xmltodict.parse(test_serialized)['records']['record']['metadata'][0]
             test_origin = xdict['@origin']
