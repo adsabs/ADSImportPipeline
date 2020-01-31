@@ -114,7 +114,7 @@ def task_merge_arxiv_direct(record):
     if current and current['origin'] == 'classic':
         # if record has been seen through classic, don't overwrite origin
         origin = 'classic'
-        entry_date = datetime.strftime(current['created'],'%Y-%m-%dT%H:%M%S%fZ')
+        entry_date = datetime.strftime(current['created'],'%Y-%m-%dT%H:%M:%S.%fZ')
     logger.info("Record for %s originates from %s" % (record['bibcode'], origin))
     modrec = ArXivDirect.add_direct(record, created_date=entry_date)
     output = read_records.xml_to_dict(modrec.root)

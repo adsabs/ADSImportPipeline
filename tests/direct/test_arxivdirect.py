@@ -59,9 +59,10 @@ class TestArXivDirect(unittest.TestCase):
             test_record = directdata.DIRECT_RAW_INPUT
             test_adsrec = ArXivDirect.add_direct(test_record)
             test_serialized = test_adsrec.root.serialize()
-            xdict = xmltodict.parse(test_serialized)['records']['record']
-            test_origin = xdict['metadata'][0]['@origin']
-            test_entryd = xdict['@entry_date']
+            xdict = xmltodict.parse(test_serialized)['records']['record']['metadata'][0]
+            print "lolol:",xdict.keys()
+            test_origin = xdict['@origin']
+            test_entryd = xdict['creation_time']
             # print "deets:",type(xdict),xdict['records']['record']['@bibcode']
             # print "lol wut:",xmltodict.parse(test_serialized)
             # print "test adsrec:",read_records.xml_to_dict(test_serialized)
