@@ -4,7 +4,7 @@
 #  and adspy via mount of /proj
 
 import sys
-import datetime
+from datetime import datetime
 try:
     import ads.ADSCachedExports as ads_ex
     import ads.journal_parser as ads_jp
@@ -21,7 +21,7 @@ except ImportError:
         print 'Unable to import ads libraries: {}'.format(e)
 
 
-def add_direct(record, json_timestamp=None, current_record=None,
+def add_direct(record, json_timestamp=None, created_date=None,
                origin=None, matched_preprint=False, fulltext=None):
     """
     return a complete ADSRecords instance from direct data with xml
@@ -31,17 +31,17 @@ def add_direct(record, json_timestamp=None, current_record=None,
         raise ads_ex.InvalidBibcode('Empty bibcode.')
 
     adsr = ads_ex.ADSRecords('full', 'XML', cacheLooker=False)    
-    bibliographic_info = ads_ex.get_bibliographic_info(bibcode)
+    # bibliographic_info = ads_ex.get_bibliographic_info(bibcode)
 
     # create a new record for the Direct entry
 
-    if current_record is None:
-        date_today = datetime.datetime.today().strftime('%Y-%m-%d')
-        rec_properties = {'bibcode': bibcode, 'entry_date': date_today}
-        # rec_properties = {'bibcode': bibcode, 'entry_date': record['pubdate']}
-        adsr.current_record = ads_ex.xml_node(adsr.xml_records, 'record', properties=rec_properties)
-    else:
-        adsr.current_record = current_record
+    if created_date is None:
+        # created_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S%fZ')
+        created_date = ads_ex.iso_8601_time(None)
+
+    print "HI CREATED DATE IS:",created_date
+    rec_properties = {'bibcode': bibcode, 'entry_date': created_date}
+    adsr.current_record = ads_ex.xml_node(adsr.xml_records, 'record', properties=rec_properties)
 
     # create a new metadata tag for the Direct entry abstract
     datasource = 'ARXIV'
@@ -50,8 +50,10 @@ def add_direct(record, json_timestamp=None, current_record=None,
 
     # begin creating subfields under this metadata tag
 
-    creation_time = ads_ex.iso_8601_time(None)
-    modif_time = creation_time
+#   creation_time = ads_ex.iso_8601_time(None)
+#   modif_time = creation_time
+    creation_time = created_date
+    modif_time = ads_ex.iso_8601_time(None)
     ads_ex.xml_node(adsr.current_abstract, 'creation_time', creation_time)
     ads_ex.xml_node(adsr.current_abstract, 'modification_time', modif_time)
 

@@ -52,7 +52,12 @@ class TestWorkers(unittest.TestCase):
             tasks.task_merge_arxiv_direct(inputrec)
             self.assertTrue(next_task.called)
             out['id'] = 1  # from database
-            self.assertEqual(next_task.call_args_list[0][0][0], out)
+            # entry_date is set at runtime, so it needs to be reset or
+            # or deleted from the dict before comparison
+            out['entry_date'] = ads_ex.iso_8601_time(None)
+            lol = next_task.call_args_list[0][0][0]
+            lol['entry_date'] = out['entry_date']
+            self.assertEqual(lol, out)
             r = self.app.get_record(directdata.DIRECT_RAW_INPUT['bibcode'])
             self.assertEqual(directdata.DIRECT_RAW_INPUT['bibcode'], r['bibcode'])
             self.assertEqual('direct', r['origin'])
