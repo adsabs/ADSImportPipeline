@@ -38,7 +38,7 @@ class TestSolrAdapter(unittest.TestCase):
          'doctype_facet_hier': [u'0/Non-Article', u'1/Non-Article/Catalog'],
          'doi': [u'doi:\xc5\xbd\xc5\xa0\xc4\x8c\xc5\x98\xc4\x8e\xc5\xa4\xc5\x87:123456789'],
          'email': [u'-', u'anders@email.com', u'-'],
-         'entry_date': '2003-03-21T00:00:00.000000Z',
+         'entry_date': '2003-03-22T00:00:00.000000Z',
          'first_author': u"t'Hooft, van X",
          'first_author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X"],
          'first_author_norm': u'T Hooft, V',
@@ -68,7 +68,7 @@ class TestSolrAdapter(unittest.TestCase):
         self.assertEquals(r, {
             "first_author": u"Kurtz, Michael J.",
         #    "links_data": [u"{\"title\":\"\",\"type\":\"spires\",\"instances\":\"\"}", "{\"title\":\"\",\"type\":\"electr\",\"instances\":\"\"}", "{\"title\":\"\",\"type\":\"spires\",\"instances\":\"\"}"],
-            "entry_date": '2003-03-21T00:00:00.000000Z', 
+            "entry_date": '2003-03-22T00:00:00.000000Z',
             "first_author_norm": u"Kurtz, M", 
             "year": u"2000", 
             "bibcode": u"2000A&AS..143...41K_test", 
@@ -179,7 +179,7 @@ class TestSolrAdapter(unittest.TestCase):
             'date':     u'2014-06-01T00:00:00.000000Z',
             'bibstem': [u'arXiv', u'arXiv1406'],
             'bibstem_facet': u'arXiv',
-            'entry_date': '2003-02-21T00:00:00.000000Z',
+            'entry_date': '2003-02-22T00:00:00.000000Z',
             'pubdate' : u'2014-06-00',
             'doctype': u'article',
             
@@ -249,7 +249,7 @@ class TestSolrAdapter(unittest.TestCase):
             'date': u'2014-06-01T00:00:00.000000Z',
             'bibstem': [u'arXiv', u'arXiv1406'],
             'bibstem_facet': u'arXiv',
-            'entry_date': '2003-02-21T00:00:00.000000Z',
+            'entry_date': '2003-02-22T00:00:00.000000Z',
             'pubdate': u'2014-06-00',
             'doctype': u'article',
 
@@ -319,7 +319,7 @@ class TestSolrAdapter(unittest.TestCase):
             'date': u'2018-07-30T00:30:00.000000Z',
             'bibstem': [u'arXiv', u'arXiv1807'],
             'bibstem_facet': u'arXiv',
-            'entry_date': '2018-07-30T00:00:00.000000Z',
+            'entry_date': '2018-07-31T00:00:00.000000Z',
             'pubdate': u'2018-07-30',
             'doctype': u'article',
 
@@ -402,7 +402,7 @@ class TestSolrAdapter(unittest.TestCase):
             'date': u'1968-09-01T00:00:00.000000Z',
             'bibstem': [u'NuPhB', u'NuPhB...7'],
             'bibstem_facet': u'NuPhB',
-            'entry_date': '2004-06-09T00:00:00.000000Z',
+            'entry_date': '2004-06-10T00:00:00.000000Z',
             'pubdate': u'1968-09-00',
             'doctype': u'article',
 
@@ -474,7 +474,7 @@ class TestSolrAdapter(unittest.TestCase):
             'date': u'2018-02-01T00:00:00.000000Z',
             'bibstem': [u'ascl', u'ascl.soft'],
             'bibstem_facet': u'ascl.soft',
-            'entry_date': '2004-06-09T00:00:00.000000Z',
+            'entry_date': '2004-06-10T00:00:00.000000Z',
             'pubdate': u'2018-02-00',
             'doctype': u'software',
 
@@ -539,7 +539,7 @@ class TestSolrAdapter(unittest.TestCase):
             'date': u'1988-04-01T00:00:00Z',
             'bibstem': [u'Sci', u'Sci...240'],
             'bibstem_facet': u'Sci',
-            'entry_date': '2002-06-26T00:00:00.000000Z',
+            'entry_date': '2002-06-27T00:00:00.000000Z',
             'pubdate': u'1988-04-00',
             'date': u'1988-04-01T00:00:00.000000Z',
             'doctype': u'article',

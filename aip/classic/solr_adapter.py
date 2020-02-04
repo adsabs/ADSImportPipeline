@@ -279,7 +279,7 @@ class SolrAdapter(object):
   def _entry_date(ADS_record):
     d = ADS_record.get('entry_date', None)
     # Add one day to entry date to account for local (Classic) vs. UTC (direct ingest) time
-    return {'entry_date': date2solrstamp(d and get_date(d)+datetime.timedelta(days=1) or get_date()+datetime.timedelta(days=1))}
+    return {'entry_date': date2solrstamp(d and get_date(d)+datetime.timedelta(days=1) or get_date())}
 
   @staticmethod
   def _year(ADS_record):

@@ -70,6 +70,7 @@ class TestWorkers(unittest.TestCase):
 
             out = copy.deepcopy(mergerdata.MERGEDRECS['2015ApJ...815..133S'])
             out['id'] = 1
+            out['entry_date'] = '2003-01-02T00:00:00.000000Z'
 
             tasks.task_merge_metadata(ADSRECORDS['2015ApJ...815..133S'])
             self.assertTrue(next_task.called)
