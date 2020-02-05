@@ -4,6 +4,7 @@ import os
 import sys
 import re
 import traceback
+import datetime
 
 
 from adsputils import setup_logging, get_date, date2solrstamp
@@ -276,8 +277,9 @@ class SolrAdapter(object):
   
   @staticmethod
   def _entry_date(ADS_record):
-    d = ADS_record.get('entry_date', None)     
-    return {'entry_date': date2solrstamp(d and get_date(d) or get_date())}
+    d = ADS_record.get('entry_date', None)
+    # Add one day to entry date to account for local (Classic) vs. UTC (direct ingest) time
+    return {'entry_date': date2solrstamp(d and get_date(d)+datetime.timedelta(days=1) or get_date())}
 
   @staticmethod
   def _year(ADS_record):
