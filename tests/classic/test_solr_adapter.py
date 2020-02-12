@@ -3,6 +3,7 @@ import unittest
 
 from aip.classic import solr_adapter
 from tests.stubdata import ADSRECORDS
+from adsputils import get_date
 
 
 class TestSolrAdapter(unittest.TestCase):
@@ -557,6 +558,148 @@ class TestSolrAdapter(unittest.TestCase):
             'orcid_user': [u'-', u'-'],
             'page_count': 0,
             'author_count': 1,
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
+        })
+
+        # check the entry_date updates - don't update if the timestamp is setup
+        r = solr_adapter.SolrAdapter.adapt({
+            "id": 99999997,
+            "modtime": '2014-06-18T21:06:49',
+            'bibcode': u'2014arXiv1406.4542H',
+            "text": {},
+            "entry_date": "2003-02-21T02:30:00.000000Z",
+            "metadata": {
+                "references": [],
+                'properties': {'refereed': False, 'openaccess': True,
+                               'doctype': {'content': u'article', 'origin': u'ADS metadata'},
+                               'private': False, 'ocrabstract': False, 'ads_openaccess': False,
+                               'eprint_openaccess': True, 'pub_openaccess': False
+                               },
+                "relations": {},
+                "general": {
+                    "publication": {
+                        "origin": u"ARXIV",
+                        'dates': [
+                            {
+                                'type': u'date-preprint',
+                                'content': u'2014-06-00'
+                            }
+                        ]
+                    },
+                    'authors': [
+                        {'name': {'normalized': u'T Hooft, V', 'western': u"t'Hooft, van X", 'native': ''},
+                         'number': u'1', 'affiliations': [], 'orcid': '', 'type': 'regular', 'emails': []},
+                        {'name': {'normalized': u'Anders, J M', 'western': u'Anders, John Michael', 'native': ''},
+                         'number': u'2', 'affiliations': [u'NASA Kavli space center, Cambridge, MA 02138, USA'],
+                         'orcid': '', 'type': 'regular', 'emails': [u'anders@email.com']},
+                        {'name': {'normalized': u'Einstein, A', 'western': u'Einstein, A', 'native': ''},
+                         'number': u'3', 'affiliations': [u'Einsteininstitute, Zurych, Switzerland'],
+                         'orcid': '', 'type': 'editor', 'emails': []}],
+                }
+            },
+            'orcid_claims': {'verified': [u'-', u'1111-2222-3333-4444', u'-']}
+        })
+        solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
+        self.assertEquals(r, {
+            "id": 99999997,
+            'bibcode': u'2014arXiv1406.4542H',
+            'date': u'2014-06-01T00:00:00.000000Z',
+            'bibstem': [u'arXiv', u'arXiv1406'],
+            'bibstem_facet': u'arXiv',
+            'entry_date': '2003-02-21T02:30:00.000000Z',
+            'pubdate': u'2014-06-00',
+            'doctype': u'article',
+
+            'aff': [u'-',
+                    u'NASA Kavli space center, Cambridge, MA 02138, USA'],
+            'author': [u"t'Hooft, van X", u'Anders, John Michael'],
+            'author_facet': [u'T Hooft, V', u'Anders, J M'],
+            'author_facet_hier': [u'0/T Hooft, V',
+                                  u"1/T Hooft, V/t'Hooft, van X",
+                                  u'0/Anders, J M',
+                                  u'1/Anders, J M/Anders, John Michael'],
+            'author_norm': [u'T Hooft, V', u'Anders, J M'],
+            'editor': [u'Einstein, A'],
+            'email': [u'-', u'anders@email.com', u'-'],
+            'first_author': u"t'Hooft, van X",
+            'first_author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X"],
+            'first_author_norm': u'T Hooft, V',
+            'orcid_pub': [u'-', u'-'],
+            'orcid_user': [u'-', u'1111-2222-3333-4444', u'-'],
+            'page_count': 0,
+            'author_count': 2,
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
+        })
+
+        # check the entry_date updates - don't update if the date is today
+        now = get_date()
+        today = now.date()
+        r = solr_adapter.SolrAdapter.adapt({
+            "id": 99999997,
+            "modtime": '2014-06-18T21:06:49',
+            'bibcode': u'2014arXiv1406.4542H',
+            "text": {},
+            "entry_date": '{}-{:02d}-{:02d}'.format(today.year, today.month, today.day),
+            "metadata": {
+                "references": [],
+                'properties': {'refereed': False, 'openaccess': True,
+                               'doctype': {'content': u'article', 'origin': u'ADS metadata'},
+                               'private': False, 'ocrabstract': False, 'ads_openaccess': False,
+                               'eprint_openaccess': True, 'pub_openaccess': False
+                               },
+                "relations": {},
+                "general": {
+                    "publication": {
+                        "origin": u"ARXIV",
+                        'dates': [
+                            {
+                                'type': u'date-preprint',
+                                'content': u'2014-06-00'
+                            }
+                        ]
+                    },
+                    'authors': [
+                        {'name': {'normalized': u'T Hooft, V', 'western': u"t'Hooft, van X", 'native': ''},
+                         'number': u'1', 'affiliations': [], 'orcid': '', 'type': 'regular', 'emails': []},
+                        {'name': {'normalized': u'Anders, J M', 'western': u'Anders, John Michael', 'native': ''},
+                         'number': u'2', 'affiliations': [u'NASA Kavli space center, Cambridge, MA 02138, USA'],
+                         'orcid': '', 'type': 'regular', 'emails': [u'anders@email.com']},
+                        {'name': {'normalized': u'Einstein, A', 'western': u'Einstein, A', 'native': ''},
+                         'number': u'3', 'affiliations': [u'Einsteininstitute, Zurych, Switzerland'],
+                         'orcid': '', 'type': 'editor', 'emails': []}],
+                }
+            },
+            'orcid_claims': {'verified': [u'-', u'1111-2222-3333-4444', u'-']}
+        })
+        solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
+        self.assertEquals(r, {
+            "id": 99999997,
+            'bibcode': u'2014arXiv1406.4542H',
+            'date': u'2014-06-01T00:00:00.000000Z',
+            'bibstem': [u'arXiv', u'arXiv1406'],
+            'bibstem_facet': u'arXiv',
+            'entry_date': '{}-{:02d}-{:02d}T00:00:00.000000Z'.format(today.year, today.month, today.day),
+            'pubdate': u'2014-06-00',
+            'doctype': u'article',
+
+            'aff': [u'-',
+                    u'NASA Kavli space center, Cambridge, MA 02138, USA'],
+            'author': [u"t'Hooft, van X", u'Anders, John Michael'],
+            'author_facet': [u'T Hooft, V', u'Anders, J M'],
+            'author_facet_hier': [u'0/T Hooft, V',
+                                  u"1/T Hooft, V/t'Hooft, van X",
+                                  u'0/Anders, J M',
+                                  u'1/Anders, J M/Anders, John Michael'],
+            'author_norm': [u'T Hooft, V', u'Anders, J M'],
+            'editor': [u'Einstein, A'],
+            'email': [u'-', u'anders@email.com', u'-'],
+            'first_author': u"t'Hooft, van X",
+            'first_author_facet_hier': [u'0/T Hooft, V', u"1/T Hooft, V/t'Hooft, van X"],
+            'first_author_norm': u'T Hooft, V',
+            'orcid_pub': [u'-', u'-'],
+            'orcid_user': [u'-', u'1111-2222-3333-4444', u'-'],
+            'page_count': 0,
+            'author_count': 2,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
         })
 
