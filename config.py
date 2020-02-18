@@ -22,11 +22,10 @@ OUTPUT_TASKNAME = 'adsmp.tasks.task_update_record'
 
 #Order matches their priority
 BIBCODE_FILES = [
-  '/proj/ads/abstracts/ast/load/current/index.status',
-  '/proj/ads/abstracts/phy/load/current/index.status',
-  '/proj/ads/abstracts/gen/load/current/index.status',
-  '/proj/ads/abstracts/pre/load/current/index.status',
-
+    './logs/input/current/ast/load/current/index.status',
+    './logs/input/current/phy/load/current/index.status',
+    './logs/input/current/gen/load/current/index.status',
+    './logs/input/current/pre/load/current/index.status',
 ]
 
 BIBCODES_PER_JOB = 100
