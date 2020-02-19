@@ -161,6 +161,12 @@ def main(*args):
                         help='ignore json fingerprints when finding new records to update (ie, force update)'
                         )
 
+    parser.add_argument('--check-canonical', default=False,
+                        action='store_true',
+                        dest='check_canonical',
+                        help='check for the existance of canonical bibcodes in input list before processing records'
+                        )
+
     parser.add_argument('--process-deletions', default=False,
                         action='store_true', dest='process_deletions',
                         help='Find orphaned bibcodes in the storage, then send these bibcodes to delete via rabbitMQ. No updates will be processed with this flag is set.'
@@ -296,7 +302,9 @@ def main(*args):
                 return
 
         # TODO(rca): getAlternates is called multiple times unnecessarily
-        records = read_records.canonicalize_records(records, targets or records, ignore_fingerprints=args.ignore_json_fingerprints)
+        records = read_records.canonicalize_records(records, targets or records, 
+                                                    ignore_fingerprints=args.ignore_json_fingerprints,
+                                                    check_canonical=args.check_canonical)
         logger.info('Canonicalize %s records', len(records))
 
         if args.replay_deletions:

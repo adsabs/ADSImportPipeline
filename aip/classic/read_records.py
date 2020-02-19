@@ -37,12 +37,17 @@ except ImportError:
 logger = utils.setup_logging('read_records')
 
 
-def canonicalize_records(records, targets=None, ignore_fingerprints=False):
+def canonicalize_records(records, targets=None, ignore_fingerprints=False, check_canonical=False):
     '''
     Takes a dict of {bibcode:fingerprint} and resolves each bibcode to its canonical.
     
     Finds all alternates associated with that bibcode and constructs the full JSON_fingerprint
     from all of these associated records
+    
+    If check_canonical is set to True, ensure that the returned list of results contains bibcodes
+    which are present in the original records array; this ensures that every input record will
+    be processed and avoids a situation in which a mapping of a bibcode to its canonical form
+    produces an unknown bibcode further downstream (due to premature index mapping). [AA 2/18/20]
     
     Note: Pops from the input dict with no attempt to copy/deepcopy it.
     '''
@@ -57,10 +62,12 @@ def canonicalize_records(records, targets=None, ignore_fingerprints=False):
     for bibcode,fingerprint in targets.iteritems():
         fingerprints = [fingerprint] #Start constructing the "full" fingerprint
         #Check if there is a canonical
-        canonical=Converter.Canonicalize([bibcode])[0]
+        canonical = Converter.Canonicalize([bibcode])[0]
+        #And make sure that there is a canonical record if check_canonical, otherwise keep this bibcode
+        if check_canonical and canonical not in records:
+            canonical = bibcode
         #If we are operating on the canonical, aggregate all of its alternates to form the "full" fingerprint
         if canonical == bibcode:
-            # TODO(rca): decide what to do with canonical != bibcode
             if ignore_fingerprints:
                 results.append((canonical, 'ignore'))
             else:
