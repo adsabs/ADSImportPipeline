@@ -2,8 +2,6 @@
 #!/usr/bin/env python
 import sys
 sys.path.append('/proj/ads/soft/python/lib/site-packages')
-
-
 import ads
 from ads.Looker import Looker
 

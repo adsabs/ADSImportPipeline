@@ -161,10 +161,10 @@ def main(*args):
                         help='ignore json fingerprints when finding new records to update (ie, force update)'
                         )
 
-    parser.add_argument('--check-canonical', default=False,
+    parser.add_argument('--force-canonical', default=False,
                         action='store_true',
-                        dest='check_canonical',
-                        help='check for the existance of canonical bibcodes in input list before processing records'
+                        dest='force_canonical',
+                        help='only process records with a valid canonical bibcode in input list'
                         )
 
     parser.add_argument('--process-deletions', default=False,
@@ -304,7 +304,7 @@ def main(*args):
         # TODO(rca): getAlternates is called multiple times unnecessarily
         records = read_records.canonicalize_records(records, targets or records, 
                                                     ignore_fingerprints=args.ignore_json_fingerprints,
-                                                    check_canonical=args.check_canonical)
+                                                    force_canonical=args.force_canonical)
         logger.info('Canonicalize %s records', len(records))
 
         if args.replay_deletions:
