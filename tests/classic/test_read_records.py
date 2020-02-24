@@ -13,43 +13,116 @@ except ImportError:
     ADSRecords = None
     print "Warning: Fallback to explicit path declaration for import"
 
-from aip.classic import read_records
+# used to mock the canonicalization of records
+CANONICALDICT = {
+    '2014arXiv1401.2993T': '2014MNRAS.439.1884T',
+    '2014MNRAS.439.1884T': '2014MNRAS.439.1884T',
+    
+    '2013arXiv1306.3186H': '2013MNRAS.434.1889H', 
+    '2013MNRAS.434.1889H': '2013MNRAS.434.1889H', 
+    
+    '1978Natur.275..624M': '1978Natur.275..624M',
+    
+    '1988ESASP.281b.287G': '1988ESASP.281b.287G',
+    '1988IUE88...2..287G': '1988ESASP.281b.287G',
+    '1988IUES....1..287G': '1988ESASP.281b.287G',
+    '1988uvai....2..287G': '1988ESASP.281b.287G',
+    
+    '2014PhRvD..90d4013F': '2014PhRvD..90d4013F',
+    '2013arXiv1311.6899F': '2014PhRvD..90d4013F',
+    
+    '2020slow.bibcode...': '2020fake.canonical.'
+    }
+
+# a sample of real-world records (except for last one) with fake fingerprints
+RECORDS = OrderedDict([
+        ('2014arXiv1401.2993T','b'), #This is an alternate to 'f'
+        ('2014MNRAS.439.1884T','f'), #This is the canonical of 'b'
+        
+        ('2013MNRAS.434.1889H','d'), #This is the canonical of 'g'
+        ('2013arXiv1306.3186H','g'), #This is the alternate of 'd'
+        
+        ('1978Natur.275..624M','c'), #No alternates, already canonical
+        
+        ('1988ESASP.281b.287G','x1'), #Canonical, the following are alternates
+        ('1988IUE88...2..287G','a1'),
+        ('1988IUES....1..287G','a2'),
+        ('1988uvai....2..287G','a3'),
+        
+        ('2014PhRvD..90d4013F','h'), #This is the canonical of 'h'
+        ('2013arXiv1311.6899F','k'), #This it the alternate of 'k'
+
+        ('2020slow.bibcode...','fake') #This one has no canonical
+        ])
+
+# this is what read_records should return for the records above
+# when run in strict mode
+EXPECTED_STRICT =  [
+    ('2014MNRAS.439.1884T', 'b;f'),
+    ('2013MNRAS.434.1889H', 'd;g'),
+    ('1978Natur.275..624M', 'c'),
+    ('1988ESASP.281b.287G','a1;a2;a3;x1'),
+    ('2014PhRvD..90d4013F','h;k'),
+    ]
+
+# results when not run in strict mode
+EXPECTED = EXPECTED_STRICT + [('2020slow.bibcode...','fake')]
+
+
+class TestCanonical(unittest.TestCase):
+
+    # here we mock the entire conversion class so that we can use
+    # the fake canonical mappings in CANONICALDICT
+    class mock_ConvertBibcodes(object):
+        def __init__(self):
+            # create inverse mapping
+            self.altdict = dict()
+            _ = [ (v,k) for (k,v) in CANONICALDICT.items() ] 
+            for (k,v) in _:
+                if not k: continue
+                if k == v: continue
+                self.altdict.setdefault(k, [])
+                self.altdict[k].append(v)
+
+        def Canonicalize(self, biblist, remove_matches=False):
+            newlist = []
+            for bibcode in biblist:
+                res = CANONICALDICT.get(bibcode)
+                if res:
+                    bibcode = res
+                newlist.append(bibcode)
+            return list(set(newlist))
+
+        def getAlternates(self, bibcode):
+            return self.altdict.get(bibcode, [])
+
+    def test_getalternates(self):
+        from aip.classic import read_records
+        import copy
+        if not hasattr(read_records, 'ConvertBibcodes'):
+            read_records.ConvertBibcodes = self.mock_ConvertBibcodes
+        # here we have to prevent the import of ads and ads.Looker needed by aip.classic.conversions
+        # so we can mock the conversion of bibcodes.  Ugly as hell but it works
+        with mock.patch.dict(sys.modules, { 'ads': mock.Mock(), 'ads.Looker': mock.Mock() } ), \
+                mock.patch('aip.classic.conversions.ConvertBibcodes', return_value=self.mock_ConvertBibcodes):
+            records = copy.deepcopy(RECORDS)
+            results = read_records.canonicalize_records(records)
+            self.assertEqual(results, EXPECTED)
+            records = copy.deepcopy(RECORDS)
+            results = read_records.canonicalize_records(records, force_canonical=True)
+            self.assertEqual(results, EXPECTED_STRICT)
+
 
 class TestADSExports(unittest.TestCase):
 
     @unittest.skipIf(not ADSRecords, "ads.ADSCachedExports not available")
     def test_canonicalize_records(self):
         from aip.classic import read_records
-    
-        records = OrderedDict([
-            ('2014arXiv1401.2993T','b'), #This is an alternate to 'f'
-            ('2014MNRAS.439.1884T','f'), #This is the canonical of 'b'
-        
-            ('2013MNRAS.434.1889H','d'), #This is the canonical of 'g'
-            ('2013arXiv1306.3186H','g'), #This is the alternate of 'd'
-        
-            ('1978Natur.275..624M','c'), #No alternates, already canonical
-        
-            ('1988ESASP.281b.287G','x1'), #Canonical, the following are alternates
-            ('1988IUE88...2..287G','a1'),
-            ('1988IUES....1..287G','a2'),
-            ('1988uvai....2..287G','a3'),
-            
-            ('2014PhRvD..90d4013F','h'), #This is the canonical of 'h'
-            ('2013arXiv1311.6899F','k'), #This it the alternate of 'k'
-          ])
-        expected =  [
-            ('2014MNRAS.439.1884T', 'b;f'),
-            ('2013MNRAS.434.1889H', 'd;g'),
-            ('1978Natur.275..624M', 'c'),
-            ('1988ESASP.281b.287G','a1;a2;a3;x1'),
-            ('2014PhRvD..90d4013F','h;k'),
-          ]
-      
-        results = read_records.canonicalize_records(OrderedDict((k,v) for k,v in records.iteritems()))
-        self.assertEqual(results, expected)
-        
+        results = read_records.canonicalize_records(RECORDS)
+        self.assertEqual(results, EXPECTED)
+
     def test_readRecordsFromADSExports(self):
+        from aip.classic import read_records
         if not hasattr(read_records, 'ADSRecords'):
             read_records.ADSRecords = {}
         

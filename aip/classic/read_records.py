@@ -21,13 +21,13 @@ except ImportError:
 try:
     from ads.ADSCachedExports import ADSRecords, init_lookers_cache
     from ads.ADSCachedExports import LOGGER as export_logger
-    from aip.classic import conversions
+    from .conversions import ConvertBibcodes
 except ImportError:
     sys.path.append('/proj/ads/soft/python/lib/site-packages') #TODO: make it configurable
     try:
         from ads.ADSCachedExports import ADSRecords, init_lookers_cache
         from ads.ADSCachedExports import LOGGER as export_logger
-        from aip.classic import conversions
+        from .conversions import ConvertBibcodes
         INIT_LOOKERS_CACHE = init_lookers_cache
     except ImportError:
         print "Unable to import ads.ADSExports.ADSRecords!"
@@ -37,12 +37,17 @@ except ImportError:
 logger = utils.setup_logging('read_records')
 
 
-def canonicalize_records(records, targets=None, ignore_fingerprints=False):
+def canonicalize_records(records, targets=None, ignore_fingerprints=False, force_canonical=False):
     '''
     Takes a dict of {bibcode:fingerprint} and resolves each bibcode to its canonical.
     
     Finds all alternates associated with that bibcode and constructs the full JSON_fingerprint
     from all of these associated records
+    
+    If force_canonical is set to True, check that the returned list of results contains bibcodes
+    which are present in the original records array; this ensures that every input record will
+    be processed and avoids a situation in which a mapping of a bibcode to its canonical form
+    produces an unknown bibcode further downstream (due to premature index mapping). [AA 2/18/20]
     
     Note: Pops from the input dict with no attempt to copy/deepcopy it.
     '''
@@ -53,14 +58,16 @@ def canonicalize_records(records, targets=None, ignore_fingerprints=False):
     
     if not targets:
         targets = records
-    Converter = conversions.ConvertBibcodes()
+    Converter = ConvertBibcodes()
     for bibcode,fingerprint in targets.iteritems():
         fingerprints = [fingerprint] #Start constructing the "full" fingerprint
         #Check if there is a canonical
-        canonical=Converter.Canonicalize([bibcode])[0]
+        canonical = Converter.Canonicalize([bibcode])[0]
+        #And make sure that there is a canonical record if check_canonical, otherwise keep this bibcode
+        if force_canonical is False and canonical not in records:
+            canonical = bibcode
         #If we are operating on the canonical, aggregate all of its alternates to form the "full" fingerprint
         if canonical == bibcode:
-            # TODO(rca): decide what to do with canonical != bibcode
             if ignore_fingerprints:
                 results.append((canonical, 'ignore'))
             else:
