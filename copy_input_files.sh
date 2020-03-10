@@ -11,11 +11,12 @@ FILES_INFO=(
   pre/load/current/index.status:1500000
 )
 
-# zip/delete old input files
+# zip oldish input files
 if [ -d ./logs/input ]; then
-    find ./logs/input/ -name "input.20*-*-*_*-*-*" -type d -mtime +1 -exec tar cvzf '{}'.tar.gz '{}' \; -exec rm -r '{}' \;
-    find ./logs/input/ -name "input.20*-*-*_*-*-*" -mtime +7 -exec rm -rf '{}' \;
+    find ./logs/input/ -maxdepth 1 -name "input.20*-*-*_*-*-*" -type d -mtime +1 -exec tar cvzf '{}'.tar.gz '{}' \; -exec rm -rf '{}' \;
+    find ./logs/input/ -maxdepth 1 -name "input.20*-*-*_*-*-*" -mtime +7 -exec rm -rf '{}' \;
 fi
+
 
 # create local copies of files
 for FILE_INFO in ${FILES_INFO[@]} ; do
