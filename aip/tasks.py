@@ -1,4 +1,5 @@
 from __future__ import absolute_import, unicode_literals
+import os
 from aip import app as app_module
 from aip.classic import solr_adapter, merger, read_records, enforce_schema
 from aip.direct import ArXivDirect
@@ -7,8 +8,10 @@ from adsmsg import BibRecord, DenormalizedRecord
 
 from datetime import datetime
 
+# ============================= INITIALIZATION ==================================== #
 
-app = app_module.ADSImportPipelineCelery('import-pipeline')
+proj_home = os.path.realpath(os.path.join(os.path.dirname(__file__), '../'))
+app = app_module.ADSImportPipelineCelery('import-pipeline', proj_home=proj_home, local_config=globals().get('local_config', {}))
 logger = app.logger
 
 
@@ -25,6 +28,7 @@ app.conf.CELERY_QUEUES = (
     Queue('output-results', app.exchange, routing_key='output-results')
 )
 
+# ============================= TASKS ============================================= #
 
 @app.task(queue='find-new-records')
 def task_find_new_records(fingerprints):
@@ -39,7 +43,7 @@ def task_find_new_records(fingerprints):
     fingers = {}
     for k, v in fingerprints:
         fingers[k] = v
-    
+
     bibcodes = [x[0] for x in fingerprints]
     results = app.get_record(bibcodes, load_only=['bibcode', 'fingerprint'])
     found = set()
@@ -57,7 +61,7 @@ def task_find_new_records(fingerprints):
     if len(batch):
         logger.debug("Calling 'task_read_records' with '%s'", batch)
         task_read_records.delay(batch)
-    
+
     # submit bibcodes that we don't have in the database
     to_do = list(set(fingers.keys()) - found)
     i = 0
@@ -164,8 +168,8 @@ def task_output_results(msg):
 @app.task(queue='output-results')
 def task_output_direct(msg):
     """
-    This worker will forward direct ingest data to 
-    the outside exchange (typically an 
+    This worker will forward direct ingest data to
+    the outside exchange (typically an
     ADSMasterPipeline) to be incorporated into the
     storage
 
@@ -179,7 +183,7 @@ def task_output_direct(msg):
     :return: no return
     """
     logger.debug('Will forward this record: %s', msg)
-    
+
     rec = DenormalizedRecord(**msg)
     app.forward_message(rec)
 
