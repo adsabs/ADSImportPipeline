@@ -1,14 +1,6 @@
-git+https://github.com/adsabs/ADSPipelineUtils.git@master
+adsputils==v1.2.4
 alembic==0.9.1
-celery==4.0.2
-ConcurrentLogHandler==0.9.1
-DateTime==4.1.1
-librabbitmq==1.6.1
-numpy
-psycopg2==2.7.1
-python-dateutil==2.6.0
+numpy==1.15.0
+psycopg2==2.8.3
 python-Levenshtein==0.12.0
-requests==2.13.0
-six==1.10.0
-SQLAlchemy==1.1.6
 timeout-decorator==0.3.3

@@ -1,11 +1,15 @@
 from __future__ import absolute_import, unicode_literals
+import os
 from aip import app as app_module
 from aip.libs import solr_adapter, merger, read_records
 from kombu import Queue
 from adsmsg import BibRecord, DenormalizedRecord
 
 
-app = app_module.ADSImportPipelineCelery('import-pipeline')
+# ============================= INITIALIZATION ==================================== #
+
+proj_home = os.path.realpath(os.path.join(os.path.dirname(__file__), '../'))
+app = app_module.ADSImportPipelineCelery('import-pipeline', proj_home=proj_home, local_config=globals().get('local_config', {}))
 logger = app.logger
 
 
@@ -18,20 +22,22 @@ app.conf.CELERY_QUEUES = (
 )
 
 
+# ============================= TASKS ============================================= #
+
 @app.task(queue='find-new-records')
 def task_find_new_records(fingerprints):
     """Finds bibcodes that are in need of updating. It will do so by comparing
     the json_fingerprint against existing db record.
-    
+
     Inputs to this task are submitted by the run.py process; which reads/submits
     contents of the BIBFILES
-    
+
     @param fingerprints: [(bibcode, json_fingerprint),....]
     """
     fingers = {}
     for k, v in fingerprints:
         fingers[k] = v
-        
+
     bibcodes = [x[0] for x in fingerprints]
     results = app.get_record(bibcodes, load_only=['bibcode', 'fingerprint'])
     found = set()
@@ -49,7 +55,7 @@ def task_find_new_records(fingerprints):
 def task_read_records(fingerprints):
     """
     Read ADS records from disk; and inserts them into the queue that ingests them.
-    
+
     @param bibcodes: [(bibcode, json_fingerprint),.....]
     """
     results = read_records.readRecordsFromADSExports(fingerprints)
@@ -60,20 +66,20 @@ def task_read_records(fingerprints):
 
 @app.task(queue='merge-metadata')
 def task_merge_metadata(record):
-    """Receives the full metadata record (incl all the versions) as read by the ADS 
+    """Receives the full metadata record (incl all the versions) as read by the ADS
     extractors. We'll merge the versions and create a close-to-canonical version of
     a metadata record."""
-    
+
     logger.debug('About to merge data')
     result = merger.mergeRecords([record])
-    
+
     if result and len(result) > 0:
         for r in result: # TODO: save the mid-cycle representation of the metadata ???
             record = app.update_storage(r['bibcode'], record['JSON_fingerprint'])
             r['id'] = record['id']
             r = solr_adapter.SolrAdapter.adapt(r)
             solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
-            
+
             task_output_results.delay(r)
     else:
         logger.debug('Strangely, the result of merge is empty: %s', record)
@@ -82,12 +88,12 @@ def task_merge_metadata(record):
 @app.task(queue='output-results')
 def task_output_results(msg):
     """
-    This worker will forward results to the outside 
+    This worker will forward results to the outside
     exchange (typically an ADSMasterPipeline) to be
     incorporated into the storage
-    
+
     :param msg: contains the bibliographic metadata
-            
+
             {'bibcode': '....',
              'authors': [....],
              'title': '.....',

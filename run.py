@@ -3,7 +3,6 @@
 import os
 import sys
 from aip.libs import read_records
-from adsputils import setup_logging, load_config
 from aip.models import Records
 from aip import app, tasks
 
@@ -13,21 +12,27 @@ import argparse
 from collections import OrderedDict
 from sqlalchemy.orm import load_only
 
-config = load_config()
-logger = setup_logging('run.py')
+# ============================= INITIALIZATION ==================================== #
 
+from adsputils import setup_logging, load_config
+proj_home = os.path.realpath(os.path.dirname(__file__))
+config = load_config(proj_home=proj_home)
+logger = setup_logging('run.py', proj_home=proj_home,
+                        level=config.get('LOGGING_LEVEL', 'INFO'),
+                        attach_stdout=config.get('LOG_STDOUT', False))
 
+# =============================== FUNCTIONS ======================================= #
 
 def readBibcodesFromFile(files): #rca: all here is old code, i don't see why mmap was used
     """Reads contents of the BIBFILES into memory; basically bibcode:json_fingerprint
     pairs.
-    
+
     @param files: list of files to read from
     @return: OrderedDict instance
     """
     start = time.time()
     records = OrderedDict()
-    
+
     for f in files:
         with open(f) as fp:
             logger.debug('...loading %s' % f)
@@ -116,17 +121,17 @@ def main(*args):
     # we can force updates
     if args.ignore_json_fingerprints:
         records = [(r[0], 'ignore') for r in records]
-        
+
     # get all bibcodes from the storage (into memory)
     store = set()
     with app.session_scope() as session:
         for r in session.query(Records).options(load_only(['bibcode'])).all():
             store.add(r.bibcode)
-    
+
     # discover differences
     canonical_bibcodes = set([x[0] for x in records])
     orphaned = store.difference(canonical_bibcodes)
-    
+
     # submit orphaned docs (to be deleted)
     if args.process_deletions:
         if len(orphaned) > args.max_deletions:
@@ -136,7 +141,7 @@ def main(*args):
             sys.exit(1)
         for x in orphaned:
             tasks.task_delete_documents.delay(x)
-    
+
     # submit others (to be compared and updated if necessary)
     bpj = config.get('BIBCODES_PER_JOB', 100)
     step = len(records) / 100
@@ -145,12 +150,12 @@ def main(*args):
     while i < len(records):
         payload = records[i:i+bpj]
         tasks.task_find_new_records.delay(payload)
-        if i / step > j: 
+        if i / step > j:
             logger.info('There are %s records left (%0.1f%% completed)'
                              % (len(records)-i, ((len(records)-i) / 100.0)))
             j = i / step
         i += bpj
-        
+
 
 if __name__ == '__main__':
     try:
@@ -158,4 +163,4 @@ if __name__ == '__main__':
     except SystemExit:
         pass  # this exception is raised by argparse if -h or wrong args given; we will ignore.
     except:
-        raise    
+        raise
