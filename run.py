@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import os
 import sys
 import datetime
 import gzip
@@ -9,16 +10,25 @@ from collections import OrderedDict
 from sqlalchemy.orm import load_only
 
 from aip.classic import read_records
-from adsputils import setup_logging
 from aip.models import Records, ChangeLog
 from aip import tasks
 
 import pyingest.parsers.aps as aps
 import pyingest.parsers.arxiv as arxiv
 
-app = tasks.app
-logger = setup_logging('run.py')
 
+# ============================= INITIALIZATION ==================================== #
+
+from adsputils import setup_logging, load_config
+proj_home = os.path.realpath(os.path.dirname(__file__))
+config = load_config(proj_home=proj_home)
+logger = setup_logging('run.py', proj_home=proj_home,
+                        level=config.get('LOGGING_LEVEL', 'INFO'),
+                        attach_stdout=config.get('LOG_STDOUT', False))
+
+app = tasks.app
+
+# =============================== FUNCTIONS ======================================= #
 
 
 def read_bibcodes(files):
@@ -183,7 +193,7 @@ def main(*args):
                         action='store_true',
                         default=False,
                         help='Show me what you would do with bibcodes')
-    
+
     parser.add_argument('-r',
                         '--replay-deletions',
                         dest='replay_deletions',
@@ -302,7 +312,7 @@ def main(*args):
                 return
 
         # TODO(rca): getAlternates is called multiple times unnecessarily
-        records = read_records.canonicalize_records(records, targets or records, 
+        records = read_records.canonicalize_records(records, targets or records,
                                                     ignore_fingerprints=args.ignore_json_fingerprints,
                                                     force_canonical=args.force_canonical)
         logger.info('Canonicalize %s records', len(records))
