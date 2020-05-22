@@ -1,9 +1,8 @@
 git+https://github.com/adsabs/adsabs-pyingest.git@v1.0.1
-adsputils==v1.2.4
+adsputils==v1.2.7
 alembic==0.9.1
 numpy==1.15.0
 psycopg2==2.8.3
-python-dateutil==2.6.0
 python-Levenshtein==0.12.0
 timeout-decorator==0.3.3
 xmltodict==0.11.0

@@ -2,13 +2,14 @@ import os
 import sys
 
 SOLR_URLS=[
-  'http://localhost:9983/solr/BumblebeeETL/update' 
+  'http://localhost:9983/solr/BumblebeeETL/update'
 ]
 
 #SQLALCHEMY_URL = 'sqlite:///'
 SQLALCHEMY_URL = 'postgres://user:password@localhost:15432/import_pipeline'
 SQLALCHEMY_ECHO = False
 
+CELERY_INCLUDE = ['aip.tasks']
 CELERY_BROKER = 'pyamqp://user:password@localhost:6672/import_pipeline'
 OUTPUT_CELERY_BROKER = 'pyamqp://user:password@localhost:5682/master_pipeline'
 OUTPUT_TASKNAME = 'adsmp.tasks.task_update_record'
