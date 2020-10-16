@@ -1,8 +1,11 @@
-git+https://github.com/adsabs/adsabs-pyingest.git@v1.0.8
-adsputils==v1.2.7
+git+https://github.com/adsabs/adsabs-pyingest.git@v1.0.10
+adsputils==v1.2.8
 alembic==0.9.1
 numpy==1.15.0
-psycopg2==2.8.3
+psycopg2==2.8.6
 python-Levenshtein==0.12.0
 timeout-decorator==0.3.3
 xmltodict==0.12.0
+# Make sure 2nd level dependencies are python2 compatible:
+portalocker==1.7.1
+SQLAlchemy-Utils==0.35.0
