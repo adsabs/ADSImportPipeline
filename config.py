@@ -348,10 +348,7 @@ REFERENCES_ALWAYS_APPEND = ['ISI', 'AUTHOR', 'OTHER',]
 # submissions: ARCHIVE_ABS_DIR
 
 ARXIV_INCOMING_ABS_DIR = '/proj/ads/abstracts/sources/ArXiv'
-
-ARXIV_UPDATE_AGENT_DIR = ARXIV_INCOMING_ABS_DIR + '/UpdateAgent'
-
-ARXIV_ARCHIVE_ABS_DIR = ARXIV_INCOMING_ABS_DIR + '/oai/arXiv.org'
+ARXIV_INCOMING_ABS_CONSIDER_ONLY_NEW = True # By default, ignore updates to avoid bibcode resurection problems
 
 
 ## ================ APS data location ================== #
