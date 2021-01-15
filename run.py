@@ -227,9 +227,16 @@ def main(*args):
 
         for d in args.direct:
             if 'arxiv' == d.lower():
-                logfile = app.conf.get('ARXIV_UPDATE_AGENT_DIR') + '/UpdateAgent.out.' + args.caldate + '.gz'
+                if app.conf.get('ARXIV_INCOMING_ABS_CONSIDER_ONLY_NEW', True):
+                    # Only new entries:
+                    logfile = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/log/' + args.caldate + "/new_records.tsv"
+                    open_func = open
+                else:
+                    # New entries + Updated entries:
+                    logfile = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/UpdateAgent/UpdateAgent.out.' + args.caldate + '.gz'
+                    open_func = gzip.open
                 reclist = list()
-                with gzip.open(logfile, 'r') as flist:
+                with open_func(logfile, 'r') as flist:
                     for l in flist.readlines():
                         # sample line: oai/arXiv.org/0706/2491 2018-06-13T01:00:29
                         a = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[0]

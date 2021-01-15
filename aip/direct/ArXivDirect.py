@@ -30,7 +30,7 @@ def add_direct(record, json_timestamp=None, created_date=None,
     if not bibcode:
         raise ads_ex.InvalidBibcode('Empty bibcode.')
 
-    adsr = ads_ex.ADSRecords('full', 'XML', cacheLooker=False)    
+    adsr = ads_ex.ADSRecords('full', 'XML', cacheLooker=False)
     # bibliographic_info = ads_ex.get_bibliographic_info(bibcode)
 
     # create a new record for the Direct entry
@@ -184,37 +184,3 @@ def add_direct(record, json_timestamp=None, created_date=None,
     return adsr
 
 
-#def main():
-#
-#    import gzip
-#
-#    reclist = list()
-##   meta_dir = '/proj/ads/abstracts/sources/ArXiv/oai/arXiv.org/'
-##   reclist.append(meta_dir + '1711/05739')
-##   reclist.append(meta_dir + '1710/08505')
-#
-#    caldate = '2018-07-10'
-#
-#    ARXIV_INCOMING_ABS_DIR = '/proj/ads/abstracts/sources/ArXiv'
-#    ARXIV_UPDATE_AGENT_DIR = ARXIV_INCOMING_ABS_DIR + '/UpdateAgent'
-#    ARXIV_ARCHIVE_ABS_DIR = ARXIV_INCOMING_ABS_DIR + '/oai/arXiv.org'
-#
-#    logfile = ARXIV_UPDATE_AGENT_DIR + '/UpdateAgent.out.' + caldate + '.gz'
-#    with gzip.open(logfile,'r') as flist:
-#        for l in flist.readlines():
-#            # sample line: oai/arXiv.org/0706/2491 2018-06-13T01:00:29
-#            a = ARXIV_INCOMING_ABS_DIR + '/' + l.split()[0]
-#            reclist.append(a)
-#
-#    for f in reclist:
-#        with open(f,'rU') as fp:
-#            input_doc = arxiv.ArxivParser()
-#            r = input_doc.parse(fp)
-#            output = adsDirectRecord('full','XML',cacheLooker=False)
-#            output.addDirect(r)
-##           print output.root.serialize()
-#            if r['bibcode'] == '2018arXiv180703779S':
-#                print r
-#
-#if __name__ == '__main__':
-#    main()
