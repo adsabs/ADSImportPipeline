@@ -229,17 +229,20 @@ def main(*args):
             if 'arxiv' == d.lower():
                 if app.conf.get('ARXIV_INCOMING_ABS_CONSIDER_ONLY_NEW', True):
                     # Only new entries:
+                    # sample line: 2101.10337      oai/arXiv.org/2101/10337
                     logfile = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/log/' + args.caldate + "/new_records.tsv"
                     open_func = open
+                    read_column=1
                 else:
                     # New entries + Updated entries:
+                    # sample line: oai/arXiv.org/0706/2491 2018-06-13T01:00:29
                     logfile = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/UpdateAgent/UpdateAgent.out.' + args.caldate + '.gz'
                     open_func = gzip.open
+                    read_column=0
                 reclist = list()
                 with open_func(logfile, 'r') as flist:
                     for l in flist.readlines():
-                        # sample line: oai/arXiv.org/0706/2491 2018-06-13T01:00:29
-                        a = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[0]
+                        a = app.conf.get('ARXIV_INCOMING_ABS_DIR') + '/' + l.split()[read_column]
                         reclist.append(a)
                 logger.info("Direct Ingest: there are %s ArXiv records to process" % len(reclist))
 
