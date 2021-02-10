@@ -3,7 +3,7 @@
 import sys
 sys.path.append('/proj/ads/soft/python/lib/site-packages')
 import ads
-from ads.Looker import Looker
+from ads.CachedLooker import Looker
 
 class ConvertBibcodes:
 
