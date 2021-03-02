@@ -103,7 +103,7 @@ class TestCanonical(unittest.TestCase):
             read_records.ConvertBibcodes = self.mock_ConvertBibcodes
         # here we have to prevent the import of ads and ads.Looker needed by aip.classic.conversions
         # so we can mock the conversion of bibcodes.  Ugly as hell but it works
-        with mock.patch.dict(sys.modules, { 'ads': mock.Mock(), 'ads.Looker': mock.Mock() } ), \
+        with mock.patch.dict(sys.modules, { 'ads': mock.Mock(), 'ads.CachedLooker': mock.Mock() } ), \
                 mock.patch('aip.classic.conversions.ConvertBibcodes', return_value=self.mock_ConvertBibcodes):
             records = copy.deepcopy(RECORDS)
             results = read_records.canonicalize_records(records)
