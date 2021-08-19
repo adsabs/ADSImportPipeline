@@ -407,7 +407,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _identifier(ADS_record):
-    result = []
+    result = [ADS_record['bibcode']]
     result.extend([i['content'] for i in ADS_record['metadata']['relations'].get('preprints', [])])
     result.extend([i['content'] for i in ADS_record['metadata']['general'].get('doi', [])])
     result.extend([i['content'] for i in ADS_record['metadata']['relations'].get('alternates', [])])
