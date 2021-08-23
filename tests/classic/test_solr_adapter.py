@@ -46,6 +46,7 @@ class TestSolrAdapter(unittest.TestCase):
          'id': 99999999,
          'identifier': [u'arxiv:1234.5678',
           u'doi:\xc5\xbd\xc5\xa0\xc4\x8c\xc5\x98\xc4\x8e\xc5\xa4\xc5\x87:123456789',
+          u'testbibcode',
           u'ARXIV:hep-ph/1234'],
          'issue': u'24i',
          'keyword': [u'Classical Statistical mechanics'],
@@ -116,7 +117,7 @@ class TestSolrAdapter(unittest.TestCase):
             "date": u"2000-04-01T00:00:00.000000Z",
             "pubdate": u"2000-04-00", 
             "id": 99999998,
-            "identifier": [u"10.1051/aas:2000170"],
+            "identifier": [u"10.1051/aas:2000170", u"2000A&AS..143...41K_test"],
             "database": [u"astronomy"], 
             "author":
                 [u"Kurtz, Michael J.", u"Eichhorn, Guenther", u"Accomazzi, Alberto",
@@ -202,7 +203,8 @@ class TestSolrAdapter(unittest.TestCase):
             'orcid_user': [u'-', u'1111-2222-3333-4444', u'-'],
             'page_count': 0,
             'author_count': 2,
-            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
+            'identifier': [u'2014arXiv1406.4542H'],
         })
 
         # test addition of type = collaboration, which should act similar to type = regular
@@ -272,7 +274,8 @@ class TestSolrAdapter(unittest.TestCase):
             'orcid_user': [u'-', u'1111-2222-3333-4444', u'-'],
             'page_count': 0,
             'author_count': 2,
-            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
+            'identifier': [u'2014arXiv1406.4542H'],
         })
 
         # test identifer arXiv with bibcode
@@ -339,7 +342,7 @@ class TestSolrAdapter(unittest.TestCase):
             'author_count': 1,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
 
-            'identifier': [u'arXiv:1807.10779'],
+            'identifier': [u'2018arXiv180710779B', u'arXiv:1807.10779'],
         })
 
         # test identifer arXiv with bibcode, different kind of arXiv id, plus made sure links are captured properly
@@ -422,7 +425,7 @@ class TestSolrAdapter(unittest.TestCase):
             'author_count': 1,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
 
-            'identifier': [u'arXiv:quant-ph/0206057'],
+            'identifier': [u'1968NuPhB...7...79F', u'arXiv:quant-ph/0206057'],
             'links_data': [
                 u'{"access": "open", "instances": "", "title": "", "type": "preprint", "url": "http://arxiv.org/abs/quant-ph/0206057"}',
                 u'{"access": "", "instances": "", "title": "", "type": "spires", "url": "http://inspirehep.net/search?p=find+eprint+quant-ph/0206057"}',
@@ -494,7 +497,7 @@ class TestSolrAdapter(unittest.TestCase):
             'author_count': 1,
             'doctype_facet_hier': ["0/Non-Article", "1/Non-Article/Software"],
 
-            'identifier': [u'ascl:1802.007'],
+            'identifier': [u'ascl:1802.007', u'2018ascl.soft02007G'],
         })
 
         # test addition of type = review, which should act similar to type = regular
@@ -558,7 +561,8 @@ class TestSolrAdapter(unittest.TestCase):
             'orcid_user': [u'-', u'-'],
             'page_count': 0,
             'author_count': 1,
-            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
+            'identifier': [u'1988Sci...240..668D'],
         })
 
         # check the entry_date updates - don't update if the timestamp is setup
@@ -628,7 +632,8 @@ class TestSolrAdapter(unittest.TestCase):
             'orcid_user': [u'-', u'1111-2222-3333-4444', u'-'],
             'page_count': 0,
             'author_count': 2,
-            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
+            'identifier': [u'2014arXiv1406.4542H'],
         })
 
         # check the entry_date updates - don't update if the date is today
@@ -700,7 +705,8 @@ class TestSolrAdapter(unittest.TestCase):
             'orcid_user': [u'-', u'1111-2222-3333-4444', u'-'],
             'page_count': 0,
             'author_count': 2,
-            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article']
+            'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
+            'identifier': [u'2014arXiv1406.4542H'],
         })
 
 class TestBibstemMapper(unittest.TestCase):

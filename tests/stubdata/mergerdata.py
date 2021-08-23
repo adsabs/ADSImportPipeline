@@ -465,6 +465,7 @@ MERGEDRECS[u'2015ApJ...815..133S'] = {'abstract': u'In order to examine their re
          'first_author_norm': u'Shinn, J',
          'identifier': [u'1511.03789',
           u'10.1088/0004-637X/815/2/133',
+          u'2015ApJ...815..133S',
           u'2015arXiv151103789S'],
          'issue': u'2',
          'keyword': [u'dust',
