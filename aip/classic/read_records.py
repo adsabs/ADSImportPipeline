@@ -10,8 +10,6 @@ try:
 except:
     ExpatError = None
 
-import adsputils as utils
-
 INIT_LOOKERS_CACHE = None
 
 try:
@@ -34,28 +32,33 @@ except ImportError:
         print "We will be unable to query ADS-classic for records!"
 
 
-logger = utils.setup_logging('read_records')
+from adsputils import setup_logging, load_config
+proj_home = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../'))
+config = load_config(proj_home=proj_home)
+logger = setup_logging(__name__, proj_home=proj_home,
+                        level=config.get('LOGGING_LEVEL', 'INFO'),
+                        attach_stdout=config.get('LOG_STDOUT', False))
 
 
 def canonicalize_records(records, targets=None, ignore_fingerprints=False, force_canonical=False):
     '''
     Takes a dict of {bibcode:fingerprint} and resolves each bibcode to its canonical.
-    
+
     Finds all alternates associated with that bibcode and constructs the full JSON_fingerprint
     from all of these associated records
-    
+
     If force_canonical is set to True, check that the returned list of results contains bibcodes
     which are present in the original records array; this ensures that every input record will
     be processed and avoids a situation in which a mapping of a bibcode to its canonical form
     produces an unknown bibcode further downstream (due to premature index mapping). [AA 2/18/20]
-    
+
     Note: Pops from the input dict with no attempt to copy/deepcopy it.
     '''
-    
+
     #TODO(rca): getAlternates is called multiple times unnecessarily
     start = time.time()
     results = []
-    
+
     if not targets:
         targets = records
     Converter = ConvertBibcodes()
@@ -95,9 +98,9 @@ def readRecordsFromADSExports(records):
     #h = hashlib.sha1(json.dumps(records)).hexdigest()
     if not records:
         return []
-    
+
     targets = dict(records)
-    
+
     s = time.time()
     failures = []
     adsrecords = ADSRecords(mode='full', type='XML', cacheLooker=True, extract_references=False)
@@ -112,7 +115,7 @@ def readRecordsFromADSExports(records):
         except Exception, err:
             failures.append(bibcode)
             logger.exception('ADSExports failed: %s (%s)' % (bibcode,err))
-            
+
     logger.debug("Calling ADSRecords.export()")
     ads_export = adsrecords.export()
     logger.debug("...ADSRecords.export() returned.")
@@ -121,7 +124,7 @@ def readRecordsFromADSExports(records):
         return []
     ttc = time.time()-s
     rate = len(targets)/ttc
-    
+
     e = enforce_schema.Enforcer()
     logger.debug("Calling xml_to_dict")
     export = []
@@ -138,7 +141,7 @@ def readRecordsFromADSExports(records):
     finally:
         ads_export.freeDoc() #always release memory
 
-    logger.info("Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" % 
+    logger.info("Read %(num_records)s records in %(duration)0.1f seconds (%(rate)0.1f rec/sec)" %
       {
         'num_records': len(records),
         'duration': ttc,
@@ -146,7 +149,7 @@ def readRecordsFromADSExports(records):
       })
     if failures:
         logger.warning("ADSExports failed to retrieve %s/%s records" % (len(failures),len(records)))
-    
+
     results = []
     for r in export:
         rec = e.enforceTopLevelSchema(record=r, JSON_fingerprint=targets[r['@bibcode']])
@@ -163,13 +166,13 @@ def readRecordsFromPickles(records,files):
         return []
     targets = dict(records)
     records = []
-    
+
     for file_ in files:
         with open(file_) as fp:
             recs = pickle.load(fp)
-    
+
     records.extend( [r for r in recs if r['@bibcode'] in targets] )
-    
+
     e = enforce_schema.Enforcer()
     for r in records:
         r = e.enforceTopLevelSchema(record=r,JSON_fingerprint=targets[r['@bibcode']])
@@ -182,9 +185,9 @@ def readRecordsFromPickles(records,files):
 def findNewRecords(records):
     '''
     Finds records that need updating.
-    
+
     @param records: [(bibcode, json_fingeprints),...]
-    
+
     Update criteria: JSON_fingerprint field different from the input records
 
     @return: [(bibcode,JSON_fingerprint),...]
