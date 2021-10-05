@@ -4,6 +4,7 @@ from aip import app as app_module
 from aip.classic import solr_adapter, merger, read_records, enforce_schema
 from aip.direct import ArXivDirect
 from kombu import Queue
+from sqlalchemy import exc
 from adsmsg import BibRecord, DenormalizedRecord
 
 from datetime import datetime
@@ -99,10 +100,18 @@ def task_merge_metadata(record):
 
     if result and len(result) > 0:
         for r in result: # TODO: save the mid-cycle representation of the metadata ???
-            record = app.update_storage(r['bibcode'], fingerprint=record['JSON_fingerprint'], origin='classic')
+            try:
+                record = app.update_storage(r['bibcode'], fingerprint=record['JSON_fingerprint'], origin='classic')
+            except exc.IntegrityError:
+                logger.exception("Update storage failed for %s", r['bibcode'])
+                continue
             r['id'] = record['id']
-            r = solr_adapter.SolrAdapter.adapt(r)
-            solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
+            try:
+                r = solr_adapter.SolrAdapter.adapt(r)
+                solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
+            except AssertionError:
+                logger.exception("Solr adapter failed for %s", r['bibcode'])
+                continue
 
             logger.debug("Calling 'task_output_results' with '%s'", r)
             task_output_results.delay(r)
@@ -127,7 +136,11 @@ def task_merge_arxiv_direct(record):
     e = enforce_schema.Enforcer()
     export = e.ensureList(output['records']['record'])
     newrec = []
-    update = app.update_storage(record['bibcode'], origin=origin)
+    try:
+        update = app.update_storage(record['bibcode'], origin=origin)
+    except exc.IntegrityError:
+        logger.exception("Update storage failed for %s", record['bibcode'])
+        return
     if update is None:
         return  # here if bibcode was already deleted, etc.
     for r in export:
@@ -137,8 +150,12 @@ def task_merge_arxiv_direct(record):
     result = merger.mergeRecords(newrec)
     for r in result:
         r['id'] = update['id']
-        r = solr_adapter.SolrAdapter.adapt(r)
-        solr_adapter.SolrAdapter.validate(r)
+        try:
+            r = solr_adapter.SolrAdapter.adapt(r)
+            solr_adapter.SolrAdapter.validate(r)
+        except AssertionError:
+            logger.exception("Solr adapter failed for %s", record['bibcode'])
+            continue
         task_output_direct.delay(r)
         logger.info('direct ingest processed bibcode %s', record['bibcode'])
 
