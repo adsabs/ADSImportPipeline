@@ -7,10 +7,15 @@ import traceback
 import datetime
 
 
-from adsputils import setup_logging, get_date, date2solrstamp
+from adsputils import get_date, date2solrstamp
 from aip.classic import enforce_schema
 
-logger = setup_logging('solr_adapter')
+from adsputils import setup_logging, load_config
+proj_home = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../'))
+config = load_config(proj_home=proj_home)
+logger = setup_logging(__name__, proj_home=proj_home,
+                        level=config.get('LOGGING_LEVEL', 'INFO'),
+                        attach_stdout=config.get('LOG_STDOUT', False))
 
 ARTICLE_TYPES = set(['eprint', 'article', 'inproceedings', 'inbook'])
 AUTHOR_TYPES = set(['regular', 'collaboration', 'review'])
@@ -67,7 +72,7 @@ class SolrAdapter(object):
     'facility': [u'', ],
     'first_author': u'',
     'first_author_facet_hier': [u'',],
-    'first_author_norm':u'', 
+    'first_author_norm':u'',
     'id': 0,
     'identifier': [u'',],
     'isbn': [u'',],
@@ -141,7 +146,7 @@ class SolrAdapter(object):
         result.append(r['text'])
     return {'alternate_title': result}
 
-  @staticmethod 
+  @staticmethod
   def _arxiv_class(ADS_record):
     results = [i for i in ADS_record['metadata']['general'].get('arxivcategories', [])]
     return {'arxiv_class':results}
@@ -185,7 +190,7 @@ class SolrAdapter(object):
     authors = ADS_record['metadata']['general'].get('authors', [])
     authors = sorted(authors, key=lambda k: int(k['number']))
     result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in AUTHOR_TYPES]
-    return {'author_facet': result}    
+    return {'author_facet': result}
 
   @staticmethod
   def _author_facet_hier(ADS_record):
@@ -209,7 +214,7 @@ class SolrAdapter(object):
   #   authors = ADS_record['metadata']['general'].get('authors',[])
   #   authors = sorted(authors,key=lambda k: int(k['number']))
   #   result = [i['name']['native'] if i['name']['native'] else u"-" for i in authors]
-  #   return {'author_native': result}  
+  #   return {'author_native': result}
 
   @staticmethod
   def _bibcode(ADS_record):
@@ -225,7 +230,7 @@ class SolrAdapter(object):
   def _bibgroup_facet(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('bibgroups', [])]
     result = list(set(result))
-    return {'bibgroup_facet': result}   
+    return {'bibgroup_facet': result}
 
   @staticmethod
   def _bibstem(ADS_record):
@@ -274,7 +279,7 @@ class SolrAdapter(object):
     result = list(set(result))
     return {'database': result}
 
-  
+
   @staticmethod
   def _entry_date(ADS_record):
     d = ADS_record.get('entry_date', None)
@@ -369,7 +374,7 @@ class SolrAdapter(object):
         r = u"0/%s" % (_normalize_author_name(authors[0]['name']['normalized']),)
         result.append(r)
         if authors[0]['name']['western']:
-          r = u"1/%s/%s" % (_normalize_author_name(authors[0]['name']['normalized']), 
+          r = u"1/%s/%s" % (_normalize_author_name(authors[0]['name']['normalized']),
                         _normalize_author_name(authors[0]['name']['western']))
           result.append(r)
     return {'first_author_facet_hier':result}
@@ -377,7 +382,7 @@ class SolrAdapter(object):
   @staticmethod
   def _first_author_norm(ADS_record):
     authors = ADS_record['metadata']['general'].get('authors', [])
-    authors = sorted(authors, key=lambda k: int(k['number']))   
+    authors = sorted(authors, key=lambda k: int(k['number']))
     result = [i['name']['normalized'] for i in authors if i['name']['normalized'] and i['type'] in AUTHOR_TYPES]
     if result:
       result = result[0]
@@ -389,9 +394,9 @@ class SolrAdapter(object):
 
   @staticmethod
   def _links_data(ADS_record):
-    result = [json.dumps({"title": i.get('title', "") or "", 
-                          "type": i.get('type', "") or "", 
-                          "instances": i.get('count', "") or "", 
+    result = [json.dumps({"title": i.get('title', "") or "",
+                          "type": i.get('type', "") or "",
+                          "instances": i.get('count', "") or "",
                           "access": i.get('access', "") or "",
                           "url": i.get("url", "") or ""},
                          sort_keys=True) \
@@ -430,7 +435,7 @@ class SolrAdapter(object):
   def _issue(ADS_record):
     result = ADS_record['metadata']['general'].get('publication', {}).get('issue')
     return {'issue': result}
-      
+
   @staticmethod
   def _page(ADS_record):
     result = [ADS_record['metadata']['general']['publication'].get('page')]
@@ -485,13 +490,13 @@ class SolrAdapter(object):
   def _keyword_norm(ADS_record):
     """normalized keywords; must match one-to-one with _keyword and _keyword_schema"""
     result = [i['normalized'] if i['normalized'] else u'-' for i in ADS_record['metadata']['general'].get('keywords', [])]
-    return {'keyword_norm': result}  
+    return {'keyword_norm': result}
 
   @staticmethod
   def _keyword_schema(ADS_record):
     """keyword system; must match one-to-one with _keyword and _keyword_norm"""
     result = [i['type'] if i['type'] else u'-' for i in ADS_record['metadata']['general'].get('keywords', [])]
-    return {'keyword_schema': result}    
+    return {'keyword_schema': result}
 
   @staticmethod
   def _keyword_facet(ADS_record):
@@ -519,7 +524,7 @@ class SolrAdapter(object):
                     if len(claims) > len(authors):
                         claims = claims[0:len(authors)]
                     else:
-                        claims = claims + [u'-'] * (len(authors) - len(claims)) 
+                        claims = claims + [u'-'] * (len(authors) - len(claims))
 
                 out[indexname] = claims
     return out
@@ -543,7 +548,7 @@ class SolrAdapter(object):
   @staticmethod
   def _vizier_facet(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['properties'].get('vizier_tables', [])]
-    return {'vizier_facet': result}    
+    return {'vizier_facet': result}
 
   #------------------------------------------------
   # Public Entrypoints
@@ -631,7 +636,7 @@ def doctype_mapper(doctype):
   htype = 'Article' if doctype in ARTICLE_TYPES else 'Non-Article'
   stype = doctype_dict.get(doctype, 'Other')
   return (htype, stype)
-    
+
 
 def simbad_type_mapper(otype):
   """

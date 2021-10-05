@@ -8,8 +8,10 @@ import types
 
 from aip.classic import enforce_schema, author_match
 import adsputils as utils
+from adsputils import setup_logging, load_config
 
-_config = utils.load_config()
+_proj_home = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../'))
+_config = load_config(proj_home=_proj_home)
 
 def mergeRecords(records):
     completeRecords = []
@@ -20,7 +22,7 @@ def mergeRecords(records):
         #Multiply defined blocks need merging.
         metadatablockCounter = collections.Counter([i['tempdata']['type'] for i in blocks])
         needsMerging = dict([(k,[]) for k,v in metadatablockCounter.iteritems() if v>1])
-    
+
         completeMetadata = {}
         #First pass: Add the singly defined blocks to the complete record
         for b in blocks:
@@ -29,7 +31,7 @@ def mergeRecords(records):
                 completeMetadata[_type] = b
             else:
                 needsMerging[_type].append(b)
-    
+
     #Second pass: Merge the multiple defined blocks
     for _type,blocks in needsMerging.iteritems():
         m = Merger(blocks)
@@ -37,7 +39,7 @@ def mergeRecords(records):
         completeMetadata.update({
           _type: m.block,
         })
-    
+
     #Finally, we have a complete record
     r['metadata'] = completeMetadata
     completeRecords.append(e.finalPassEnforceSchema(r))
@@ -45,9 +47,9 @@ def mergeRecords(records):
 
 
 class Merger:
-  def __init__(self, 
-               blocks=None, 
-               logger=None, 
+  def __init__(self,
+               blocks=None,
+               logger=None,
                merger_rules= _config['MERGER_RULES'],
                priorities = _config['PRIORITIES'],
                references_always_append = _config['REFERENCES_ALWAYS_APPEND']
@@ -60,13 +62,15 @@ class Merger:
     self.merger_rules = merger_rules
     self.priorities = priorities
     self.references_always_append = references_always_append
-    
+
     if blocks:
       #Assert that there is only block type being merged
       assert len(set([i['tempdata']['type'] for i in blocks]))==1
       self.blocktype = blocks[0]['tempdata']['type']
     if not self.logger:
-      self.logger = utils.setup_logging('merger')
+      self.logger = setup_logging(__name__, proj_home=_proj_home,
+                              level=_config.get('LOGGING_LEVEL', 'INFO'),
+                              attach_stdout=_config.get('LOG_STDOUT', False))
 
 
   def _dispatcher(self, field):
@@ -185,7 +189,7 @@ class Merger:
         'electronic_id':  i['publication']['electronic_id'],
         'name':           i['publication']['name'],
         'dates':          i['publication']['dates'],
-      },i['tempdata']) for i in self.blocks if not i['tempdata']['alternate_journal'] ]    
+      },i['tempdata']) for i in self.blocks if not i['tempdata']['alternate_journal'] ]
 
     altpublications = [{
         'origin':         i['publication']['origin'],
@@ -292,7 +296,7 @@ class Merger:
     if isinstance(obj,datetime.date):
       return obj
     date_format = '%Y-%m-%dT%H:%M:%SZ'
-    obj_str = str(obj) 
+    obj_str = str(obj)
     if obj_str[-1] != 'Z':  # hack, Z seems is often missing
       date_format = '%Y-%m-%dT%H:%M:%S'
     elif '.' in obj_str:
