@@ -514,19 +514,10 @@ class SolrAdapter(object):
         for indexname, claimname in [('orcid_user', 'verified'), ('orcid_other', 'unverified')]:
             if claimname in ADS_record['orcid_claims']:
                 claims = ADS_record['orcid_claims'][claimname]
-                # basic check, the length should be equal
-                if len(claims) != len(authors):
-                    logger.warn("Potential problem with orcid claims for: {0} (len(authors) != len(claims))"
-                                .format(ADS_record['bibcode']))
-                    # TODO: in the grant scheme of things, we should trigger ADS orcid update (let the remote
-                    # pipeline processes know, that something is out of sync); for now we'll just truncate the
-                    # data
-                    if len(claims) > len(authors):
-                        claims = claims[0:len(authors)]
-                    else:
-                        claims = claims + [u'-'] * (len(authors) - len(claims))
-
-                out[indexname] = claims
+                claims_trimmed = [c for idx, c in enumerate(claims) if authors[idx]['type'] in AUTHOR_TYPES]
+                # don't add an empty list
+                if claims_trimmed:
+                    out[indexname] = claims_trimmed
     return out
 
 
