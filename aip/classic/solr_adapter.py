@@ -515,6 +515,9 @@ class SolrAdapter(object):
             if claimname in ADS_record['orcid_claims']:
                 claims = ADS_record['orcid_claims'][claimname]
                 claims_trimmed = [c for idx, c in enumerate(claims) if authors[idx]['type'] in AUTHOR_TYPES]
+                if len(claims) != len(authors):
+                    logger.warn("Potential problem with orcid claims for: {0} (len(authors) != len(claims))"
+                                .format(ADS_record['bibcode']))
                 # don't add an empty list
                 if claims_trimmed:
                     out[indexname] = claims_trimmed
