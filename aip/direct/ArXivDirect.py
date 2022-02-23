@@ -133,7 +133,8 @@ def add_direct(record, json_timestamp=None, created_date=None,
                 try:
                     databases.add(ads_ex.ARXIV_DATABASE[category])
                 except:
-                    pass
+                    # pass
+                    databases.add('GEN')
                 main_category = None
                 keywords.append((keyword, kw_normalizer.get_normalized_keyword(keyword)))
     all_keywords.setdefault('arXiv', []).extend(keywords)
