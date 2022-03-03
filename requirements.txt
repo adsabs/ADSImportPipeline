@@ -5,6 +5,7 @@ numpy==1.15.0
 psycopg2==2.8.6
 python-Levenshtein==0.12.0
 timeout-decorator==0.3.3
+unidecode==0.4.21
 xmltodict==0.12.0
 # Make sure 2nd level dependencies are python2 compatible:
 portalocker==1.7.1
