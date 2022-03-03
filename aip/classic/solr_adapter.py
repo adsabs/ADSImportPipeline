@@ -340,7 +340,7 @@ class SolrAdapter(object):
   @staticmethod
   def _doi(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('doi', [])]
-    return {'doi': result}
+    return {'doi': list(set(result))}
 
   @staticmethod
   def _eid(ADS_record):

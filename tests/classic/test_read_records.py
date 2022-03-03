@@ -17,20 +17,20 @@ except ImportError:
 CANONICALDICT = {
     '2014arXiv1401.2993T': '2014MNRAS.439.1884T',
     '2014MNRAS.439.1884T': '2014MNRAS.439.1884T',
-    
-    '2013arXiv1306.3186H': '2013MNRAS.434.1889H', 
-    '2013MNRAS.434.1889H': '2013MNRAS.434.1889H', 
-    
+
+    '2013arXiv1306.3186H': '2013MNRAS.434.1889H',
+    '2013MNRAS.434.1889H': '2013MNRAS.434.1889H',
+
     '1978Natur.275..624M': '1978Natur.275..624M',
-    
+
     '1988ESASP.281b.287G': '1988ESASP.281b.287G',
     '1988IUE88...2..287G': '1988ESASP.281b.287G',
     '1988IUES....1..287G': '1988ESASP.281b.287G',
     '1988uvai....2..287G': '1988ESASP.281b.287G',
-    
+
     '2014PhRvD..90d4013F': '2014PhRvD..90d4013F',
     '2013arXiv1311.6899F': '2014PhRvD..90d4013F',
-    
+
     '2020slow.bibcode...': '2020fake.canonical.'
     }
 
@@ -38,17 +38,17 @@ CANONICALDICT = {
 RECORDS = OrderedDict([
         ('2014arXiv1401.2993T','b'), #This is an alternate to 'f'
         ('2014MNRAS.439.1884T','f'), #This is the canonical of 'b'
-        
+
         ('2013MNRAS.434.1889H','d'), #This is the canonical of 'g'
         ('2013arXiv1306.3186H','g'), #This is the alternate of 'd'
-        
+
         ('1978Natur.275..624M','c'), #No alternates, already canonical
-        
+
         ('1988ESASP.281b.287G','x1'), #Canonical, the following are alternates
         ('1988IUE88...2..287G','a1'),
         ('1988IUES....1..287G','a2'),
         ('1988uvai....2..287G','a3'),
-        
+
         ('2014PhRvD..90d4013F','h'), #This is the canonical of 'h'
         ('2013arXiv1311.6899F','k'), #This it the alternate of 'k'
 
@@ -77,7 +77,7 @@ class TestCanonical(unittest.TestCase):
         def __init__(self):
             # create inverse mapping
             self.altdict = dict()
-            _ = [ (v,k) for (k,v) in CANONICALDICT.items() ] 
+            _ = [ (v,k) for (k,v) in CANONICALDICT.items() ]
             for (k,v) in _:
                 if not k: continue
                 if k == v: continue
@@ -106,7 +106,7 @@ class TestCanonical(unittest.TestCase):
         with mock.patch.dict(sys.modules, { 'ads': mock.Mock(), 'ads.CachedLooker': mock.Mock() } ), \
                 mock.patch('aip.classic.conversions.ConvertBibcodes', return_value=self.mock_ConvertBibcodes):
             records = copy.deepcopy(RECORDS)
-            results = read_records.canonicalize_records(records)
+            results = read_records.canonicalize_records(records, force_canonical=False)
             self.assertEqual(results, EXPECTED)
             records = copy.deepcopy(RECORDS)
             results = read_records.canonicalize_records(records, force_canonical=True)
@@ -125,7 +125,7 @@ class TestADSExports(unittest.TestCase):
         from aip.classic import read_records
         if not hasattr(read_records, 'ADSRecords'):
             read_records.ADSRecords = {}
-        
+
         adsrecord = mock.Mock()
         with mock.patch('aip.classic.read_records.ADSRecords', return_value=adsrecord), \
             mock.patch.object(adsrecord, 'export', return_value=adsrecord), \

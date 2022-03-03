@@ -43,15 +43,18 @@ class TestArXivDirect(unittest.TestCase):
         self.app.close_app()
         tasks.app = self._app
 
-    @unittest.skipIf(not ads_ex, "ads.ADSCachedExports not available")
+    @unittest.skipUnless(ads_ex, 'adspy not available')
     def test_ArXivDirect_add_direct(self):
         with patch.object(self.app, 'forward_message', return_value=None) as next_task:
 
             # for a novel record (not yet ingested)
             origin_shouldbe = 'ARXIV'
-            entryd_shouldbe = ads_ex.iso_8601_time(None)
+            # entryd_shouldbe = ads_ex.iso_8601_time(None)
+            # causing test to fail if you happen to run test at the
+            # wrong instant...
+            entryd_shouldbe = '2022-03-02T12:00:00Z'
             test_record = directdata.DIRECT_RAW_INPUT
-            test_adsrec = ArXivDirect.add_direct(test_record)
+            test_adsrec = ArXivDirect.add_direct(test_record, created_date='2022-03-02T12:00:00Z')
             test_serialized = test_adsrec.root.serialize()
             xdict = xmltodict.parse(test_serialized)['records']['record']['metadata'][0]
             test_origin = xdict['@origin']
