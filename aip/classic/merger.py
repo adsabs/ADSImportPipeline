@@ -21,7 +21,7 @@ def mergeRecords(records):
         blocks = e.ensureList(r['metadata'])
         #Multiply defined blocks need merging.
         metadatablockCounter = collections.Counter([i['tempdata']['type'] for i in blocks])
-        needsMerging = dict([(k,[]) for k,v in metadatablockCounter.iteritems() if v>1])
+        needsMerging = dict([(k,[]) for k,v in metadatablockCounter.items() if v>1])
 
         completeMetadata = {}
         #First pass: Add the singly defined blocks to the complete record
@@ -33,7 +33,7 @@ def mergeRecords(records):
                 needsMerging[_type].append(b)
 
     #Second pass: Merge the multiple defined blocks
-    for _type,blocks in needsMerging.iteritems():
+    for _type,blocks in needsMerging.items():
         m = Merger(blocks)
         m.merge()
         completeMetadata.update({
@@ -111,8 +111,8 @@ class Merger:
       for block in self.blocks:
         if fieldName in block:
           fieldsHist[fieldName] += 1
-    singleDefinedFields = [k for k,v in fieldsHist.iteritems() if v==1]
-    multipleDefinedFields = [k for k,v in fieldsHist.iteritems() if v>1]
+    singleDefinedFields = [k for k,v in fieldsHist.items() if v==1]
+    multipleDefinedFields = [k for k,v in fieldsHist.items() if v>1]
     r = {}
     # First pass: construct the record from singly defined fields
     for field in singleDefinedFields:
@@ -123,7 +123,7 @@ class Merger:
     for field in multipleDefinedFields:
       try:
         r[field] = self._dispatcher(field)
-      except Exception, err:
+      except Exception as err:
         self.logger.error('Error with merger dispatcher on %s: %s' % (field,err))
         raise
     self.block = r

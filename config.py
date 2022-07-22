@@ -319,19 +319,19 @@ _PRIORITIES_REFERENCES = {
 
 PRIORITIES = {
   'default': dict((source, score)
-    for score, sources in _PRIORITIES_DEFAULT.iteritems()
+    for score, sources in _PRIORITIES_DEFAULT.items()
     for source in sources),
   'journals': dict((source, score)
-    for score, sources in _PRIORITIES_JOURNALS.iteritems()
+    for score, sources in _PRIORITIES_JOURNALS.items()
     for source in sources),
   'authors': dict((source, score)
-    for score, sources in _PRIORITIES_AUTHORS.iteritems()
+    for score, sources in _PRIORITIES_AUTHORS.items()
     for source in sources),
   'references': dict((source, score)
-    for score, sources in _PRIORITIES_REFERENCES.iteritems()
+    for score, sources in _PRIORITIES_REFERENCES.items()
     for source in sources),
   'abstracts': dict((source, score)
-    for score, sources in _PRIORITIES_ABSTRACTS.iteritems()
+    for score, sources in _PRIORITIES_ABSTRACTS.items()
     for source in sources),
 }
 

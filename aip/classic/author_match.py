@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """
 This code was found in the github repository of Martin-Louis Bright (mlbright@gmail.com):
 https://github.com/mlbright/Assignment-Problem/blob/master/kuhn_munkres.py
@@ -51,15 +53,17 @@ import sys
 import re
 import numpy as np
 
-
+if sys.version_info[0] >= 3:
+    unicode = str
+    
 class HungarianGraph(object):
 
     def __init__(self, weights):
         self.weights = weights
         self.N  = len(self.weights)
 
-        self.lu = [max([self.weights[u][v] for v in xrange(self.N)]) for u in xrange(self.N)]  # start with trivial labels
-        self.lv = [0 for v in xrange(self.N)]
+        self.lu = [max([self.weights[u][v] for v in range(self.N)]) for u in range(self.N)]  # start with trivial labels
+        self.lv = [0 for v in range(self.N)]
 
         self.Mu = {}  # start with empty matching
         self.Mv = {}
@@ -69,7 +73,7 @@ class HungarianGraph(object):
         """ change the labels, and maintain min_slack. """
         for u in self.S:
             self.lu[u] -= val
-        for v in xrange(self.N):
+        for v in range(self.N):
             if v in self.T:
                 self.lv[v] += val
             else:
@@ -93,7 +97,7 @@ class HungarianGraph(object):
         """ augment the matching, possibly improving the labels on the way. """
         while True:
             # select edge (u,v) with u in S, v not in T and min slack
-            ((val, u), v) = min([(self.min_slack[v], v) for v in xrange(self.N) if v not in self.T])
+            ((val, u), v) = min([(self.min_slack[v], v) for v in range(self.N) if v not in self.T])
             assert u in self.S
             if val > 0:        
                 self.improve_labels(val)
@@ -109,7 +113,7 @@ class HungarianGraph(object):
                 u1 = self.Mv[v]                      # matched edge, 
                 assert not u1 in self.S
                 self.S.add(u1)
-                for v in xrange(self.N): # maintain min_slack
+                for v in range(self.N): # maintain min_slack
                     if v not in self.T and self.min_slack[v][0] > self.slack(u1,v):
                         self.min_slack[v] = [self.slack(u1,v), u1]
             else:
@@ -125,10 +129,10 @@ class HungarianGraph(object):
         """
 
         while len(self.Mu) < self.N:
-            u0 = [u for u in xrange(self.N) if u not in self.Mu][0] # choose free vertex u0
+            u0 = [u for u in range(self.N) if u not in self.Mu][0] # choose free vertex u0
             self.S = set([u0])
             self.T = {}
-            self.min_slack = [[self.slack(u0,v), u0] for v in xrange(self.N)]
+            self.min_slack = [[self.slack(u0,v), u0] for v in range(self.N)]
             self.augment()
         # val. of matching is total edge weight
         val = sum(self.lu) + sum(self.lv)
@@ -414,7 +418,7 @@ def is_suitable_match(a1, a2):
 #   'Accomazzi, A. (CfA); Krutz, M. (SAO); Grant Stern, C (Harvard)'
 
 if __name__ == "__main__":
-
+    
     if len(sys.argv) != 3:
         sys.stderr.write("Usage: %s 'aut_string1' 'aut_string2'\n",
                          sys.argv[0]);
@@ -442,34 +446,34 @@ if __name__ == "__main__":
         f2.append({'name': {'western': name}, 'affiliations': [aff] if aff else []})
         a2aff += 1 if aff else 0
 
-    print "Aut1 struct:", f1
-    print "Aut2 struct:", f2
-    print "Number of names in aut1: ", a1aut
-    print "Number of names in aut2: ", a2aut
-    print "Number of affiliations in aut1: ", a1aff
-    print "Number of affiliations in aut2: ", a2aff
+    print("Aut1 struct:", f1)
+    print("Aut2 struct:", f2)
+    print("Number of names in aut1: ", a1aut)
+    print("Number of names in aut2: ", a2aut)
+    print("Number of affiliations in aut1: ", a1aff)
+    print("Number of affiliations in aut2: ", a2aff)
     
     if a1aut == a1aff:
-        print "all authors in aut1 have affiliations, we're done"
+        print("all authors in aut1 have affiliations, we're done")
         exit(0)
     elif a2aff == 0:
-        print "no affiliations present in aut2, we're done"
+        print("no affiliations present in aut2, we're done")
         exit(0)
     else:
-        print "will try to pick from", a2aff, "affiliations to assign to", a1aut - a1aff, "author names"
+        print("will try to pick from", a2aff, "affiliations to assign to", a1aut - a1aff, "author names")
 
     res = match_ads_author_fields(f1, f2)
     
     authors = []
     for author1, author2 in res:
-        print "considering:", author1, author2
+        print("considering:", author1, author2)
         if author1 and author2 and \
                 not author1['affiliations'] and \
                 author2['affiliations'] and \
                 is_suitable_match(author1, author2):
             author1['affiliations'] = author2['affiliations']
-            print "updated author affiliations:", author1
+            print("updated author affiliations:", author1)
         authors.append(author1)
                 
-    print "Final author structure:", authors
+    print("Final author structure:", authors)
 
