@@ -56,7 +56,7 @@ MERGER_RULES = {
   'conf_metadata':        'originTrustMerger',
   'isbns':                'takeAll',
   'issns':                'takeAll',
-  'doi':                  'takeAll',
+  'doi':                  'takeAllByPriority',
   'copyright':            'originTrustMerger',
   'comment':              'originTrustMerger',
   'pubnote':              'takeAll',

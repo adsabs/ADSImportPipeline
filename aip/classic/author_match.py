@@ -55,6 +55,7 @@ import numpy as np
 
 if sys.version_info[0] >= 3:
     unicode = str
+    xrange = range
     
 class HungarianGraph(object):
 
@@ -62,8 +63,8 @@ class HungarianGraph(object):
         self.weights = weights
         self.N  = len(self.weights)
 
-        self.lu = [max([self.weights[u][v] for v in range(self.N)]) for u in range(self.N)]  # start with trivial labels
-        self.lv = [0 for v in range(self.N)]
+        self.lu = [max([self.weights[u][v] for v in xrange(self.N)]) for u in xrange(self.N)]  # start with trivial labels
+        self.lv = [0 for v in xrange(self.N)]
 
         self.Mu = {}  # start with empty matching
         self.Mv = {}
@@ -73,7 +74,7 @@ class HungarianGraph(object):
         """ change the labels, and maintain min_slack. """
         for u in self.S:
             self.lu[u] -= val
-        for v in range(self.N):
+        for v in xrange(self.N):
             if v in self.T:
                 self.lv[v] += val
             else:
@@ -97,7 +98,7 @@ class HungarianGraph(object):
         """ augment the matching, possibly improving the labels on the way. """
         while True:
             # select edge (u,v) with u in S, v not in T and min slack
-            ((val, u), v) = min([(self.min_slack[v], v) for v in range(self.N) if v not in self.T])
+            ((val, u), v) = min([(self.min_slack[v], v) for v in xrange(self.N) if v not in self.T])
             assert u in self.S
             if val > 0:        
                 self.improve_labels(val)
@@ -113,7 +114,7 @@ class HungarianGraph(object):
                 u1 = self.Mv[v]                      # matched edge, 
                 assert not u1 in self.S
                 self.S.add(u1)
-                for v in range(self.N): # maintain min_slack
+                for v in xrange(self.N): # maintain min_slack
                     if v not in self.T and self.min_slack[v][0] > self.slack(u1,v):
                         self.min_slack[v] = [self.slack(u1,v), u1]
             else:
@@ -129,10 +130,10 @@ class HungarianGraph(object):
         """
 
         while len(self.Mu) < self.N:
-            u0 = [u for u in range(self.N) if u not in self.Mu][0] # choose free vertex u0
+            u0 = [u for u in xrange(self.N) if u not in self.Mu][0] # choose free vertex u0
             self.S = set([u0])
             self.T = {}
-            self.min_slack = [[self.slack(u0,v), u0] for v in range(self.N)]
+            self.min_slack = [[self.slack(u0,v), u0] for v in xrange(self.N)]
             self.augment()
         # val. of matching is total edge weight
         val = sum(self.lu) + sum(self.lv)
@@ -306,7 +307,7 @@ def normalize_authors (a1, a2):
     author2 += ','
     # now append segments from first and middle names
     ntokens = min(len(pa1),len(pa2))
-    for i in range(ntokens):
+    for i in xrange(ntokens):
         tlen = min(len(pa1[i]), len(pa2[i]))
         author1 += ' ' + pa1[i][:tlen]
         author2 += ' ' + pa2[i][:tlen]
@@ -326,12 +327,12 @@ def match_author_lists (al1, al2, impl=None):
     # we work with a square matrix, so enforce same
     # dimension for both arrays
     n = max(len(al1), len(al2))
-    m = [[-1 for i in range(n)] for j in range(n)]
+    m = [[-1 for i in xrange(n)] for j in xrange(n)]
 
     # now compute cost matrix
-    for i in range(n):
+    for i in xrange(n):
         s1 = al1[i] if i < len(al1) else ''
-        for j in range(n):
+        for j in xrange(n):
             s2 = al2[j] if j < len(al2) else ''
             # note: we can't cache the normalized versions
             # of author names because they are computed in pairs
@@ -389,9 +390,9 @@ def match_ads_author_fields (f1, f2, impl=None):
     # make sure there are enough elements in f2
     if len(f2) < len(f1):
         # print "Extending array2 with", len(f1) - len(f2), "additional elements"
-        f2.extend([None for i in range(len(f1) - len(f2))])
+        f2.extend([None for i in xrange(len(f1) - len(f2))])
 
-    return [ (f1[i],f2[mapping[i]]) for i in range(len(f1)) ]
+    return [ (f1[i],f2[mapping[i]]) for i in xrange(len(f1)) ]
 
 
 def is_suitable_match(a1, a2):

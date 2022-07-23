@@ -222,6 +222,7 @@ class Merger:
 
 
   def takeAll(self,field):
+    """Takes all values for a field, concatenating them in a unique array"""
     def deDuplicated(L):
       #This will still consider 'origin' in the comparison
       result = []
@@ -236,6 +237,49 @@ class Merger:
         r.extend(i[field])
 
     return deDuplicated(r)
+
+
+  def takeAllByPriority(self,field):
+    def deDuplicated(L):
+      result = []
+      for i in L:
+        if i not in result:
+          result.append(i)
+      return result
+
+    data = [ (i[field],i['tempdata']) for i in self.blocks if field in i]
+    for f in data:
+      p = self._getOriginPriority(f,field)
+      f[1]['priority'] = p
+
+    # sort by priority
+    data.sort(key=lambda f: f[1]['priority'], reverse=True)
+    # flatten the list since each element can be an array
+    r = []
+    for i in data:
+        if i[0]:
+            r.extend(i[0])
+
+    return deDuplicated(r)
+
+
+  def _getOriginPriority(self,f,field):
+    """Returns the priority score of a metdata record for a given field"""
+    if not f:
+      return 0
+    if field not in self.priorities:
+      p = self.priorities['default']
+    else:
+      p = self.priorities[field]
+    # pick the origin with the highest priority for each record
+    origins = f[1]['origin'].split('; ')
+    o = origins.pop()
+    for i in origins:
+      o = i if p.get(i.upper(),0) >= p.get(o1.upper(),0) else o
+    # if origin not defined, default to 'PUBLISHER'
+    P = p.get(o.upper(),p.get('PUBLISHER',0))
+    return P
+
 
   def _getBestOrigin(self,f1,f2,field):
     #If one of the two fields has empty content, return the one with content
