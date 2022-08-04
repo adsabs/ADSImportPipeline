@@ -21,7 +21,7 @@ def mergeRecords(records):
         blocks = e.ensureList(r['metadata'])
         #Multiply defined blocks need merging.
         metadatablockCounter = collections.Counter([i['tempdata']['type'] for i in blocks])
-        needsMerging = dict([(k,[]) for k,v in metadatablockCounter.iteritems() if v>1])
+        needsMerging = dict([(k,[]) for k,v in metadatablockCounter.items() if v>1])
 
         completeMetadata = {}
         #First pass: Add the singly defined blocks to the complete record
@@ -33,7 +33,7 @@ def mergeRecords(records):
                 needsMerging[_type].append(b)
 
     #Second pass: Merge the multiple defined blocks
-    for _type,blocks in needsMerging.iteritems():
+    for _type,blocks in needsMerging.items():
         m = Merger(blocks)
         m.merge()
         completeMetadata.update({
@@ -111,8 +111,8 @@ class Merger:
       for block in self.blocks:
         if fieldName in block:
           fieldsHist[fieldName] += 1
-    singleDefinedFields = [k for k,v in fieldsHist.iteritems() if v==1]
-    multipleDefinedFields = [k for k,v in fieldsHist.iteritems() if v>1]
+    singleDefinedFields = [k for k,v in fieldsHist.items() if v==1]
+    multipleDefinedFields = [k for k,v in fieldsHist.items() if v>1]
     r = {}
     # First pass: construct the record from singly defined fields
     for field in singleDefinedFields:
@@ -123,7 +123,7 @@ class Merger:
     for field in multipleDefinedFields:
       try:
         r[field] = self._dispatcher(field)
-      except Exception, err:
+      except Exception as err:
         self.logger.error('Error with merger dispatcher on %s: %s' % (field,err))
         raise
     self.block = r
@@ -222,6 +222,7 @@ class Merger:
 
 
   def takeAll(self,field):
+    """Takes all values for a field, concatenating them in a unique array"""
     def deDuplicated(L):
       #This will still consider 'origin' in the comparison
       result = []
@@ -236,6 +237,49 @@ class Merger:
         r.extend(i[field])
 
     return deDuplicated(r)
+
+
+  def takeAllByPriority(self,field):
+    def deDuplicated(L):
+      result = []
+      for i in L:
+        if i not in result:
+          result.append(i)
+      return result
+
+    data = [ (i[field],i['tempdata']) for i in self.blocks if field in i]
+    for f in data:
+      p = self._getOriginPriority(f,field)
+      f[1]['priority'] = p
+
+    # sort by priority
+    data.sort(key=lambda f: f[1]['priority'], reverse=True)
+    # flatten the list since each element can be an array
+    r = []
+    for i in data:
+        if i[0]:
+            r.extend(i[0])
+
+    return deDuplicated(r)
+
+
+  def _getOriginPriority(self,f,field):
+    """Returns the priority score of a metdata record for a given field"""
+    if not f:
+      return 0
+    if field not in self.priorities:
+      p = self.priorities['default']
+    else:
+      p = self.priorities[field]
+    # pick the origin with the highest priority for each record
+    origins = f[1]['origin'].split('; ')
+    o = origins.pop()
+    for i in origins:
+      o = i if p.get(i.upper(),0) >= p.get(o1.upper(),0) else o
+    # if origin not defined, default to 'PUBLISHER'
+    P = p.get(o.upper(),p.get('PUBLISHER',0))
+    return P
+
 
   def _getBestOrigin(self,f1,f2,field):
     #If one of the two fields has empty content, return the one with content

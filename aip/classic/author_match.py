@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """
 This code was found in the github repository of Martin-Louis Bright (mlbright@gmail.com):
 https://github.com/mlbright/Assignment-Problem/blob/master/kuhn_munkres.py
@@ -51,7 +53,10 @@ import sys
 import re
 import numpy as np
 
-
+if sys.version_info[0] >= 3:
+    unicode = str
+    xrange = range
+    
 class HungarianGraph(object):
 
     def __init__(self, weights):
@@ -302,7 +307,7 @@ def normalize_authors (a1, a2):
     author2 += ','
     # now append segments from first and middle names
     ntokens = min(len(pa1),len(pa2))
-    for i in range(ntokens):
+    for i in xrange(ntokens):
         tlen = min(len(pa1[i]), len(pa2[i]))
         author1 += ' ' + pa1[i][:tlen]
         author2 += ' ' + pa2[i][:tlen]
@@ -322,12 +327,12 @@ def match_author_lists (al1, al2, impl=None):
     # we work with a square matrix, so enforce same
     # dimension for both arrays
     n = max(len(al1), len(al2))
-    m = [[-1 for i in range(n)] for j in range(n)]
+    m = [[-1 for i in xrange(n)] for j in xrange(n)]
 
     # now compute cost matrix
-    for i in range(n):
+    for i in xrange(n):
         s1 = al1[i] if i < len(al1) else ''
-        for j in range(n):
+        for j in xrange(n):
             s2 = al2[j] if j < len(al2) else ''
             # note: we can't cache the normalized versions
             # of author names because they are computed in pairs
@@ -385,9 +390,9 @@ def match_ads_author_fields (f1, f2, impl=None):
     # make sure there are enough elements in f2
     if len(f2) < len(f1):
         # print "Extending array2 with", len(f1) - len(f2), "additional elements"
-        f2.extend([None for i in range(len(f1) - len(f2))])
+        f2.extend([None for i in xrange(len(f1) - len(f2))])
 
-    return [ (f1[i],f2[mapping[i]]) for i in range(len(f1)) ]
+    return [ (f1[i],f2[mapping[i]]) for i in xrange(len(f1)) ]
 
 
 def is_suitable_match(a1, a2):
@@ -414,7 +419,7 @@ def is_suitable_match(a1, a2):
 #   'Accomazzi, A. (CfA); Krutz, M. (SAO); Grant Stern, C (Harvard)'
 
 if __name__ == "__main__":
-
+    
     if len(sys.argv) != 3:
         sys.stderr.write("Usage: %s 'aut_string1' 'aut_string2'\n",
                          sys.argv[0]);
@@ -442,34 +447,34 @@ if __name__ == "__main__":
         f2.append({'name': {'western': name}, 'affiliations': [aff] if aff else []})
         a2aff += 1 if aff else 0
 
-    print "Aut1 struct:", f1
-    print "Aut2 struct:", f2
-    print "Number of names in aut1: ", a1aut
-    print "Number of names in aut2: ", a2aut
-    print "Number of affiliations in aut1: ", a1aff
-    print "Number of affiliations in aut2: ", a2aff
+    print("Aut1 struct:", f1)
+    print("Aut2 struct:", f2)
+    print("Number of names in aut1: ", a1aut)
+    print("Number of names in aut2: ", a2aut)
+    print("Number of affiliations in aut1: ", a1aff)
+    print("Number of affiliations in aut2: ", a2aff)
     
     if a1aut == a1aff:
-        print "all authors in aut1 have affiliations, we're done"
+        print("all authors in aut1 have affiliations, we're done")
         exit(0)
     elif a2aff == 0:
-        print "no affiliations present in aut2, we're done"
+        print("no affiliations present in aut2, we're done")
         exit(0)
     else:
-        print "will try to pick from", a2aff, "affiliations to assign to", a1aut - a1aff, "author names"
+        print("will try to pick from", a2aff, "affiliations to assign to", a1aut - a1aff, "author names")
 
     res = match_ads_author_fields(f1, f2)
     
     authors = []
     for author1, author2 in res:
-        print "considering:", author1, author2
+        print("considering:", author1, author2)
         if author1 and author2 and \
                 not author1['affiliations'] and \
                 author2['affiliations'] and \
                 is_suitable_match(author1, author2):
             author1['affiliations'] = author2['affiliations']
-            print "updated author affiliations:", author1
+            print("updated author affiliations:", author1)
         authors.append(author1)
                 
-    print "Final author structure:", authors
+    print("Final author structure:", authors)
 
