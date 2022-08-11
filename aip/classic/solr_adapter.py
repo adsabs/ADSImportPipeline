@@ -340,7 +340,7 @@ class SolrAdapter(object):
   @staticmethod
   def _doi(ADS_record):
     result = [i['content'] for i in ADS_record['metadata']['general'].get('doi', [])]
-    return {'doi': result}
+    return {'doi': case_insensitive_unique_list(result)}
 
   @staticmethod
   def _eid(ADS_record):
@@ -580,6 +580,17 @@ class SolrAdapter(object):
         assert len(set([type(i) for i in v])) == 1, "{0}: multiple data-types in list: {1}".format(k, v)
         assert isinstance(v[0], type(SCHEMA[k][0])), "{0}: inner list element has unexpected type ({1}!={2}): {3}".format(k, type(v[0]), type(SCHEMA[k][0]), v)
 
+def case_insensitive_unique_list(array):
+  """
+  Returns the list of unique elements in the input array
+  in a case-insensitive way, preserving order and case
+  """
+  seen, result = set(), []
+  for item in array:
+    if item.lower() not in seen:
+      seen.add(item.lower())
+      result.append(item)
+  return result
 
 def unroll_unique_list(array):
   """
