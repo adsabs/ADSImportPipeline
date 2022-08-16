@@ -80,11 +80,13 @@ class TestMerger(unittest.TestCase):
         B1 = {'tempdata':{'origin':'PUBLISHER','type':'general'}}
         B2 = {'tempdata':{'origin':'ARXIV','type':'general'}}
         B3 = {'tempdata':{'origin':'SIMBAD','type':'general'}}
+        B4 = {'tempdata':{'origin':'JST; CROSSREF','type':'general'}}
 
         # 2022NatAs...6..331D
         B1['doi'] = [ '10.1038/s41550-021-01558-y' ]
         B2['doi'] = [ '10.48550/arXiv.2201.05617' ]
         B3['doi'] = [ '10.1038/s41550-021-01558-y' ]
+        B4['doi'] = [ '10.1038/S41550-021-01558-Y' ] # note different case
 
         blocks = [B1,B2]
         m = merger.Merger(blocks)
@@ -105,6 +107,14 @@ class TestMerger(unittest.TestCase):
         m.merge()
         results = m.block
         expectedResults = { 'doi': [ '10.1038/s41550-021-01558-y', '10.48550/arXiv.2201.05617' ], 'altpublications': [] }
+        self.assertEqual(results,expectedResults)
+
+        blocks = [B4,B2,B1,B3]
+        m = merger.Merger(blocks)
+        m.merge()
+        results = m.block
+        # the list gets eventually uniqued in solr_adapter
+        expectedResults = { 'doi': [ '10.1038/S41550-021-01558-Y', '10.1038/s41550-021-01558-y', '10.48550/arXiv.2201.05617' ], 'altpublications': [] }
         self.assertEqual(results,expectedResults)
 
 
