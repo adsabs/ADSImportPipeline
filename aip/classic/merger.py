@@ -275,7 +275,7 @@ class Merger:
     origins = f[1]['origin'].split('; ')
     o = origins.pop()
     for i in origins:
-      o = i if p.get(i.upper(),0) >= p.get(o1.upper(),0) else o
+      o = i if p.get(i.upper(),0) >= p.get(o.upper(),0) else o
     # if origin not defined, default to 'PUBLISHER'
     P = p.get(o.upper(),p.get('PUBLISHER',0))
     return P
