@@ -1,6 +1,6 @@
 # ADSimportpipeline
 
-[![Build Status](https://travis-ci.org/adsabs/ADSimportpipeline.svg?branch=master)](https://travis-ci.org/adsabs/ADSimportpipeline)
+[![GitHub Actions CI](https://github.com/adsabs/ADSImportPipeline/actions/workflows/python_actions.yml/badge.svg)](https://github.com/adsabs/ADSImportPipeline/actions/workflows/python_actions.yml)
 [![Coverage Status](https://coveralls.io/repos/adsabs/ADSimportpipeline/badge.svg?branch=master)](https://coveralls.io/r/adsabs/ADSimportpipeline)
 
 ## Overview
