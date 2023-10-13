@@ -274,6 +274,7 @@ class SolrAdapter(object):
       'PHY': u'physics',
       'AST': u'astronomy',
       'GEN': u'general',
+      'GEO': u'earth science',
     }
     result = [translation[i['content'].upper()] for i in ADS_record['metadata']['properties'].get('databases', [])]
     result = list(set(result))
