@@ -85,9 +85,9 @@ def do_the_work(records, orphaned, max_deletions=-1):
         else:
             tasks.task_find_new_records.delay(payload)
         if i / step > j:
-            logger.info('There are %s records left (%0.1f%% completed)'
-                        % (len(records)-i, ((len(records)-i) / 100.0)))
             j = i / step
+            logger.info('There are %s records left (%0.1f%% completed)'
+                        % (len(records)-i, j))
         i += bpj
 
 
