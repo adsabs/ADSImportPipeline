@@ -75,7 +75,7 @@ def do_the_work(records, orphaned, max_deletions=-1):
 
     # submit others (to be compared and updated if necessary)
     bpj = app.conf.get('BIBCODES_PER_JOB', 100)
-    step = max(len(records) / 100, 1)
+    step = max(len(records) / bpj, 1)
     i = 0
     j = 0
     while i < len(records):
