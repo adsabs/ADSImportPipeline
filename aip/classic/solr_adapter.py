@@ -756,6 +756,9 @@ def bibstem_mapper(bibcode):
     short_stem = u'arXiv'
     vol_field = u'....'
     long_stem = short_stem + vol_field
+  elif short_stem == 'EaArX':
+    vol_field = u'....'
+    long_stem = short_stem + vol_field
   # 5th character could be volume digit, in whih case reset it
   elif short_stem[0:4] in PUB_VOLUME_SPILLS_LEFT and short_stem[4].isdigit():
     short_stem = short_stem[0:4] + u'.'
