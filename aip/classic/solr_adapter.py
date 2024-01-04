@@ -630,6 +630,7 @@ doctype_dict = {
   'newsletter':    'Newsletter',
   'catalog':       'Catalog',
   'editorial':     'Editorial',
+  'dataset':       'Dataset',
   'misc':          'Other'
 }
 
