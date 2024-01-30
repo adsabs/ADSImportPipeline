@@ -3,8 +3,6 @@ import sys
 import mock
 from collections import OrderedDict
 from tests.stubdata import ADSRECORDS
-import pdb
-import json
 if '/proj/ads/soft/python/lib/site-packages' not in sys.path:
     sys.path.append('/proj/ads/soft/python/lib/site-packages')
 

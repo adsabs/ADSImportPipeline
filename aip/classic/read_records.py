@@ -1,5 +1,4 @@
 import os,sys
-import json
 import time
 import timeout_decorator
 import xmltodict
@@ -152,8 +151,6 @@ def readRecordsFromADSExports(records):
     results = []
     for r in export:
         rec = e.enforceTopLevelSchema(record=r, JSON_fingerprint=targets[r['@bibcode']])
-        with open("importrecord.txt", "w") as fp:
-            json.dump(rec,fp, indent = 2, sort_keys=True)
         results.append(rec)
     return results
 
