@@ -52,6 +52,7 @@
             "page_count" : u"19",
             "page" : u"41",
             "volume" : u"143",
+            "publisher": u"Publisher",
             "page_range" : u"41-59",
             "electronic_id" : u"here is the eid",
             "issue" : None,

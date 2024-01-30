@@ -228,6 +228,7 @@ class Enforcer:
     r['publication']['page_count'] =    g('number_pages')
     r['publication']['electronic_id'] = g('electronic_id')
     r['publication']['altbibcode'] =    g('bibcode')
+    r['publication']['publisher'] =     g('publisher')
     r['publication']['name'] = {
       'raw':        g('journal'),
       'canonical':  g('canonical_journal'),

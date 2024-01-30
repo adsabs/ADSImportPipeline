@@ -4,7 +4,7 @@ import unittest
 from aip.classic import solr_adapter
 from tests.stubdata import ADSRECORDS
 from adsputils import get_date
-
+import pdb
 
 class TestSolrAdapter(unittest.TestCase):
     def setUp(self):
@@ -62,6 +62,7 @@ class TestSolrAdapter(unittest.TestCase):
          'page': [u'2056-2078'],
          'page_count': 0,
          'pubdate': u'2013-08-05',
+         'publisher': u'Publisher',
          'title': [u'This is of the title', u'This is of the alternate'],
          'volume': u'l24'})
     
@@ -109,7 +110,8 @@ class TestSolrAdapter(unittest.TestCase):
                              u"Accomazzi, A", u"Grant, C", u"Murray, S", u"Watson, J"],
             "bibstem_facet": u"A&AS", 
             "pub": u"Astronomy and Astrophysics Supplement Series", 
-            "volume": u"143", 
+            "volume": u"143",
+            "publisher": u"Publisher", 
             "doi": [u"10.1051/aas:2000170"],
             "eid": u"here is the eid",
             "author_norm": [u"Kurtz, M", u"Eichhorn, G", u"Accomazzi, A", u"Grant, C",
@@ -154,6 +156,7 @@ class TestSolrAdapter(unittest.TestCase):
                 "general" : {
                     "publication" : {
                         "origin" : u"ARXIV",
+                        "publisher": u"Publisher",
                         'dates' : [
                             {
                                 'type' : u'date-preprint',
@@ -205,6 +208,7 @@ class TestSolrAdapter(unittest.TestCase):
             'author_count': 2,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
             'identifier': [u'2014arXiv1406.4542H'],
+            "publisher": u"Publisher",
         })
 
         # test addition of type = collaboration, which should act similar to type = regular
@@ -225,6 +229,7 @@ class TestSolrAdapter(unittest.TestCase):
                 "general": {
                     "publication": {
                         "origin": u"ARXIV",
+                        "publisher": u"Publisher",
                         'dates': [
                             {
                                 'type': u'date-preprint',
@@ -276,6 +281,7 @@ class TestSolrAdapter(unittest.TestCase):
             'author_count': 2,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
             'identifier': [u'2014arXiv1406.4542H'],
+            "publisher": u"Publisher",
         })
 
         # test identifer arXiv with bibcode
@@ -303,6 +309,7 @@ class TestSolrAdapter(unittest.TestCase):
                 "general": {
                     "publication": {
                         "origin": u"ARXIV",
+                        "publisher": u"Publisher",
                         'dates': [
                             {
                                 'type': u'date-preprint',
@@ -343,6 +350,7 @@ class TestSolrAdapter(unittest.TestCase):
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
 
             'identifier': [u'2018arXiv180710779B', u'arXiv:1807.10779'],
+            "publisher": u"Publisher",
         })
 
         # test identifer arXiv with bibcode, different kind of arXiv id, plus made sure links are captured properly
@@ -386,6 +394,7 @@ class TestSolrAdapter(unittest.TestCase):
                 "general": {
                     "publication": {
                         "origin": u"ARXIV",
+                        "publisher": u"Publisher",
                         'dates': [
                             {
                                 'type': u'date-preprint',
@@ -424,7 +433,7 @@ class TestSolrAdapter(unittest.TestCase):
             'page_count': 0,
             'author_count': 1,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
-
+            "publisher": u"Publisher",
             'identifier': [u'1968NuPhB...7...79F', u'arXiv:quant-ph/0206057'],
             'links_data': [
                 u'{"access": "open", "instances": "", "title": "", "type": "preprint", "url": "http://arxiv.org/abs/quant-ph/0206057"}',
@@ -458,6 +467,7 @@ class TestSolrAdapter(unittest.TestCase):
                 "general": {
                     "publication": {
                         "origin": u"ASCL",
+                        "publisher": u"Publisher",
                         'dates': [
                             {
                                 'type': u'date-published',
@@ -496,7 +506,7 @@ class TestSolrAdapter(unittest.TestCase):
             'page_count': 0,
             'author_count': 1,
             'doctype_facet_hier': ["0/Non-Article", "1/Non-Article/Software"],
-
+            "publisher": u"Publisher",
             'identifier': [u'ascl:1802.007', u'2018ascl.soft02007G'],
         })
 
@@ -518,6 +528,7 @@ class TestSolrAdapter(unittest.TestCase):
                 "general": {
                     "publication": {
                         "origin": u"JSTOR",
+                        "publisher": u"Publisher",
                         'dates': [
                             {
                                 'type': u'date-published',
@@ -562,6 +573,7 @@ class TestSolrAdapter(unittest.TestCase):
             'author_count': 1,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
             'identifier': [u'1988Sci...240..668D'],
+            "publisher": u"Publisher",
         })
 
         # check the entry_date updates - don't update if the timestamp is setup
@@ -582,6 +594,7 @@ class TestSolrAdapter(unittest.TestCase):
                 "general": {
                     "publication": {
                         "origin": u"ARXIV",
+                        "publisher": u"Publisher",
                         'dates': [
                             {
                                 'type': u'date-preprint',
@@ -633,6 +646,7 @@ class TestSolrAdapter(unittest.TestCase):
             'author_count': 2,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
             'identifier': [u'2014arXiv1406.4542H'],
+            "publisher": u"Publisher",
         })
 
         # check the entry_date updates - don't update if the date is today
@@ -655,6 +669,7 @@ class TestSolrAdapter(unittest.TestCase):
                 "general": {
                     "publication": {
                         "origin": u"ARXIV",
+                        "publisher": u"Publisher",
                         'dates': [
                             {
                                 'type': u'date-preprint',
@@ -706,6 +721,7 @@ class TestSolrAdapter(unittest.TestCase):
             'author_count': 2,
             'doctype_facet_hier': [u'0/Article', u'1/Article/Journal Article'],
             'identifier': [u'2014arXiv1406.4542H'],
+            "publisher": u"Publisher",
         })
 
 class TestBibstemMapper(unittest.TestCase):

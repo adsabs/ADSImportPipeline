@@ -95,6 +95,7 @@ class SolrAdapter(object):
     'pubnote': [u'',],
     'pub_raw': u'',
     'pubdate': u'',
+    'publisher': u'',
     'recid': 0,
     'series': u'',
     'thesis': u'',
@@ -471,6 +472,10 @@ class SolrAdapter(object):
   def _pubdate(ADS_record):
     result = get_date_by_datetype(ADS_record)
     return {'pubdate':result}
+
+  @staticmethod
+  def _publisher(ADS_record):
+    return {'publisher': ADS_record['metadata']['general'].get('publication', {}).get('publisher')}
 
   @staticmethod
   def _pubnote(ADS_record):
