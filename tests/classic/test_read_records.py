@@ -3,7 +3,6 @@ import sys
 import mock
 from collections import OrderedDict
 from tests.stubdata import ADSRECORDS
-
 if '/proj/ads/soft/python/lib/site-packages' not in sys.path:
     sys.path.append('/proj/ads/soft/python/lib/site-packages')
 
@@ -131,7 +130,9 @@ class TestADSExports(unittest.TestCase):
             mock.patch.object(adsrecord, 'export', return_value=adsrecord), \
             mock.patch('aip.classic.read_records.xml_to_dict', return_value=ADSRECORDS[u'2009AAS...21320006C.classic']):
             results = read_records.readRecordsFromADSExports([(u'2009AAS...21320006C', 'fingerprint')])
-            self.assertDictContainsSubset({'JSON_fingerprint': 'fingerprint',
+            self.assertDictContainsSubset(
+{
+                            'JSON_fingerprint': 'fingerprint',
                               'bibcode': u'2009AAS...21320006C',
                               'entry_date': u'2009-01-03',
                               'metadata': [{'abstracts': [{'lang': u'en',
@@ -166,7 +167,8 @@ class TestADSExports(unittest.TestCase):
                                  'page_count': None,
                                  'page_last': None,
                                  'page_range': None,
-                                 'volume': u'213'},
+                                 'volume': u'213', 
+                                 'publisher': u'Publisher'},
                                 'pubnote': [],
                                 'tempdata': {'alternate_journal': False,
                                  'modtime': u'2016-01-21T23:19:13Z',
@@ -205,7 +207,8 @@ class TestADSExports(unittest.TestCase):
                                  'page_count': None,
                                  'page_last': None,
                                  'page_range': u'187',
-                                 'volume': u'41'},
+                                 'volume': u'41',
+                                 'publisher': None},
                                 'pubnote': [],
                                 'tempdata': {'alternate_journal': True,
                                  'modtime': u'2016-01-21T23:20:41Z',

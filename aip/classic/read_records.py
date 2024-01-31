@@ -1,8 +1,6 @@
 import os,sys
-import json
 import time
 import timeout_decorator
-
 import xmltodict
 from aip.classic import enforce_schema
 try:
