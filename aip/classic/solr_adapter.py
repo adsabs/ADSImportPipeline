@@ -6,7 +6,6 @@ import re
 import traceback
 import datetime
 
-
 from adsputils import get_date, date2solrstamp
 from aip.classic import enforce_schema
 
@@ -475,7 +474,12 @@ class SolrAdapter(object):
 
   @staticmethod
   def _publisher(ADS_record):
-    return {'publisher': ADS_record['metadata']['general'].get('publication', {}).get('publisher')}
+    result = ADS_record['metadata']['general'].get('publication', {}).get('publisher')
+
+    if result:
+      if result.lower() == 'publisher':
+        result = None
+    return {'publisher': result}
 
   @staticmethod
   def _pubnote(ADS_record):

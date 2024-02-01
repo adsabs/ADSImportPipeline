@@ -42,7 +42,7 @@
     'origin': '',
     'page': u'2056-2078',
     'page_count': 0,
-    'publisher': u'Publisher',
+    'publisher': u'test-Publisher',
     'volume': u'l24'},
    'titles': [{'lang': u'en', 'text': u'This is of the title'},
     {'lang': '', 'text': u'This is of the alternate'}]},
