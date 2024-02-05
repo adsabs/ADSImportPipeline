@@ -5,7 +5,7 @@ import sys
 import re
 import traceback
 import datetime
-
+import pdb
 from adsputils import get_date, date2solrstamp
 from aip.classic import enforce_schema
 
@@ -261,6 +261,7 @@ class SolrAdapter(object):
 
   @staticmethod
   def _comment(ADS_record):
+    pdb.set_trace()
     result = [i['content'] for i in ADS_record['metadata']['general'].get('comment', [])]
     result = list(set(result))
     # XXX - Hack to avoid a re-indexing because of non-multivalued field 'comment'
@@ -475,6 +476,7 @@ class SolrAdapter(object):
   @staticmethod
   def _publisher(ADS_record):
     result = ADS_record['metadata']['general'].get('publication', {}).get('publisher')
+    pdb.set_trace()
 
     if result:
       if result.lower() == 'publisher':

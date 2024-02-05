@@ -64,7 +64,11 @@ class TestSolrAdapter(unittest.TestCase):
          'publisher': u'test-Publisher',
          'title': [u'This is of the title', u'This is of the alternate'],
          'volume': u'l24'})
-    
+
+        r = solr_adapter.SolrAdapter.adapt(ADSRECORDS['2009AAS...21320006C'])
+        solr_adapter.SolrAdapter.validate(r) #Raises AssertionError if not validated
+        self.assertEquals(r, {})
+
         r = solr_adapter.SolrAdapter.adapt(ADSRECORDS['testbibcode2'])
         solr_adapter.SolrAdapter.validate(r) #Raises AssertionError if not validated
         self.assertEquals(r, {
