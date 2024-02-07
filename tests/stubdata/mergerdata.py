@@ -515,5 +515,6 @@ MERGEDRECS[u'2015ApJ...815..133S'] = {'abstract': u'In order to examine their re
          'pubnote': [u'33 pages, 7 figures, 5 tables, ApJ in press; doi:10.1088/0004-637X/815/2/133'],
          'title': [u'Ultraviolet Radiative Transfer Modeling of Nearby Galaxies with Extraplanar Dusts'],
          'volume': u'815',
+         'publisher': u'IOP',
          'series': '123',
          'year': u'2015'}
