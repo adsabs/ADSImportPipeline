@@ -5,7 +5,6 @@ import sys
 import re
 import traceback
 import datetime
-
 from adsputils import get_date, date2solrstamp
 from aip.classic import enforce_schema
 

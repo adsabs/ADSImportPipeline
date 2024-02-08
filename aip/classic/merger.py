@@ -189,6 +189,7 @@ class Merger:
         'electronic_id':  i['publication']['electronic_id'],
         'name':           i['publication']['name'],
         'dates':          i['publication']['dates'],
+        'publisher':      i['publication']['publisher'],
       },i['tempdata']) for i in self.blocks if not i['tempdata']['alternate_journal'] ]
 
     altpublications = [{
@@ -204,6 +205,7 @@ class Merger:
         'electronic_id':  i['publication']['electronic_id'],
         'name':           i['publication']['name'],
         'dates':          i['publication']['dates'],
+        'publisher':      i['publication']['publisher'],
     } for i in self.blocks if i['tempdata']['alternate_journal'] ]
 
     self.altpublications = altpublications
