@@ -723,6 +723,43 @@ class TestSolrAdapter(unittest.TestCase):
             
         })
 
+        r = solr_adapter.SolrAdapter.adapt({
+            "id": 99999997,
+            "modtime": '2014-06-18T21:06:49',
+            'bibcode': u'2025rubn.inst...36S',
+            "text": {},
+            "entry_date": "2003-02-21T02:30:00.000000Z",
+            "metadata": {
+                "references": [],
+                'properties': {'refereed': False, 'openaccess': False,
+                               'doctype': {'content': u'instrument', 'origin': u'ADS metadata'},
+                               'private': False, 'ocrabstract': False, 'ads_openaccess': False,
+                               'eprint_openaccess': True, 'pub_openaccess': False
+                               },
+                "relations": {},
+                "general": {
+                    "publication": {
+                        "origin": u"ADS",
+                        
+                        'dates': [
+                            {
+                                'type': u'date-published',
+                                'content': u'2025-00-00'
+                            }
+                        ]
+                    },
+                    'authors': [
+                        {'name': {'normalized': u'SLAC National Accelerator Laboratory', 'western': u"SLAC National Accelerator Laboratory", 'native': ''},
+                         'number': u'1', 'affiliations': [], 'orcid': '', 'type': 'regular', 'emails': []},
+                        {'name': {'normalized': u'NSF-DOE Vera C. Rubin Observatory', 'western': u'NSF-DOE Vera C. Rubin Observatory', 'native': ''},
+                         'number': u'2', 'affiliations': [],
+                         'orcid': '', 'type': 'regular', 'emails': []}],
+                }
+            },
+        })
+        solr_adapter.SolrAdapter.validate(r)  # Raises AssertionError if not validated
+        self.assertEquals(r['doctype_facet_hier'], [u'0/Non-Article', u'1/Non-Article/Instrument'])
+
 class TestBibstemMapper(unittest.TestCase):
     def setUp(self):
         pass
