@@ -646,6 +646,7 @@ doctype_dict = {
   'dataset':       'Dataset',
   'instrument':    'Instrument',
   'service':       'Service',
+  'bookreview':    'Book Review',
   'misc':          'Other'
 }
 
